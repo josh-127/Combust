@@ -15,8 +15,6 @@ Building
 
 ### Installing Requirements
 ```
-yum install autoconf
-yum install automake
 yum install make
 yum install gcc
 ```
