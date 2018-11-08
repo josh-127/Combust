@@ -210,20 +210,20 @@ static int SkipLongSuffix(char **cursor)
 
 static void SkipIntSuffixes(LEXER *l, TOKEN *t)
 {
-    unsigned suffix_length = 0;
+    unsigned suffixLength = 0;
     char *suffix;
-    char *suffix_cursor;
+    char *suffixCursor;
     unsigned i;
 
-    ScanSuffix(l, &suffix, &suffix_length);
-    suffix_cursor = suffix;
+    ScanSuffix(l, &suffix, &suffixLength);
+    suffixCursor = suffix;
 
-    if (SkipUnsignedSuffix(&suffix_cursor))
-        SkipLongSuffix(&suffix_cursor);
-    else if (SkipLongSuffix(&suffix_cursor))
-        SkipUnsignedSuffix(&suffix_cursor);
+    if (SkipUnsignedSuffix(&suffixCursor))
+        SkipLongSuffix(&suffixCursor);
+    else if (SkipLongSuffix(&suffixCursor))
+        SkipUnsignedSuffix(&suffixCursor);
 
-    if (IsLetter(*suffix_cursor)) {
+    if (IsLetter(*suffixCursor)) {
         LogErrorC(&t->Location, "invalid suffix \"%s\" on integer constant", suffix);
     }
 
@@ -232,29 +232,29 @@ static void SkipIntSuffixes(LEXER *l, TOKEN *t)
 
 static void ScanFractionalLiteral(LEXER *l, TOKEN *t)
 {
-    float float_frac = 0.0F;
-    float float_exp = 0.1F;
-    float double_frac = 0.0;
-    float double_exp = 0.1;
+    float floatFrac = 0.0F;
+    float floatExp = 0.1F;
+    float doubleFrac = 0.0;
+    float doubleExp = 0.1;
     char *suffix;
-    unsigned suffix_length;
+    unsigned suffixLength;
 
     for (; IsDecimal(*l->Cursor); IncrementCursor(l)) {
-        float_frac += float_exp * (*l->Cursor - '0');
-        double_frac += double_exp * (*l->Cursor - '0');
-        float_exp *= 0.1F;
-        double_exp *= 0.1;
+        floatFrac += floatExp * (*l->Cursor - '0');
+        doubleFrac += doubleExp * (*l->Cursor - '0');
+        floatExp *= 0.1F;
+        doubleExp *= 0.1;
     }
 
-    ScanSuffix(l, &suffix, &suffix_length);
+    ScanSuffix(l, &suffix, &suffixLength);
 
     if (*suffix == 'f' || *suffix == 'F') {
         t->Kind = TK_FLOAT_CONSTANT;
-        t->FloatValue = t->IntValue + float_frac;
+        t->FloatValue = t->IntValue + floatFrac;
     }
     else {
         t->Kind = TK_DOUBLE_CONSTANT;
-        t->DoubleValue = t->IntValue + double_frac;
+        t->DoubleValue = t->IntValue + doubleFrac;
     }
 
     if (suffix[1] != 0) {
@@ -317,17 +317,17 @@ static void ScanDecimalLiteral(LEXER *l, TOKEN *t)
 static void ScanNumericalLiteral(LEXER *l, TOKEN *t)
 {
     if (*l->Cursor == '0') {
-        unsigned whole_length = 0;
+        unsigned wholeLength = 0;
 
         do {
             IncrementCursor(l);
         }
         while (*l->Cursor == '0');
 
-        while (IsDecimal(l->Cursor[whole_length]))
-            ++whole_length;
+        while (IsDecimal(l->Cursor[wholeLength]))
+            ++wholeLength;
 
-        if (l->Cursor[whole_length] == '.') {
+        if (l->Cursor[wholeLength] == '.') {
             ScanDecimalLiteral(l, t);
         }
         else if (*l->Cursor == 'X' || *l->Cursor == 'x') {
@@ -348,7 +348,7 @@ static char ScanChar(LEXER *l)
     char result;
 
     if (*l->Cursor == '\\') {
-        unsigned digit_count;
+        unsigned digitCount;
 
         IncrementCursor(l);
 
@@ -368,10 +368,10 @@ static char ScanChar(LEXER *l)
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
             result = 0;
-            digit_count = 0;
-            while (digit_count < 3 && IsOctal(*l->Cursor)) {
+            digitCount = 0;
+            while (digitCount < 3 && IsOctal(*l->Cursor)) {
                 result = (result * 8) + (*l->Cursor - '0');
-                ++digit_count;
+                ++digitCount;
                 IncrementCursor(l);
             }
             break;
@@ -465,21 +465,21 @@ static void CountUnescapedChar(LEXER *l, unsigned *length)
 static void ScanStringLiteral(LEXER *l, TOKEN *t)
 {
     unsigned length = 0;
-    unsigned unescaped_length = 1;
+    unsigned unescapedLength = 1;
     unsigned i;
 
     t->Kind = TK_STR_CONSTANT;
 
     /* TODO: Can hit a null terminator and go out of bounds */
-    while (l->Cursor[unescaped_length] != '"') {
-        if (l->Cursor[unescaped_length] == '\n') {
+    while (l->Cursor[unescapedLength] != '"') {
+        if (l->Cursor[unescapedLength] == '\n') {
             LogErrorC(&t->Location, "missing terminating \" character");
-            IncrementCursorBy(l, unescaped_length);
+            IncrementCursorBy(l, unescapedLength);
             t->StringValue = 0;
             return;
         }
 
-        CountUnescapedChar(l, &unescaped_length);
+        CountUnescapedChar(l, &unescapedLength);
         ++length;
     }
 

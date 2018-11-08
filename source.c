@@ -8,7 +8,7 @@ SOURCE_FILE OpenSourceFile(const char *file_name)
     FILE *file;
     SOURCE_FILE result;
     unsigned length;
-    unsigned line_count;
+    unsigned lineCount;
     unsigned i;
 
     file = fopen(file_name, "rb");
@@ -24,18 +24,18 @@ SOURCE_FILE OpenSourceFile(const char *file_name)
     result.Contents[length] = 0;
     fclose(file);
 
-    line_count = 1;
+    lineCount = 1;
     for (i = 0; i < length; ++i) {
         if (result.Contents[i] == '\n')
-            ++line_count;
+            ++lineCount;
     }
 
-    result.Lines = malloc(line_count * sizeof(char*));
-    line_count = 0;
+    result.Lines = malloc(lineCount * sizeof(char*));
+    lineCount = 0;
     result.Lines[0] = result.Contents;
     for (i = 0; i < length; ++i) {
         if (result.Contents[i] == '\n')
-            result.Lines[++line_count] = &result.Contents[i + 1];
+            result.Lines[++lineCount] = &result.Contents[i + 1];
     }
 
     result.FileName = malloc(strlen(file_name) + 1);

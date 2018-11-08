@@ -16,24 +16,24 @@ static void init_globals(int argc, char **argv)
 #define PROCESS_COMPILE               2
 #define PROCESS_PREPROCESS            3
 
-static int file_process = PROCESS_COMPILE_ASSEMBLE_LINK;
+static int g_fileProcess = PROCESS_COMPILE_ASSEMBLE_LINK;
 
 static void preprocess_files(int optind, int argc, char **argv)
 {
     for (; optind < argc; ++optind) {
-        SOURCE_FILE source_file = OpenSourceFile(argv[optind]);
-        LEXER *lexer = CreateLexer(&source_file);
+        SOURCE_FILE sourceFile = OpenSourceFile(argv[optind]);
+        LEXER *lexer = CreateLexer(&sourceFile);
         TOKEN t = ReadTokenDirect(lexer);
         while (t.Kind != TK_EOF)
             t = ReadTokenDirect(lexer);
         DeleteLexer(lexer);
-        CloseSourceFile(&source_file);
+        CloseSourceFile(&sourceFile);
     }
 }
 
 static void process_files(int optind, int argc, char **argv)
 {
-    if (file_process == PROCESS_PREPROCESS)
+    if (g_fileProcess == PROCESS_PREPROCESS)
         preprocess_files(optind, argc, argv);
     else
         LogFatal("not implemented yet");
@@ -44,7 +44,7 @@ static void process_files(int optind, int argc, char **argv)
 
 int main(int argc, char** argv)
 {
-    static struct option long_options[] = {
+    static struct option longOptions[] = {
         { "version", no_argument, 0, OPTION_VERSION },
         { "help",    no_argument, 0, OPTION_HELP },
         { 0 }
@@ -54,18 +54,18 @@ int main(int argc, char** argv)
 
     init_globals(argc, argv);
 
-    while ((c = getopt_long(argc, argv, "ESc", long_options, 0)) != -1) {
+    while ((c = getopt_long(argc, argv, "ESc", longOptions, 0)) != -1) {
         switch (c) {
         case 'E':
-            file_process = PROCESS_PREPROCESS;
+            g_fileProcess = PROCESS_PREPROCESS;
             break;
 
         case 'S':
-            file_process = PROCESS_COMPILE;
+            g_fileProcess = PROCESS_COMPILE;
             break;
 
         case 'c':
-            file_process = PROCESS_COMPILE_ASSEMBLE;
+            g_fileProcess = PROCESS_COMPILE_ASSEMBLE;
             break;
 
         case OPTION_VERSION:
