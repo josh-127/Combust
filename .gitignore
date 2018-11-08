@@ -1,7 +1,4 @@
-Makefile
-config.h
 mycc
-.deps/
 
 # Created by https://www.gitignore.io/api/c,c++,autotools
 
