@@ -69,12 +69,12 @@ typedef enum {
 
 typedef struct LEXER LEXER;
 
-extern LEXER *CreateLexer(SOURCE_FILE *input);
-extern void   DeleteLexer(LEXER *l);
-extern void   EnableLexerMode(LEXER *l, LEXER_MODE modes);
-extern void   DisableLexerMode(LEXER *l, LEXER_MODE modes);
-extern TOKEN  PeekTokenDirect(LEXER *l);
-extern TOKEN  ReadTokenDirect(LEXER *l);
-extern void   FreeToken(TOKEN *t);
+LEXER *CreateLexer(SOURCE_FILE *input);
+void   DeleteLexer(LEXER *l);
+void   EnableLexerMode(LEXER *l, LEXER_MODE modes);
+void   DisableLexerMode(LEXER *l, LEXER_MODE modes);
+TOKEN  PeekTokenDirect(LEXER *l);
+TOKEN  ReadTokenDirect(LEXER *l);
+void   FreeToken(TOKEN *t);
 
 #endif
