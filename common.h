@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef MYCC_COMMON_H
+#define MYCC_COMMON_H
 
 extern char *g_ProgramName;
 
