@@ -1,4 +1,4 @@
-TARGET	:= mycc
+TARGET	:= ptc-cl
 
 HFILES	:= \
 	common.h \
@@ -7,7 +7,7 @@ HFILES	:= \
 CFILES	:= \
 	error.c \
 	lexer.c \
-	mycc.c \
+	ptc-cl.c \
 	source.c
 
 .PHONY: all clean
