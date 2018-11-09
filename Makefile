@@ -1,5 +1,7 @@
 TARGET	:= ptc-cl
 
+CFLAGS	:= -g -ansi
+
 HFILES	:= \
 	common.h \
 	lexer.h
@@ -18,4 +20,4 @@ clean:
 	rm -f $(TARGET)
 
 $(TARGET): $(CFILES) $(HFILES)
-	gcc -o$@ -ansi $^
+	gcc $(CFLAGS) -o$@ $^
