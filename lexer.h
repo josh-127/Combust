@@ -57,7 +57,7 @@ typedef struct {
         char      *StringValue;
         char       OffendingChar;
     };
-} TOKEN;
+} TOKEN, *PTOKEN;
 
 typedef enum {
     LM_DEFAULT             = 0,
@@ -67,14 +67,14 @@ typedef enum {
     LM_ANGLED_STR_CONSTANT = 8
 } LEXER_MODE;
 
-typedef struct LEXER LEXER;
+typedef struct LEXER LEXER, *PLEXER;
 
-LEXER *CreateLexer(SOURCE_FILE *input);
-void   DeleteLexer(LEXER *l);
-void   EnableLexerMode(LEXER *l, LEXER_MODE modes);
-void   DisableLexerMode(LEXER *l, LEXER_MODE modes);
-TOKEN  PeekTokenDirect(LEXER *l);
-TOKEN  ReadTokenDirect(LEXER *l);
-void   FreeToken(TOKEN *t);
+LEXER *CreateLexer(PSOURCE_FILE input);
+void   DeleteLexer(PLEXER l);
+void   EnableLexerMode(PLEXER l, LEXER_MODE modes);
+void   DisableLexerMode(PLEXER l, LEXER_MODE modes);
+TOKEN  PeekTokenDirect(PLEXER l);
+TOKEN  ReadTokenDirect(PLEXER l);
+void   FreeToken(PTOKEN t);
 
 #endif

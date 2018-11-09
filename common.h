@@ -8,13 +8,13 @@ typedef struct {
     char  *FileName;
     char  *Contents;
     char **Lines;
-} SOURCE_FILE;
+} SOURCE_FILE, *PSOURCE_FILE;
 
 typedef struct {
     SOURCE_FILE *Source;
     unsigned     Line;
     unsigned     Column;
-} SOURCE_LOC;
+} SOURCE_LOC, *PSOURCE_LOC;
 
 SOURCE_FILE OpenSourceFile(const char *fname);
 void        CloseSourceFile(SOURCE_FILE *sf);
@@ -25,9 +25,9 @@ unsigned g_ErrorsLogged;
 void LogError   (const char *format, ...);
 void LogWarning (const char *format, ...);
 void LogFatal   (const char *format, ...);
-void LogErrorC  (SOURCE_LOC *loc, const char *format, ...);
-void LogWarningC(SOURCE_LOC *loc, const char *format, ...);
-void LogFatalC  (SOURCE_LOC *loc, const char *format, ...);
+void LogErrorC  (PSOURCE_LOC loc, const char *format, ...);
+void LogWarningC(PSOURCE_LOC loc, const char *format, ...);
+void LogFatalC  (PSOURCE_LOC loc, const char *format, ...);
 
 
 #endif

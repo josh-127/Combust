@@ -7,17 +7,17 @@
 typedef enum { false, true = !false } bool;
 
 struct LEXER {
-    SOURCE_FILE *Source;
-    char*        Cursor;
+    PSOURCE_FILE Source;
+    char        *Cursor;
     LEXER_MODE   CurrentModes;
     int          CurrentFlags;
     SOURCE_LOC   CurrentLocation;
     TOKEN        CurrentToken;
 };
 
-LEXER *CreateLexer(SOURCE_FILE *input)
+PLEXER CreateLexer(PSOURCE_FILE input)
 {
-    LEXER *lexer = malloc(sizeof(LEXER));
+    PLEXER lexer = malloc(sizeof(LEXER));
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentModes           = LM_DEFAULT;
@@ -28,21 +28,21 @@ LEXER *CreateLexer(SOURCE_FILE *input)
     return lexer;
 }
 
-void DeleteLexer(LEXER *l)
+void DeleteLexer(PLEXER l)
 { free(l); }
 
-void EnableLexerMode(LEXER *l, LEXER_MODE modes)
+void EnableLexerMode(PLEXER l, LEXER_MODE modes)
 { l->CurrentModes |= modes; }
 
-void DisableLexerMode(LEXER *l, LEXER_MODE modes)
+void DisableLexerMode(PLEXER l, LEXER_MODE modes)
 { l->CurrentModes &= ~modes; }
 
-static TOKEN ScanToken(LEXER *l);
+static TOKEN ScanToken(PLEXER l);
 
-TOKEN PeekTokenDirect(LEXER *l)
+TOKEN PeekTokenDirect(PLEXER l)
 { return l->CurrentToken; }
 
-TOKEN ReadTokenDirect(LEXER *l)
+TOKEN ReadTokenDirect(PLEXER l)
 {
     for (;;) {
         l->CurrentToken = ScanToken(l);
@@ -56,7 +56,7 @@ TOKEN ReadTokenDirect(LEXER *l)
     }
 }
 
-void FreeToken(TOKEN *t)
+void FreeToken(PTOKEN t)
 {
     if (t->Kind == TK_IDENTIFIER)
         free(t->IdentifierName);
@@ -80,19 +80,19 @@ void FreeToken(TOKEN *t)
                   (c) >= 'A' && (c) <= 'F' || \
                   (c) >= 'a' && (c) <= 'f')
 
-static void IncrementCursor(LEXER *l)
+static void IncrementCursor(PLEXER l)
 {
     ++l->Cursor;
     ++l->CurrentLocation.Column;
 }
 
-static void IncrementCursorBy(LEXER *l, unsigned amount)
+static void IncrementCursorBy(PLEXER l, unsigned amount)
 {
     while (amount--)
         IncrementCursor(l);
 }
 
-static void IncrementCursorML(LEXER *l)
+static void IncrementCursorML(PLEXER l)
 {
     if (*l->Cursor == '\n') {
         ++l->CurrentLocation.Line;
@@ -105,7 +105,7 @@ static void IncrementCursorML(LEXER *l)
 }
 
 /* Precondition: *l->Cursor is [_A-Za-z] */
-static void ScanIdentifier(LEXER *l, TOKEN *t)
+static void ScanIdentifier(PLEXER l, PTOKEN t)
 {
     unsigned length = 0;
 
@@ -173,7 +173,7 @@ static void ScanIdentifier(LEXER *l, TOKEN *t)
     IncrementCursorBy(l, length);
 }
 
-static void ScanSuffix(LEXER *l, char **suffix, unsigned *length)
+static void ScanSuffix(PLEXER l, char **suffix, unsigned *length)
 {
     unsigned i;
 
@@ -208,7 +208,7 @@ static int SkipLongSuffix(char **cursor)
     return 0;
 }
 
-static void SkipIntSuffixes(LEXER *l, TOKEN *t)
+static void SkipIntSuffixes(PLEXER l, PTOKEN t)
 {
     unsigned suffixLength = 0;
     char *suffix;
@@ -230,7 +230,7 @@ static void SkipIntSuffixes(LEXER *l, TOKEN *t)
     free(suffix);
 }
 
-static void ScanFractionalLiteral(LEXER *l, TOKEN *t)
+static void ScanFractionalLiteral(PLEXER l, PTOKEN t)
 {
     float floatFrac = 0.0F;
     float floatExp = 0.1F;
@@ -264,7 +264,7 @@ static void ScanFractionalLiteral(LEXER *l, TOKEN *t)
     free(suffix);
 }
 
-static void ScanHexLiteral(LEXER *l, TOKEN *t)
+static void ScanHexLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
     t->IntValue = 0;
@@ -283,7 +283,7 @@ static void ScanHexLiteral(LEXER *l, TOKEN *t)
     SkipIntSuffixes(l, t);
 }
 
-static void ScanOctalLiteral(LEXER *l, TOKEN *t)
+static void ScanOctalLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
     t->IntValue = 0;
@@ -298,7 +298,7 @@ static void ScanOctalLiteral(LEXER *l, TOKEN *t)
     SkipIntSuffixes(l, t);
 }
 
-static void ScanDecimalLiteral(LEXER *l, TOKEN *t)
+static void ScanDecimalLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
     t->IntValue = 0;
@@ -314,7 +314,7 @@ static void ScanDecimalLiteral(LEXER *l, TOKEN *t)
     }
 }
 
-static void ScanNumericalLiteral(LEXER *l, TOKEN *t)
+static void ScanNumericalLiteral(PLEXER l, PTOKEN t)
 {
     if (*l->Cursor == '0') {
         unsigned wholeLength = 0;
@@ -343,7 +343,7 @@ static void ScanNumericalLiteral(LEXER *l, TOKEN *t)
     }
 }
 
-static char ScanChar(LEXER *l)
+static char ScanChar(PLEXER l)
 {
     char result;
 
@@ -397,7 +397,7 @@ static char ScanChar(LEXER *l)
 }
 
 /* Precondition: *l->Cursor == '\'' */
-static void ScanCharLiteral(LEXER *l, TOKEN *t)
+static void ScanCharLiteral(PLEXER l, PTOKEN t)
 {
     IncrementCursor(l);
     t->Kind = TK_INT_CONSTANT;
@@ -429,7 +429,7 @@ static void ScanCharLiteral(LEXER *l, TOKEN *t)
     }
 }
 
-static void CountUnescapedChar(LEXER *l, unsigned *length)
+static void CountUnescapedChar(PLEXER l, unsigned *length)
 {
     if (l->Cursor[*length] == '\\') {
         unsigned j;
@@ -462,7 +462,7 @@ static void CountUnescapedChar(LEXER *l, unsigned *length)
 }
 
 /* Precondition: *l->Cursor == '"' */
-static void ScanStringLiteral(LEXER *l, TOKEN *t)
+static void ScanStringLiteral(PLEXER l, PTOKEN t)
 {
     unsigned length = 0;
     unsigned unescapedLength = 1;
@@ -493,7 +493,7 @@ static void ScanStringLiteral(LEXER *l, TOKEN *t)
     IncrementCursor(l);
 }
 
-static TOKEN ScanToken(LEXER *l)
+static TOKEN ScanToken(PLEXER l)
 {
     TOKEN result;
 

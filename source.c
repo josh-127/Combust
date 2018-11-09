@@ -43,7 +43,7 @@ SOURCE_FILE OpenSourceFile(const char *file_name)
     return result;
 }
 
-void CloseSourceFile(SOURCE_FILE *sf)
+void CloseSourceFile(PSOURCE_FILE sf)
 {
     free(sf->Lines);
     free(sf->Contents);

@@ -54,7 +54,7 @@ void LogFatal(const char *format, ...)
 
 static void LogMessageC(
     const char *loc_msg,
-    SOURCE_LOC *loc,
+    PSOURCE_LOC loc,
     const char *format,
     va_list     args
 )
@@ -76,7 +76,7 @@ static void LogMessageC(
     fprintf(stderr, "^\n");
 }
 
-void LogErrorC(SOURCE_LOC *loc, const char *format, ...)
+void LogErrorC(PSOURCE_LOC loc, const char *format, ...)
 {
     ++g_ErrorsLogged;
     va_list args;
@@ -85,7 +85,7 @@ void LogErrorC(SOURCE_LOC *loc, const char *format, ...)
     va_end(args);
 }
 
-void LogWarningC(SOURCE_LOC *loc, const char *format, ...)
+void LogWarningC(PSOURCE_LOC loc, const char *format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -93,7 +93,7 @@ void LogWarningC(SOURCE_LOC *loc, const char *format, ...)
     va_end(args);
 }
 
-void LogFatalC(SOURCE_LOC *loc, const char *format, ...)
+void LogFatalC(PSOURCE_LOC loc, const char *format, ...)
 {
     ++g_ErrorsLogged;
     va_list args;
