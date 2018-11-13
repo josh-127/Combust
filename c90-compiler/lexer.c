@@ -39,9 +39,6 @@ void DisableLexerMode(PLEXER l, LEXER_MODE modes)
 
 static TOKEN ScanToken(PLEXER l);
 
-TOKEN PeekTokenDirect(PLEXER l)
-{ return l->CurrentToken; }
-
 TOKEN ReadTokenDirect(PLEXER l)
 {
     for (;;) {

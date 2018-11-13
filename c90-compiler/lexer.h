@@ -73,7 +73,6 @@ LEXER *CreateLexer(PSOURCE_FILE input);
 void   DeleteLexer(PLEXER l);
 void   EnableLexerMode(PLEXER l, LEXER_MODE modes);
 void   DisableLexerMode(PLEXER l, LEXER_MODE modes);
-TOKEN  PeekTokenDirect(PLEXER l);
 TOKEN  ReadTokenDirect(PLEXER l);
 void   FreeToken(PTOKEN t);
 
