@@ -114,7 +114,7 @@ static void ScanIdentifier(PLEXER l, PTOKEN t)
         ++length;
     }
 
-#define o(kw) !strncmp(l->Cursor, kw, length)
+#define o(kw) (length == ((sizeof(kw) - 1) / sizeof(char)) && !strncmp(l->Cursor, kw, length))
     if (l->CurrentModes & LM_PP_DIRECTIVE_KW) {
              if (o("if"))       t->Kind = TK_PP_IF;
         else if (o("ifdef"))    t->Kind = TK_PP_IFDEF;
