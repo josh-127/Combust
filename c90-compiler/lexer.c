@@ -257,7 +257,7 @@ static void ScanFractionalLiteral(PLEXER l, PTOKEN t)
         t->DoubleValue = t->IntValue + doubleFrac;
     }
 
-    if (suffix[1] != 0) {
+    if (suffixLength > 1) {
         LogErrorC(&t->Location, "invalid suffix \"%s\" on floating constant", suffix);
     }
 
