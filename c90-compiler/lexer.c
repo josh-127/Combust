@@ -412,8 +412,6 @@ static void ScanCharLiteral(PLEXER l, PTOKEN t)
             IncrementCursor(l);
         }
         else {
-            /* TODO: Can hit null terminator without newline at
-                     end of file */
             while (*l->Cursor != '\'') {
                 if (*l->Cursor == '\n') {
                     LogErrorC(&t->Location, "missing terminating ' character");
@@ -470,7 +468,6 @@ static void ScanStringLiteral(PLEXER l, PTOKEN t)
 
     t->Kind = TK_STR_CONSTANT;
 
-    /* TODO: Can hit a null terminator and go out of bounds */
     while (l->Cursor[unescapedLength] != '"') {
         if (l->Cursor[unescapedLength] == '\n') {
             LogErrorC(&t->Location, "missing terminating \" character");

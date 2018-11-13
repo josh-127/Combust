@@ -19,9 +19,10 @@ SOURCE_FILE OpenSourceFile(const char *file_name)
     fseek(file, 0, SEEK_END);
     length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    result.Contents = malloc(length + 1);
+    result.Contents = malloc(length + 2);
     fread(result.Contents, length, 1, file);
-    result.Contents[length] = 0;
+    result.Contents[length] = '\n';
+    result.Contents[length + 1] = 0;
     fclose(file);
 
     lineCount = 1;
