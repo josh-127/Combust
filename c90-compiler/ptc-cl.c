@@ -8,6 +8,8 @@ char *g_ProgramName;
 
 static void InitGlobals(int argc, char **argv)
 {
+    (void) argc;
+
     g_ProgramName = argv[0];
 }
 

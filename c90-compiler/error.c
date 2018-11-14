@@ -28,8 +28,9 @@ static void LogMessage(const char *header, const char *format, va_list args)
 
 void LogError(const char *format, ...)
 {
-    ++g_ErrorsLogged;
     va_list args;
+    ++g_ErrorsLogged;
+
     va_start(args, format);
     LogMessage(WHITE_B "%s: " RED_B "error: " WHITE, format, args);
     va_end(args);
@@ -45,8 +46,9 @@ void LogWarning(const char *format, ...)
 
 void LogFatal(const char *format, ...)
 {
-    ++g_ErrorsLogged;
     va_list args;
+    ++g_ErrorsLogged;
+
     va_start(args, format);
     LogMessage(WHITE_B "%s: " RED_B "fatal error: " WHITE, format, args);
     va_end(args);
@@ -78,8 +80,9 @@ static void LogMessageC(
 
 void LogErrorC(PSOURCE_LOC loc, const char *format, ...)
 {
-    ++g_ErrorsLogged;
     va_list args;
+    ++g_ErrorsLogged;
+
     va_start(args, format);
     LogMessageC(WHITE_B "%s:%d:%d: " RED_B "error: " WHITE, loc, format, args);
     va_end(args);
@@ -95,8 +98,9 @@ void LogWarningC(PSOURCE_LOC loc, const char *format, ...)
 
 void LogFatalC(PSOURCE_LOC loc, const char *format, ...)
 {
-    ++g_ErrorsLogged;
     va_list args;
+    ++g_ErrorsLogged;
+
     va_start(args, format);
     LogMessageC(WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE, loc, format, args);
     va_end(args);

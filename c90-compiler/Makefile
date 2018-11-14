@@ -1,6 +1,6 @@
 TARGET	:= ptc-cl
 
-CFLAGS	:= -g -ansi
+CFLAGS	:= -g -ansi -Wall -Wextra -pedantic-errors
 
 HFILES	:= \
 	common.h \

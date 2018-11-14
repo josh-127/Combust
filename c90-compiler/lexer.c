@@ -45,7 +45,7 @@ TOKEN ReadTokenDirect(PLEXER l)
         l->CurrentToken = ScanToken(l);
         if (l->CurrentToken.Kind == TK_UNKNOWN) {
             LogErrorC(&l->CurrentToken.Location, "stray '%c' in program",
-                      l->CurrentToken.OffendingChar);
+                      l->CurrentToken.Value.OffendingChar);
         }
         else if (l->CurrentToken.Kind != TK_COMMENT) {
             return l->CurrentToken;
@@ -56,9 +56,9 @@ TOKEN ReadTokenDirect(PLEXER l)
 void FreeToken(PTOKEN t)
 {
     if (t->Kind == TK_IDENTIFIER)
-        free(t->IdentifierName);
+        free(t->Value.IdentifierName);
     else if (t->Kind == TK_STR_CONSTANT)
-        free(t->StringValue);
+        free(t->Value.StringValue);
 }
 
 #define IsWhitespace(c) ((c) == ' ' || \
@@ -66,16 +66,16 @@ void FreeToken(PTOKEN t)
                          (c) == '\r' || \
                          (c) == '\t')
 
-#define IsLetter(c) ((c) >= 'A' && (c) <= 'Z' || \
-                     (c) >= 'a' && (c) <= 'z')
+#define IsLetter(c) (((c) >= 'A' && (c) <= 'Z') || \
+                     ((c) >= 'a' && (c) <= 'z'))
 
 #define IsDecimal(c) ((c) >= '0' && (c) <= '9')
 
 #define IsOctal(c) ((c) >= '0' && (c) <= '7')
 
-#define IsHex(c) ((c) >= '0' && (c) <= '9' || \
-                  (c) >= 'A' && (c) <= 'F' || \
-                  (c) >= 'a' && (c) <= 'f')
+#define IsHex(c) (((c) >= '0' && (c) <= '9') || \
+                  ((c) >= 'A' && (c) <= 'F') || \
+                  ((c) >= 'a' && (c) <= 'f'))
 
 static void IncrementCursor(PLEXER l)
 {
@@ -106,10 +106,11 @@ static void ScanIdentifier(PLEXER l, PTOKEN t)
 {
     unsigned length = 0;
 
-    while (l->Cursor[length] == '_' || l->Cursor[length] == '$' ||
-           l->Cursor[length] >= 'A' && l->Cursor[length] <= 'Z' ||
-           l->Cursor[length] >= 'a' && l->Cursor[length] <= 'z' ||
-           l->Cursor[length] >= '0' && l->Cursor[length] <= '9')
+    while ((l->Cursor[length] == '_') ||
+           (l->Cursor[length] == '$') ||
+           (l->Cursor[length] >= 'A' && l->Cursor[length] <= 'Z') ||
+           (l->Cursor[length] >= 'a' && l->Cursor[length] <= 'z') ||
+           (l->Cursor[length] >= '0' && l->Cursor[length] <= '9'))
     {
         ++length;
     }
@@ -161,9 +162,9 @@ static void ScanIdentifier(PLEXER l, PTOKEN t)
     else if (o("return"))   t->Kind = TK_KW_RETURN;
     else {
         t->Kind = TK_IDENTIFIER;
-        t->IdentifierName = malloc(length + 1);
-        strncpy(t->IdentifierName, l->Cursor, length);
-        t->IdentifierName[length] = 0;
+        t->Value.IdentifierName = malloc(length + 1);
+        strncpy(t->Value.IdentifierName, l->Cursor, length);
+        t->Value.IdentifierName[length] = 0;
     }
 #undef o
 
@@ -210,7 +211,6 @@ static void SkipIntSuffixes(PLEXER l, PTOKEN t)
     unsigned suffixLength = 0;
     char *suffix;
     char *suffixCursor;
-    unsigned i;
 
     ScanSuffix(l, &suffix, &suffixLength);
     suffixCursor = suffix;
@@ -247,11 +247,11 @@ static void ScanFractionalLiteral(PLEXER l, PTOKEN t)
 
     if (*suffix == 'f' || *suffix == 'F') {
         t->Kind = TK_FLOAT_CONSTANT;
-        t->FloatValue = t->IntValue + floatFrac;
+        t->Value.FloatValue = t->Value.IntValue + floatFrac;
     }
     else {
         t->Kind = TK_DOUBLE_CONSTANT;
-        t->DoubleValue = t->IntValue + doubleFrac;
+        t->Value.DoubleValue = t->Value.IntValue + doubleFrac;
     }
 
     if (suffixLength > 1) {
@@ -264,15 +264,15 @@ static void ScanFractionalLiteral(PLEXER l, PTOKEN t)
 static void ScanHexLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
-    t->IntValue = 0;
+    t->Value.IntValue = 0;
     while (IsHex(*l->Cursor)) {
-        t->IntValue *= 16;
+        t->Value.IntValue *= 16;
         if (*l->Cursor <= '9')
-            t->IntValue += *l->Cursor - '0';
+            t->Value.IntValue += *l->Cursor - '0';
         else if (*l->Cursor <= 'F')
-            t->IntValue += *l->Cursor - 'A' + 10;
+            t->Value.IntValue += *l->Cursor - 'A' + 10;
         else
-            t->IntValue += *l->Cursor - 'a' + 10;
+            t->Value.IntValue += *l->Cursor - 'a' + 10;
 
         IncrementCursor(l);
     }
@@ -283,10 +283,10 @@ static void ScanHexLiteral(PLEXER l, PTOKEN t)
 static void ScanOctalLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
-    t->IntValue = 0;
+    t->Value.IntValue = 0;
     for (; IsDecimal(*l->Cursor); IncrementCursor(l)) {
         if (IsOctal(*l->Cursor)) {
-            t->IntValue = (t->IntValue * 8) - (*l->Cursor - '0');
+            t->Value.IntValue = (t->Value.IntValue * 8) - (*l->Cursor - '0');
         }
         else {
             LogErrorC(&t->Location, "invalid digit \"%c\" in octal constant", *l->Cursor);
@@ -298,9 +298,9 @@ static void ScanOctalLiteral(PLEXER l, PTOKEN t)
 static void ScanDecimalLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
-    t->IntValue = 0;
+    t->Value.IntValue = 0;
     for (; IsDecimal(*l->Cursor); IncrementCursor(l))
-        t->IntValue = (t->IntValue * 10) + (*l->Cursor - '0');
+        t->Value.IntValue = (t->Value.IntValue * 10) + (*l->Cursor - '0');
 
     if (*l->Cursor == '.') {
         IncrementCursor(l);
@@ -403,7 +403,7 @@ static void ScanCharLiteral(PLEXER l, PTOKEN t)
         LogErrorC(&t->Location, "missing terminating ' character");
     }
     else {
-        t->IntValue = ScanChar(l);
+        t->Value.IntValue = ScanChar(l);
 
         if (*l->Cursor == '\'') {
             IncrementCursor(l);
@@ -469,7 +469,7 @@ static void ScanStringLiteral(PLEXER l, PTOKEN t)
         if (l->Cursor[unescapedLength] == '\n') {
             LogErrorC(&t->Location, "missing terminating \" character");
             IncrementCursorBy(l, unescapedLength);
-            t->StringValue = 0;
+            t->Value.StringValue = 0;
             return;
         }
 
@@ -477,13 +477,13 @@ static void ScanStringLiteral(PLEXER l, PTOKEN t)
         ++length;
     }
 
-    t->StringValue = malloc(length + 1);
+    t->Value.StringValue = malloc(length + 1);
 
     IncrementCursor(l);
     for (i = 0; *l->Cursor != '"'; ++i)
-        t->StringValue[i] = ScanChar(l);
+        t->Value.StringValue[i] = ScanChar(l);
 
-    t->StringValue[length] = 0;
+    t->Value.StringValue[length] = 0;
     IncrementCursor(l);
 }
 
@@ -544,7 +544,7 @@ static TOKEN ScanToken(PLEXER l)
         case '.':
             IncrementCursor(l);
             if (IsDecimal(*l->Cursor)) {
-                result.IntValue = 0;
+                result.Value.IntValue = 0;
                 ScanFractionalLiteral(l, &result);
             }
             else {
@@ -784,7 +784,7 @@ static TOKEN ScanToken(PLEXER l)
 
         default:
             result.Kind = TK_UNKNOWN;
-            result.OffendingChar = *l->Cursor;
+            result.Value.OffendingChar = *l->Cursor;
             IncrementCursor(l);
             break;
         }

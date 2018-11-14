@@ -44,19 +44,21 @@ typedef enum {
     TK_KW_FOR,      TK_KW_BREAK,    TK_KW_CONTINUE, TK_KW_RETURN
 } TOKEN_KIND;
 
+typedef union {
+    char   *IdentifierName;
+    long    IntValue;
+    float   FloatValue;
+    double  DoubleValue;
+    char   *StringValue;
+    char    OffendingChar;
+} TOKEN_VALUE;
+
 typedef struct {
-    int            Flags;
-    SOURCE_LOC     Location;
-    unsigned       Length;
-    TOKEN_KIND     Kind;
-    union {
-        char      *IdentifierName;
-        long long  IntValue;
-        float      FloatValue;
-        double     DoubleValue;
-        char      *StringValue;
-        char       OffendingChar;
-    };
+    int         Flags;
+    SOURCE_LOC  Location;
+    unsigned    Length;
+    TOKEN_KIND  Kind;
+    TOKEN_VALUE Value;
 } TOKEN, *PTOKEN;
 
 typedef enum {
