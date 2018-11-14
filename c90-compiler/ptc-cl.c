@@ -6,7 +6,7 @@
 
 char *g_ProgramName;
 
-static void init_globals(int argc, char **argv)
+static void InitGlobals(int argc, char **argv)
 {
     g_ProgramName = argv[0];
 }
@@ -18,7 +18,7 @@ static void init_globals(int argc, char **argv)
 
 static int g_fileProcess = PROCESS_COMPILE_ASSEMBLE_LINK;
 
-static void preprocess_files(int optind, int argc, char **argv)
+static void PreprocessFiles(int optind, int argc, char **argv)
 {
     for (; optind < argc; ++optind) {
         SOURCE_FILE sourceFile = OpenSourceFile(argv[optind]);
@@ -33,10 +33,10 @@ static void preprocess_files(int optind, int argc, char **argv)
     }
 }
 
-static void process_files(int optind, int argc, char **argv)
+static void ProcessFiles(int optind, int argc, char **argv)
 {
     if (g_fileProcess == PROCESS_PREPROCESS)
-        preprocess_files(optind, argc, argv);
+        PreprocessFiles(optind, argc, argv);
     else
         LogFatal("not implemented yet");
 }
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
     int c;
 
-    init_globals(argc, argv);
+    InitGlobals(argc, argv);
 
     while ((c = getopt_long(argc, argv, "ESc", longOptions, 0)) != -1) {
         switch (c) {
@@ -93,7 +93,7 @@ Options:\n\
         fprintf(stderr, "compilation terminated\n");
     }
     else {
-        process_files(optind, argc, argv);
+        ProcessFiles(optind, argc, argv);
     }
 
     return g_ErrorsLogged ? EXIT_FAILURE : EXIT_SUCCESS;
