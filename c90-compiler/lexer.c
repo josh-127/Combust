@@ -440,7 +440,7 @@ static void CountUnescapedChar(PLEXER l, unsigned *length)
 
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
-            for (j = 0; j < 3, IsOctal(l->Cursor[*length]); ++j)
+            for (j = 0; j < 3 && IsOctal(l->Cursor[*length]); ++j)
                 ++*length;
             break;
 
