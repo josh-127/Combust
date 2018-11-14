@@ -607,16 +607,27 @@ static TOKEN ScanToken(PLEXER l)
                 IncrementCursor(l);
                 result.Kind = TK_COMMENT;
 
-                if (*l->Cursor == '/')
-                    IncrementCursor(l);
+                for (;;) {
+                    if (*l->Cursor == '*') {
+                        IncrementCursor(l);
 
-                while (*l->Cursor != '/') {
-                    while (*l->Cursor != '*')
+                        if (*l->Cursor == '/') {
+                            IncrementCursor(l);
+                            break;
+                        }
+                        else if (*l->Cursor == 0) {
+                            LogErrorC(&result.Location, "unterminated comment");
+                            break;
+                        }
+                    }
+                    else if (*l->Cursor == 0) {
+                        LogErrorC(&result.Location, "unterminated comment");
+                        break;
+                    }
+                    else {
                         IncrementCursorML(l);
-                    IncrementCursor(l);
+                    }
                 }
-
-                IncrementCursor(l);
             }
             else {
                 result.Kind = TK_SLASH;
