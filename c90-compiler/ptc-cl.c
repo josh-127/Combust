@@ -71,7 +71,7 @@ int main(int argc, char** argv)
             break;
 
         case OPTION_VERSION:
-            printf("mycc 0.1-snapshot\n");
+            printf("ptc-cl 0.1-snapshot\n");
             return EXIT_FAILURE;
 
         case OPTION_HELP:
