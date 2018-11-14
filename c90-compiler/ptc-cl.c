@@ -23,7 +23,7 @@ static void PreprocessFiles(int optind, int argc, char **argv)
     for (; optind < argc; ++optind) {
         SOURCE_FILE sourceFile = OpenSourceFile(argv[optind]);
         PLEXER lexer = CreateLexer(&sourceFile);
-        TOKEN t = ReadTokenDirect(lexer);
+        TOKEN t = { 0 };
         while (t.Kind != TK_EOF) {
             t = ReadTokenDirect(lexer);
             FreeToken(&t);
