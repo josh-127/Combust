@@ -48,7 +48,7 @@
 
 ### 3.1 Lexical Elements [ ]
 
-#### 3.1.1 Keywords [ ]
+#### 3.1.1 Keywords [X]
 
 #### 3.1.2 Identifiers [ ]
 
@@ -551,7 +551,7 @@
 #### A.1.1 Lexical Grammar [ ]
 
 - [ ] A.1.1.1 Tokens
-- [ ] A.1.1.2 Keywords
+- [X] A.1.1.2 Keywords
 - [ ] A.1.1.3 Identifiers
 - [ ] A.1.1.4 Constants
 - [ ] A.1.1.5 String Literals
