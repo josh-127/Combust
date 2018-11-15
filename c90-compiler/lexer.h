@@ -5,43 +5,21 @@
 #define TOKENFLAG_BOL 1
 
 typedef enum {
-    TK_PP_HASH,
-    TK_PP_IF,       TK_PP_IFDEF,    TK_PP_IFNDEF,
-    TK_PP_ELIF,     TK_PP_ENDIF,
-    TK_PP_INCLUDE,
-    TK_PP_DEFINE,   TK_PP_UNDEF,
-    TK_PP_LINE,     TK_PP_ERROR,    TK_PP_WARNING,
+    #define PpTok(name)       TK_PP_##name,
+    #define PpKw(name)        TK_PP_##name,
+    #define Tok(name)         TK_##name,
+    #define Sym(name, symbol) TK_##name,
+    #define Kw(name)          TK_KW_##name,
 
-    TK_UNKNOWN,     TK_EOF,         TK_COMMENT,     TK_IDENTIFIER,
-    TK_INT_CONSTANT,TK_FLOAT_CONSTANT,              TK_DOUBLE_CONSTANT,
-    TK_STR_CONSTANT,TK_ANGLED_STR_CONSTANT,
+    #include "tokens.def"
 
-    TK_LPAREN,      TK_RPAREN,
-    TK_LBRACKET,    TK_RBRACKET,
-    TK_LBRACE,      TK_RBRACE,
-    TK_SEMICOLON,   TK_DOT,             TK_COMMA,
-    TK_TILDE,       TK_QUESTION,        TK_COLON,
-    TK_PLUS,        TK_PLUS_EQUALS,     TK_PLUS_PLUS,
-    TK_MINUS,       TK_MINUS_EQUALS,    TK_MINUS_MINUS,     TK_MINUS_GT,
-    TK_ASTERISK,    TK_ASTERISK_EQUALS,
-    TK_SLASH,       TK_SLASH_EQUALS,
-    TK_PERCENT,     TK_PERCENT_EQUALS,
-    TK_LT,          TK_LT_EQUALS,   TK_LT_LT,       TK_LT_LT_EQUALS,
-    TK_GT,          TK_GT_EQUALS,   TK_GT_GT,       TK_GT_GT_EQUALS,
-    TK_EQUALS,      TK_EQUALS_EQUALS,
-    TK_EXCLAMATION, TK_EXCLAMATION_EQUALS,
-    TK_AMPERSAND,   TK_AMPERSAND_EQUALS,            TK_AMPERSAND_AMPERSAND,
-    TK_CARET,       TK_CARET_EQUALS,
-    TK_PIPE,        TK_PIPE_EQUALS,                 TK_PIPE_PIPE,
+    #undef Kw
+    #undef Sym
+    #undef Tok
+    #undef PpKw
+    #undef PpTok
 
-    TK_KW_CONST,    TK_KW_EXTERN,   TK_KW_STATIC,   TK_KW_AUTO,
-    TK_KW_VOLATILE, TK_KW_UNSIGNED, TK_KW_SIGNED,   TK_KW_VOID,
-    TK_KW_CHAR,     TK_KW_SHORT,    TK_KW_INT,      TK_KW_LONG,
-    TK_KW_FLOAT,    TK_KW_DOUBLE,   TK_KW_ENUM,     TK_KW_STRUCT,
-    TK_KW_UNION,    TK_KW_TYPEDEF,  TK_KW_SIZEOF,   TK_KW_REGISTER,
-    TK_KW_GOTO,     TK_KW_IF,       TK_KW_ELSE,     TK_KW_SWITCH,
-    TK_KW_CASE,     TK_KW_DEFAULT,  TK_KW_DO,       TK_KW_WHILE,
-    TK_KW_FOR,      TK_KW_BREAK,    TK_KW_CONTINUE, TK_KW_RETURN
+    TOKEN_KIND_CARDINAL
 } TOKEN_KIND;
 
 typedef union {
