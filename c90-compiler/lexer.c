@@ -148,6 +148,7 @@ static void ScanIdentifier(PLEXER l, PTOKEN t)
     else if (o("union"))    t->Kind = TK_KW_UNION;
     else if (o("typedef"))  t->Kind = TK_KW_TYPEDEF;
     else if (o("sizeof"))   t->Kind = TK_KW_SIZEOF;
+    else if (o("register")) t->Kind = TK_KW_REGISTER;
     else if (o("goto"))     t->Kind = TK_KW_GOTO;
     else if (o("if"))       t->Kind = TK_KW_IF;
     else if (o("else"))     t->Kind = TK_KW_ELSE;
