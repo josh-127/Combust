@@ -79,6 +79,11 @@ void FreeToken(PTOKEN t)
 
 static void IncrementCursor(PLEXER l)
 {
+    if (*l->Cursor == '\n') {
+        ++l->CurrentLocation.Line;
+        l->CurrentLocation.Column = -1;
+    }
+
     ++l->Cursor;
     ++l->CurrentLocation.Column;
 }
@@ -87,18 +92,6 @@ static void IncrementCursorBy(PLEXER l, unsigned amount)
 {
     while (amount--)
         IncrementCursor(l);
-}
-
-static void IncrementCursorML(PLEXER l)
-{
-    if (*l->Cursor == '\n') {
-        ++l->CurrentLocation.Line;
-        l->CurrentLocation.Column = -1;
-        IncrementCursor(l);
-    }
-    else {
-        IncrementCursor(l);
-    }
 }
 
 /* Precondition: *l->Cursor is [_A-Za-z] */
@@ -495,7 +488,7 @@ static TOKEN ScanToken(PLEXER l)
     while (IsWhitespace(*l->Cursor)) {
         if (*l->Cursor == '\n')
             l->CurrentFlags |= TOKENFLAG_BOL;
-        IncrementCursorML(l);
+        IncrementCursor(l);
     }
 
     if (l->CurrentModes & LM_PP_DIRECTIVE && *l->Cursor == '\\') {
@@ -516,7 +509,7 @@ static TOKEN ScanToken(PLEXER l)
             }
             IncrementCursorBy(l, chars_before_newline + 1);
             while (IsWhitespace(*l->Cursor))
-                IncrementCursorML(l);
+                IncrementCursor(l);
         }
     }
 
@@ -626,7 +619,7 @@ static TOKEN ScanToken(PLEXER l)
                         break;
                     }
                     else {
-                        IncrementCursorML(l);
+                        IncrementCursor(l);
                     }
                 }
             }
