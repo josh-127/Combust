@@ -19,15 +19,13 @@ unsigned g_ErrorsLogged = 0;
 #define CYAN_B    "\x1b[1m\x1b[36m"
 #define WHITE_B   "\x1b[1m\x1b[0m"
 
-static void LogMessage(const char *header, const char *format, va_list args)
-{
+static void LogMessage(const char *header, const char *format, va_list args) {
     fprintf(stderr, header, g_ProgramName);
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
 }
 
-void LogError(const char *format, ...)
-{
+void LogError(const char *format, ...) {
     va_list args;
     ++g_ErrorsLogged;
 
@@ -36,16 +34,14 @@ void LogError(const char *format, ...)
     va_end(args);
 }
 
-void LogWarning(const char *format, ...)
-{
+void LogWarning(const char *format, ...) {
     va_list args;
     va_start(args, format);
     LogMessage(WHITE_B "%s: " YELLOW_B "warning: " WHITE, format, args);
     va_end(args);
 }
 
-void LogFatal(const char *format, ...)
-{
+void LogFatal(const char *format, ...) {
     va_list args;
     ++g_ErrorsLogged;
 
@@ -78,8 +74,7 @@ static void LogMessageC(
     fprintf(stderr, "^\n");
 }
 
-void LogErrorC(PSOURCE_LOC loc, const char *format, ...)
-{
+void LogErrorC(PSOURCE_LOC loc, const char *format, ...) {
     va_list args;
     ++g_ErrorsLogged;
 
@@ -88,16 +83,14 @@ void LogErrorC(PSOURCE_LOC loc, const char *format, ...)
     va_end(args);
 }
 
-void LogWarningC(PSOURCE_LOC loc, const char *format, ...)
-{
+void LogWarningC(PSOURCE_LOC loc, const char *format, ...) {
     va_list args;
     va_start(args, format);
     LogMessageC(WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE, loc, format, args);
     va_end(args);
 }
 
-void LogFatalC(PSOURCE_LOC loc, const char *format, ...)
-{
+void LogFatalC(PSOURCE_LOC loc, const char *format, ...) {
     va_list args;
     ++g_ErrorsLogged;
 

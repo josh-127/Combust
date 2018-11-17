@@ -15,8 +15,7 @@ struct LEXER {
     TOKEN        CurrentToken;
 };
 
-PLEXER CreateLexer(PSOURCE_FILE input)
-{
+PLEXER CreateLexer(PSOURCE_FILE input) {
     PLEXER lexer = malloc(sizeof(LEXER));
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
@@ -39,8 +38,7 @@ void DisableLexerMode(PLEXER l, LEXER_MODE modes)
 
 static TOKEN ReadTokenOnce(PLEXER l);
 
-TOKEN ReadTokenDirect(PLEXER l)
-{
+TOKEN ReadTokenDirect(PLEXER l) {
     for (;;) {
         l->CurrentToken = ReadTokenOnce(l);
         if (l->CurrentToken.Kind == TK_UNKNOWN) {
@@ -53,8 +51,7 @@ TOKEN ReadTokenDirect(PLEXER l)
     }
 }
 
-void FreeToken(PTOKEN t)
-{
+void FreeToken(PTOKEN t) {
     if (t->Kind == TK_IDENTIFIER)
         free(t->Value.IdentifierName);
     else if (t->Kind == TK_STR_CONSTANT)
@@ -77,8 +74,7 @@ void FreeToken(PTOKEN t)
                   ((c) >= 'A' && (c) <= 'F') || \
                   ((c) >= 'a' && (c) <= 'f'))
 
-static void IncrementCursor(PLEXER l)
-{
+static void IncrementCursor(PLEXER l) {
     if (*l->Cursor == '\n') {
         ++l->CurrentLocation.Line;
         l->CurrentLocation.Column = -1;
@@ -88,15 +84,13 @@ static void IncrementCursor(PLEXER l)
     ++l->CurrentLocation.Column;
 }
 
-static void IncrementCursorBy(PLEXER l, unsigned amount)
-{
+static void IncrementCursorBy(PLEXER l, unsigned amount) {
     while (amount--)
         IncrementCursor(l);
 }
 
 /* Precondition: *l->Cursor is [_A-Za-z] */
-static void ReadIdentifier(PLEXER l, PTOKEN t)
-{
+static void ReadIdentifier(PLEXER l, PTOKEN t) {
     unsigned length = 0;
 
     while ((l->Cursor[length] == '_') ||
@@ -165,8 +159,7 @@ static void ReadIdentifier(PLEXER l, PTOKEN t)
     IncrementCursorBy(l, length);
 }
 
-static void ReadSuffix(PLEXER l, char **suffix, unsigned *length)
-{
+static void ReadSuffix(PLEXER l, char **suffix, unsigned *length) {
     unsigned i;
 
     *length = 0;
@@ -180,8 +173,7 @@ static void ReadSuffix(PLEXER l, char **suffix, unsigned *length)
     IncrementCursorBy(l, *length);
 }
 
-static int SkipUnsignedSuffix(char **cursor)
-{
+static int SkipUnsignedSuffix(char **cursor) {
     if (**cursor == 'U' || **cursor == 'u') {
         ++*cursor;
         return 1;
@@ -189,8 +181,7 @@ static int SkipUnsignedSuffix(char **cursor)
     return 0;
 }
 
-static int SkipLongSuffix(char **cursor)
-{
+static int SkipLongSuffix(char **cursor) {
     if (**cursor == 'L' || **cursor == 'l') {
         ++*cursor;
         if (**cursor == 'L' || **cursor == 'l')
@@ -200,8 +191,7 @@ static int SkipLongSuffix(char **cursor)
     return 0;
 }
 
-static void SkipIntSuffixes(PLEXER l, PTOKEN t)
-{
+static void SkipIntSuffixes(PLEXER l, PTOKEN t) {
     unsigned suffixLength = 0;
     char *suffix;
     char *suffixCursor;
@@ -221,8 +211,7 @@ static void SkipIntSuffixes(PLEXER l, PTOKEN t)
     free(suffix);
 }
 
-static void ReadFractionalLiteral(PLEXER l, PTOKEN t)
-{
+static void ReadFractionalLiteral(PLEXER l, PTOKEN t) {
     float floatFrac = 0.0F;
     float floatExp = 0.1F;
     float doubleFrac = 0.0;
@@ -255,8 +244,7 @@ static void ReadFractionalLiteral(PLEXER l, PTOKEN t)
     free(suffix);
 }
 
-static void ReadHexLiteral(PLEXER l, PTOKEN t)
-{
+static void ReadHexLiteral(PLEXER l, PTOKEN t) {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
     while (IsHex(*l->Cursor)) {
@@ -274,8 +262,7 @@ static void ReadHexLiteral(PLEXER l, PTOKEN t)
     SkipIntSuffixes(l, t);
 }
 
-static void ReadOctalLiteral(PLEXER l, PTOKEN t)
-{
+static void ReadOctalLiteral(PLEXER l, PTOKEN t) {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
     for (; IsDecimal(*l->Cursor); IncrementCursor(l)) {
@@ -289,8 +276,7 @@ static void ReadOctalLiteral(PLEXER l, PTOKEN t)
     SkipIntSuffixes(l, t);
 }
 
-static void ReadDecimalLiteral(PLEXER l, PTOKEN t)
-{
+static void ReadDecimalLiteral(PLEXER l, PTOKEN t) {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
     for (; IsDecimal(*l->Cursor); IncrementCursor(l))
@@ -305,8 +291,7 @@ static void ReadDecimalLiteral(PLEXER l, PTOKEN t)
     }
 }
 
-static void ReadNumericalLiteral(PLEXER l, PTOKEN t)
-{
+static void ReadNumericalLiteral(PLEXER l, PTOKEN t) {
     if (*l->Cursor == '0') {
         unsigned wholeLength = 0;
 
@@ -334,8 +319,7 @@ static void ReadNumericalLiteral(PLEXER l, PTOKEN t)
     }
 }
 
-static char ReadChar(PLEXER l)
-{
+static char ReadChar(PLEXER l) {
     char result;
 
     if (*l->Cursor == '\\') {
@@ -388,8 +372,7 @@ static char ReadChar(PLEXER l)
 }
 
 /* Precondition: *l->Cursor == '\'' */
-static void ReadCharLiteral(PLEXER l, PTOKEN t)
-{
+static void ReadCharLiteral(PLEXER l, PTOKEN t) {
     IncrementCursor(l);
     t->Kind = TK_INT_CONSTANT;
 
@@ -418,8 +401,7 @@ static void ReadCharLiteral(PLEXER l, PTOKEN t)
     }
 }
 
-static void CountUnescapedChar(PLEXER l, unsigned *length)
-{
+static void CountUnescapedChar(PLEXER l, unsigned *length) {
     if (l->Cursor[*length] == '\\') {
         unsigned j;
         ++*length;
@@ -451,8 +433,7 @@ static void CountUnescapedChar(PLEXER l, unsigned *length)
 }
 
 /* Precondition: *l->Cursor == '"' */
-static void ReadStringLiteral(PLEXER l, PTOKEN t)
-{
+static void ReadStringLiteral(PLEXER l, PTOKEN t) {
     unsigned length = 0;
     unsigned unescapedLength = 1;
     unsigned i;
@@ -481,8 +462,7 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t)
     IncrementCursor(l);
 }
 
-static TOKEN ReadTokenOnce(PLEXER l)
-{
+static TOKEN ReadTokenOnce(PLEXER l) {
     TOKEN result;
 
     while (IsWhitespace(*l->Cursor)) {

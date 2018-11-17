@@ -6,8 +6,7 @@
 
 char *g_ProgramName;
 
-static void InitGlobals(int argc, char **argv)
-{
+static void InitGlobals(int argc, char **argv) {
     (void) argc;
 
     g_ProgramName = argv[0];
@@ -20,8 +19,7 @@ static void InitGlobals(int argc, char **argv)
 
 static int g_fileProcess = PROCESS_COMPILE_ASSEMBLE_LINK;
 
-static void PreprocessFiles(int optind, int argc, char **argv)
-{
+static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
         SOURCE_FILE sourceFile = OpenSourceFile(argv[optind]);
         PLEXER lexer = CreateLexer(&sourceFile);
@@ -35,8 +33,7 @@ static void PreprocessFiles(int optind, int argc, char **argv)
     }
 }
 
-static void ProcessFiles(int optind, int argc, char **argv)
-{
+static void ProcessFiles(int optind, int argc, char **argv) {
     if (g_fileProcess == PROCESS_PREPROCESS)
         PreprocessFiles(optind, argc, argv);
     else
@@ -46,8 +43,7 @@ static void ProcessFiles(int optind, int argc, char **argv)
 #define OPTION_VERSION 0
 #define OPTION_HELP    1
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     static struct option longOptions[] = {
         { "version", no_argument, 0, OPTION_VERSION },
         { "help",    no_argument, 0, OPTION_HELP },

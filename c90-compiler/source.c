@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-SOURCE_FILE OpenSourceFile(const char *file_name)
-{
+SOURCE_FILE OpenSourceFile(const char *file_name) {
     FILE *file;
     SOURCE_FILE result;
     unsigned length;
@@ -44,8 +43,7 @@ SOURCE_FILE OpenSourceFile(const char *file_name)
     return result;
 }
 
-void CloseSourceFile(PSOURCE_FILE sf)
-{
+void CloseSourceFile(PSOURCE_FILE sf) {
     free(sf->Lines);
     free(sf->Contents);
     free(sf->FileName);
