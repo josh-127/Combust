@@ -37,12 +37,12 @@ void EnableLexerMode(PLEXER l, LEXER_MODE modes)
 void DisableLexerMode(PLEXER l, LEXER_MODE modes)
 { l->CurrentModes &= ~modes; }
 
-static TOKEN ScanToken(PLEXER l);
+static TOKEN ReadTokenOnce(PLEXER l);
 
 TOKEN ReadTokenDirect(PLEXER l)
 {
     for (;;) {
-        l->CurrentToken = ScanToken(l);
+        l->CurrentToken = ReadTokenOnce(l);
         if (l->CurrentToken.Kind == TK_UNKNOWN) {
             LogErrorC(&l->CurrentToken.Location, "stray '%c' in program",
                       l->CurrentToken.Value.OffendingChar);
@@ -95,7 +95,7 @@ static void IncrementCursorBy(PLEXER l, unsigned amount)
 }
 
 /* Precondition: *l->Cursor is [_A-Za-z] */
-static void ScanIdentifier(PLEXER l, PTOKEN t)
+static void ReadIdentifier(PLEXER l, PTOKEN t)
 {
     unsigned length = 0;
 
@@ -165,7 +165,7 @@ static void ScanIdentifier(PLEXER l, PTOKEN t)
     IncrementCursorBy(l, length);
 }
 
-static void ScanSuffix(PLEXER l, char **suffix, unsigned *length)
+static void ReadSuffix(PLEXER l, char **suffix, unsigned *length)
 {
     unsigned i;
 
@@ -206,7 +206,7 @@ static void SkipIntSuffixes(PLEXER l, PTOKEN t)
     char *suffix;
     char *suffixCursor;
 
-    ScanSuffix(l, &suffix, &suffixLength);
+    ReadSuffix(l, &suffix, &suffixLength);
     suffixCursor = suffix;
 
     if (SkipUnsignedSuffix(&suffixCursor))
@@ -221,7 +221,7 @@ static void SkipIntSuffixes(PLEXER l, PTOKEN t)
     free(suffix);
 }
 
-static void ScanFractionalLiteral(PLEXER l, PTOKEN t)
+static void ReadFractionalLiteral(PLEXER l, PTOKEN t)
 {
     float floatFrac = 0.0F;
     float floatExp = 0.1F;
@@ -237,7 +237,7 @@ static void ScanFractionalLiteral(PLEXER l, PTOKEN t)
         doubleExp *= 0.1;
     }
 
-    ScanSuffix(l, &suffix, &suffixLength);
+    ReadSuffix(l, &suffix, &suffixLength);
 
     if (*suffix == 'f' || *suffix == 'F') {
         t->Kind = TK_FLOAT_CONSTANT;
@@ -255,7 +255,7 @@ static void ScanFractionalLiteral(PLEXER l, PTOKEN t)
     free(suffix);
 }
 
-static void ScanHexLiteral(PLEXER l, PTOKEN t)
+static void ReadHexLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
@@ -274,7 +274,7 @@ static void ScanHexLiteral(PLEXER l, PTOKEN t)
     SkipIntSuffixes(l, t);
 }
 
-static void ScanOctalLiteral(PLEXER l, PTOKEN t)
+static void ReadOctalLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
@@ -289,7 +289,7 @@ static void ScanOctalLiteral(PLEXER l, PTOKEN t)
     SkipIntSuffixes(l, t);
 }
 
-static void ScanDecimalLiteral(PLEXER l, PTOKEN t)
+static void ReadDecimalLiteral(PLEXER l, PTOKEN t)
 {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
@@ -298,14 +298,14 @@ static void ScanDecimalLiteral(PLEXER l, PTOKEN t)
 
     if (*l->Cursor == '.') {
         IncrementCursor(l);
-        ScanFractionalLiteral(l, t);
+        ReadFractionalLiteral(l, t);
     }
     else {
         SkipIntSuffixes(l, t);
     }
 }
 
-static void ScanNumericalLiteral(PLEXER l, PTOKEN t)
+static void ReadNumericalLiteral(PLEXER l, PTOKEN t)
 {
     if (*l->Cursor == '0') {
         unsigned wholeLength = 0;
@@ -319,22 +319,22 @@ static void ScanNumericalLiteral(PLEXER l, PTOKEN t)
             ++wholeLength;
 
         if (l->Cursor[wholeLength] == '.') {
-            ScanDecimalLiteral(l, t);
+            ReadDecimalLiteral(l, t);
         }
         else if (*l->Cursor == 'X' || *l->Cursor == 'x') {
             IncrementCursor(l);
-            ScanHexLiteral(l, t);
+            ReadHexLiteral(l, t);
         }
         else {
-            ScanOctalLiteral(l, t);
+            ReadOctalLiteral(l, t);
         }
     }
     else {
-        ScanDecimalLiteral(l, t);
+        ReadDecimalLiteral(l, t);
     }
 }
 
-static char ScanChar(PLEXER l)
+static char ReadChar(PLEXER l)
 {
     char result;
 
@@ -388,7 +388,7 @@ static char ScanChar(PLEXER l)
 }
 
 /* Precondition: *l->Cursor == '\'' */
-static void ScanCharLiteral(PLEXER l, PTOKEN t)
+static void ReadCharLiteral(PLEXER l, PTOKEN t)
 {
     IncrementCursor(l);
     t->Kind = TK_INT_CONSTANT;
@@ -397,7 +397,7 @@ static void ScanCharLiteral(PLEXER l, PTOKEN t)
         LogErrorC(&t->Location, "missing terminating ' character");
     }
     else {
-        t->Value.IntValue = ScanChar(l);
+        t->Value.IntValue = ReadChar(l);
 
         if (*l->Cursor == '\'') {
             IncrementCursor(l);
@@ -451,7 +451,7 @@ static void CountUnescapedChar(PLEXER l, unsigned *length)
 }
 
 /* Precondition: *l->Cursor == '"' */
-static void ScanStringLiteral(PLEXER l, PTOKEN t)
+static void ReadStringLiteral(PLEXER l, PTOKEN t)
 {
     unsigned length = 0;
     unsigned unescapedLength = 1;
@@ -475,13 +475,13 @@ static void ScanStringLiteral(PLEXER l, PTOKEN t)
 
     IncrementCursor(l);
     for (i = 0; *l->Cursor != '"'; ++i)
-        t->Value.StringValue[i] = ScanChar(l);
+        t->Value.StringValue[i] = ReadChar(l);
 
     t->Value.StringValue[length] = 0;
     IncrementCursor(l);
 }
 
-static TOKEN ScanToken(PLEXER l)
+static TOKEN ReadTokenOnce(PLEXER l)
 {
     TOKEN result;
 
@@ -539,7 +539,7 @@ static TOKEN ScanToken(PLEXER l)
             IncrementCursor(l);
             if (IsDecimal(*l->Cursor)) {
                 result.Value.IntValue = 0;
-                ScanFractionalLiteral(l, &result);
+                ReadFractionalLiteral(l, &result);
             }
             else {
                 result.Kind = TK_DOT;
@@ -759,21 +759,21 @@ static TOKEN ScanToken(PLEXER l)
         case 'q': case 'r': case 's': case 't':
         case 'u': case 'v': case 'w': case 'x':
         case 'y': case 'z': 
-            ScanIdentifier(l, &result);
+            ReadIdentifier(l, &result);
             break;
 
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
         case '8': case '9':
-            ScanNumericalLiteral(l, &result);
+            ReadNumericalLiteral(l, &result);
             break;
 
         case '\'':
-            ScanCharLiteral(l, &result);
+            ReadCharLiteral(l, &result);
             break;
 
         case '"':
-            ScanStringLiteral(l, &result);
+            ReadStringLiteral(l, &result);
             break;
 
         default:
