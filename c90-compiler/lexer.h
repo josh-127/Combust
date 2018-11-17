@@ -1,5 +1,5 @@
-#ifndef MYCC_LEXER_H
-#define MYCC_LEXER_H
+#ifndef PTC_CL_LEXER_H
+#define PTC_CL_LEXER_H
 #include "common.h"
 
 #define TOKENFLAG_BOL 1

@@ -1,5 +1,5 @@
-#ifndef MYCC_COMMON_H
-#define MYCC_COMMON_H
+#ifndef PTC_CL_COMMON_H
+#define PTC_CL_COMMON_H
 
 extern char *g_ProgramName;
 
