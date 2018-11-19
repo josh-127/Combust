@@ -6,7 +6,7 @@
 
 typedef enum { false, true = !false } bool;
 
-struct LEXER {
+struct tagLexer {
     PSOURCE_FILE Source;
     char        *Cursor;
     LEXER_MODE   CurrentModes;
@@ -16,7 +16,7 @@ struct LEXER {
 };
 
 PLEXER CreateLexer(PSOURCE_FILE input) {
-    PLEXER lexer = malloc(sizeof(LEXER));
+    PLEXER lexer = malloc(sizeof(Lexer));
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentModes           = LM_DEFAULT;

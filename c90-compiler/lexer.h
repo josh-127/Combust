@@ -47,9 +47,9 @@ typedef enum {
     LM_ANGLED_STR_CONSTANT = 8
 } LEXER_MODE;
 
-typedef struct LEXER LEXER, *PLEXER;
+typedef struct tagLexer Lexer, *PLEXER;
 
-LEXER *CreateLexer(PSOURCE_FILE input);
+PLEXER CreateLexer(PSOURCE_FILE input);
 void   DeleteLexer(PLEXER l);
 void   EnableLexerMode(PLEXER l, LEXER_MODE modes);
 void   DisableLexerMode(PLEXER l, LEXER_MODE modes);
