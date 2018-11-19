@@ -1,5 +1,6 @@
 #include "common.h"
 #include "lexer.h"
+#include "text-decoder.h"
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,6 +17,7 @@ static void InitGlobals(int argc, char **argv) {
 #define PROCESS_COMPILE_ASSEMBLE      1
 #define PROCESS_COMPILE               2
 #define PROCESS_PREPROCESS            3
+#define PROCESS_DECODE_TEXT           4
 
 static int g_fileProcess = PROCESS_COMPILE_ASSEMBLE_LINK;
 
@@ -33,9 +35,30 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
     }
 }
 
+static void DecodeText(int optind, int argc, char **argv) {
+    for (; optind < argc; ++optind) {
+        SOURCE_FILE sourceFile = OpenSourceFile(argv[optind]);
+        PTEXT_DECODER decoder = CreateTextDecoder(sourceFile.Contents);
+        UTF32STRING result;
+        int resultLength;
+        int i;
+
+        GetDecodedString(decoder, &result, &resultLength);
+
+        for (i = 0; i < resultLength; ++i) {
+            printf("%c", result[i]);
+        }
+
+        DeleteTextDecoder(decoder);
+        CloseSourceFile(&sourceFile);
+    }
+}
+
 static void ProcessFiles(int optind, int argc, char **argv) {
     if (g_fileProcess == PROCESS_PREPROCESS)
         PreprocessFiles(optind, argc, argv);
+    else if (g_fileProcess == PROCESS_DECODE_TEXT)
+        DecodeText(optind, argc, argv);
     else
         LogFatal("not implemented yet");
 }
@@ -54,7 +77,7 @@ int main(int argc, char** argv) {
 
     InitGlobals(argc, argv);
 
-    while ((c = getopt_long(argc, argv, "ESc", longOptions, 0)) != -1) {
+    while ((c = getopt_long(argc, argv, "EScx", longOptions, 0)) != -1) {
         switch (c) {
         case 'E':
             g_fileProcess = PROCESS_PREPROCESS;
@@ -66,6 +89,10 @@ int main(int argc, char** argv) {
 
         case 'c':
             g_fileProcess = PROCESS_COMPILE_ASSEMBLE;
+            break;
+
+        case 'x':
+            g_fileProcess = PROCESS_DECODE_TEXT;
             break;
 
         case OPTION_VERSION:
@@ -81,6 +108,7 @@ Options:\n\
     -E              Preprocess only; do not compile, assemble, or link.\n\
     -S              Compile only; do not assemble or link.\n\
     -c              Compile and assemble, but do not link.\n\
+    -x              Decode text\n\
 ", argv[0]);
             return EXIT_FAILURE;
         }

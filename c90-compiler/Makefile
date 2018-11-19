@@ -4,13 +4,15 @@ CFLAGS	:= -g -ansi -Wall -Wextra -pedantic-errors
 
 HFILES	:= \
 	common.h \
-	lexer.h
+	lexer.h \
+	text-decoder.h
 
 CFILES	:= \
 	error.c \
 	lexer.c \
 	ptc-cl.c \
-	source.c
+	source.c \
+	text-decoder.c
 
 .PHONY: all clean
 
