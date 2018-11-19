@@ -74,10 +74,50 @@ void FreeToken(PTOKEN t) {
                   ((c) >= 'A' && (c) <= 'F') || \
                   ((c) >= 'a' && (c) <= 'f'))
 
+static char GetChar(PLEXER l) {
+    if (l->Cursor[0] == '?' && l->Cursor[1] == '?') {
+        switch (l->Cursor[2]) {
+            case '=':  return '#';
+            case '(':  return '[';
+            case '/':  return '\\';
+            case ')':  return ']';
+            case '\'': return '^';
+            case '<':  return '{';
+            case '!':  return '|';
+            case '>':  return '}';
+            case '-':  return '~';
+        }
+    }
+
+    return *l->Cursor;
+}
+
 static void IncrementCursor(PLEXER l) {
     if (*l->Cursor == '\n') {
         ++l->CurrentLocation.Line;
-        l->CurrentLocation.Column = -1;
+        l->CurrentLocation.Column = 0;
+        ++l->Cursor;
+        return;
+    }
+
+    if (
+        l->Cursor[0] == '?' && l->Cursor[1] == '?' &&
+        (
+            l->Cursor[2] == '=' ||
+            l->Cursor[2] == '(' ||
+            l->Cursor[2] == '/' ||
+            l->Cursor[2] == ')' ||
+            l->Cursor[2] == '\'' ||
+            l->Cursor[2] == '<' ||
+            l->Cursor[2] == '!' ||
+            l->Cursor[2] == '>' ||
+            l->Cursor[2] == '-'
+        )
+    )
+    {
+        l->CurrentLocation.Column += 3;
+        l->Cursor += 3;
+        return;
     }
 
     ++l->Cursor;
@@ -89,7 +129,7 @@ static void IncrementCursorBy(PLEXER l, unsigned amount) {
         IncrementCursor(l);
 }
 
-/* Precondition: *l->Cursor is [_A-Za-z] */
+/* Precondition: GetChar(l) is [_A-Za-z] */
 static void ReadIdentifier(PLEXER l, PTOKEN t) {
     unsigned length = 0;
 
@@ -219,9 +259,9 @@ static void ReadFractionalLiteral(PLEXER l, PTOKEN t) {
     char *suffix;
     unsigned suffixLength;
 
-    for (; IsDecimal(*l->Cursor); IncrementCursor(l)) {
-        floatFrac += floatExp * (*l->Cursor - '0');
-        doubleFrac += doubleExp * (*l->Cursor - '0');
+    for (; IsDecimal(GetChar(l)); IncrementCursor(l)) {
+        floatFrac += floatExp * (GetChar(l) - '0');
+        doubleFrac += doubleExp * (GetChar(l) - '0');
         floatExp *= 0.1F;
         doubleExp *= 0.1;
     }
@@ -247,14 +287,14 @@ static void ReadFractionalLiteral(PLEXER l, PTOKEN t) {
 static void ReadHexLiteral(PLEXER l, PTOKEN t) {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
-    while (IsHex(*l->Cursor)) {
+    while (IsHex(GetChar(l))) {
         t->Value.IntValue *= 16;
-        if (*l->Cursor <= '9')
-            t->Value.IntValue += *l->Cursor - '0';
-        else if (*l->Cursor <= 'F')
-            t->Value.IntValue += *l->Cursor - 'A' + 10;
+        if (GetChar(l) <= '9')
+            t->Value.IntValue += GetChar(l) - '0';
+        else if (GetChar(l) <= 'F')
+            t->Value.IntValue += GetChar(l) - 'A' + 10;
         else
-            t->Value.IntValue += *l->Cursor - 'a' + 10;
+            t->Value.IntValue += GetChar(l) - 'a' + 10;
 
         IncrementCursor(l);
     }
@@ -265,12 +305,12 @@ static void ReadHexLiteral(PLEXER l, PTOKEN t) {
 static void ReadOctalLiteral(PLEXER l, PTOKEN t) {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
-    for (; IsDecimal(*l->Cursor); IncrementCursor(l)) {
-        if (IsOctal(*l->Cursor)) {
-            t->Value.IntValue = (t->Value.IntValue * 8) - (*l->Cursor - '0');
+    for (; IsDecimal(GetChar(l)); IncrementCursor(l)) {
+        if (IsOctal(GetChar(l))) {
+            t->Value.IntValue = (t->Value.IntValue * 8) - (GetChar(l) - '0');
         }
         else {
-            LogErrorC(&t->Location, "invalid digit \"%c\" in octal constant", *l->Cursor);
+            LogErrorC(&t->Location, "invalid digit \"%c\" in octal constant", GetChar(l));
         }
     }
     SkipIntSuffixes(l, t);
@@ -279,10 +319,10 @@ static void ReadOctalLiteral(PLEXER l, PTOKEN t) {
 static void ReadDecimalLiteral(PLEXER l, PTOKEN t) {
     t->Kind = TK_INT_CONSTANT;
     t->Value.IntValue = 0;
-    for (; IsDecimal(*l->Cursor); IncrementCursor(l))
-        t->Value.IntValue = (t->Value.IntValue * 10) + (*l->Cursor - '0');
+    for (; IsDecimal(GetChar(l)); IncrementCursor(l))
+        t->Value.IntValue = (t->Value.IntValue * 10) + (GetChar(l) - '0');
 
-    if (*l->Cursor == '.') {
+    if (GetChar(l) == '.') {
         IncrementCursor(l);
         ReadFractionalLiteral(l, t);
     }
@@ -292,13 +332,13 @@ static void ReadDecimalLiteral(PLEXER l, PTOKEN t) {
 }
 
 static void ReadNumericalLiteral(PLEXER l, PTOKEN t) {
-    if (*l->Cursor == '0') {
+    if (GetChar(l) == '0') {
         unsigned wholeLength = 0;
 
         do {
             IncrementCursor(l);
         }
-        while (*l->Cursor == '0');
+        while (GetChar(l) == '0');
 
         while (IsDecimal(l->Cursor[wholeLength]))
             ++wholeLength;
@@ -306,7 +346,7 @@ static void ReadNumericalLiteral(PLEXER l, PTOKEN t) {
         if (l->Cursor[wholeLength] == '.') {
             ReadDecimalLiteral(l, t);
         }
-        else if (*l->Cursor == 'X' || *l->Cursor == 'x') {
+        else if (GetChar(l) == 'X' || GetChar(l) == 'x') {
             IncrementCursor(l);
             ReadHexLiteral(l, t);
         }
@@ -322,12 +362,12 @@ static void ReadNumericalLiteral(PLEXER l, PTOKEN t) {
 static char ReadChar(PLEXER l) {
     char result;
 
-    if (*l->Cursor == '\\') {
+    if (GetChar(l) == '\\') {
         unsigned digitCount;
 
         IncrementCursor(l);
 
-        switch (*l->Cursor) {
+        switch (GetChar(l)) {
         case '\'':  IncrementCursor(l); result = '\''; break;
         case '"':   IncrementCursor(l); result = '\"'; break;
         case '?':   IncrementCursor(l); result = '\?'; break;
@@ -344,8 +384,8 @@ static char ReadChar(PLEXER l) {
         case '4': case '5': case '6': case '7':
             result = 0;
             digitCount = 0;
-            while (digitCount < 3 && IsOctal(*l->Cursor)) {
-                result = (result * 8) + (*l->Cursor - '0');
+            while (digitCount < 3 && IsOctal(GetChar(l))) {
+                result = (result * 8) + (GetChar(l) - '0');
                 ++digitCount;
                 IncrementCursor(l);
             }
@@ -354,40 +394,40 @@ static char ReadChar(PLEXER l) {
         case 'x':
             IncrementCursor(l);
             result = 0;
-            for (; IsHex(*l->Cursor); IncrementCursor(l)) {
+            for (; IsHex(GetChar(l)); IncrementCursor(l)) {
                 result *= 16;
-                if (*l->Cursor <= '9')      result += *l->Cursor - '0';
-                else if (*l->Cursor <= 'F') result += *l->Cursor - 'A' + 10;
-                else if (*l->Cursor <= 'f') result += *l->Cursor - 'a' + 10;
+                if (GetChar(l) <= '9')      result += GetChar(l) - '0';
+                else if (GetChar(l) <= 'F') result += GetChar(l) - 'A' + 10;
+                else if (GetChar(l) <= 'f') result += GetChar(l) - 'a' + 10;
             }
             break;
         }
     }
     else {
-        result = *l->Cursor;
+        result = GetChar(l);
         IncrementCursor(l);
     }
 
     return result;
 }
 
-/* Precondition: *l->Cursor == '\'' */
+/* Precondition: GetChar(l) == '\'' */
 static void ReadCharLiteral(PLEXER l, PTOKEN t) {
     IncrementCursor(l);
     t->Kind = TK_INT_CONSTANT;
 
-    if (*l->Cursor == '\n') {
+    if (GetChar(l) == '\n') {
         LogErrorC(&t->Location, "missing terminating ' character");
     }
     else {
         t->Value.IntValue = ReadChar(l);
 
-        if (*l->Cursor == '\'') {
+        if (GetChar(l) == '\'') {
             IncrementCursor(l);
         }
         else {
-            while (*l->Cursor != '\'') {
-                if (*l->Cursor == '\n') {
+            while (GetChar(l) != '\'') {
+                if (GetChar(l) == '\n') {
                     LogErrorC(&t->Location, "missing terminating ' character");
                     return;
                 }
@@ -432,7 +472,7 @@ static void CountUnescapedChar(PLEXER l, unsigned *length) {
     }
 }
 
-/* Precondition: *l->Cursor == '"' */
+/* Precondition: GetChar(l) == '"' */
 static void ReadStringLiteral(PLEXER l, PTOKEN t) {
     unsigned length = 0;
     unsigned unescapedLength = 1;
@@ -455,7 +495,7 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t) {
     t->Value.StringValue = malloc(length + 1);
 
     IncrementCursor(l);
-    for (i = 0; *l->Cursor != '"'; ++i)
+    for (i = 0; GetChar(l) != '"'; ++i)
         t->Value.StringValue[i] = ReadChar(l);
 
     t->Value.StringValue[length] = 0;
@@ -465,13 +505,13 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t) {
 static TOKEN ReadTokenOnce(PLEXER l) {
     TOKEN result;
 
-    while (IsWhitespace(*l->Cursor)) {
-        if (*l->Cursor == '\n')
+    while (IsWhitespace(GetChar(l))) {
+        if (GetChar(l) == '\n')
             l->CurrentFlags |= TOKENFLAG_BOL;
         IncrementCursor(l);
     }
 
-    if (l->CurrentModes & LM_PP_DIRECTIVE && *l->Cursor == '\\') {
+    if (l->CurrentModes & LM_PP_DIRECTIVE && GetChar(l) == '\\') {
         bool is_only_whitespace = true;
         unsigned chars_before_newline = 0;
 
@@ -488,7 +528,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
                 LogWarningC(&l->CurrentLocation, "backslash and newline separated by space");
             }
             IncrementCursorBy(l, chars_before_newline + 1);
-            while (IsWhitespace(*l->Cursor))
+            while (IsWhitespace(GetChar(l)))
                 IncrementCursor(l);
         }
     }
@@ -496,12 +536,12 @@ static TOKEN ReadTokenOnce(PLEXER l) {
     result.Flags = l->CurrentFlags;
     result.Location = l->CurrentLocation;
 
-    if (result.Flags & TOKENFLAG_BOL && *l->Cursor == '#') {
+    if (result.Flags & TOKENFLAG_BOL && GetChar(l) == '#') {
         IncrementCursor(l);
         result.Kind = TK_PP_HASH;
     }
     else {
-        switch (*l->Cursor) {
+        switch (GetChar(l)) {
         case 0: result.Kind = TK_EOF; break;
         case '(': IncrementCursor(l); result.Kind = TK_LPAREN;    break;
         case ')': IncrementCursor(l); result.Kind = TK_RPAREN;    break;
@@ -517,7 +557,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '.':
             IncrementCursor(l);
-            if (IsDecimal(*l->Cursor)) {
+            if (IsDecimal(GetChar(l))) {
                 result.Value.IntValue = 0;
                 ReadFractionalLiteral(l, &result);
             }
@@ -528,11 +568,11 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '+':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_PLUS_EQUALS;
             }
-            else if (*l->Cursor == '+') {
+            else if (GetChar(l) == '+') {
                 IncrementCursor(l);
                 result.Kind = TK_PLUS_PLUS;
             }
@@ -543,15 +583,15 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '-':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_MINUS_EQUALS;
             }
-            else if (*l->Cursor == '-') {
+            else if (GetChar(l) == '-') {
                 IncrementCursor(l);
                 result.Kind = TK_MINUS_MINUS;
             }
-            else if (*l->Cursor == '>') {
+            else if (GetChar(l) == '>') {
                 IncrementCursor(l);
                 result.Kind = TK_MINUS_GT;
             }
@@ -562,7 +602,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '*':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_ASTERISK_EQUALS;
             }
@@ -573,28 +613,28 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '/':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_SLASH_EQUALS;
             }
-            else if (*l->Cursor == '*') {
+            else if (GetChar(l) == '*') {
                 IncrementCursor(l);
                 result.Kind = TK_COMMENT;
 
                 for (;;) {
-                    if (*l->Cursor == '*') {
+                    if (GetChar(l) == '*') {
                         IncrementCursor(l);
 
-                        if (*l->Cursor == '/') {
+                        if (GetChar(l) == '/') {
                             IncrementCursor(l);
                             break;
                         }
-                        else if (*l->Cursor == 0) {
+                        else if (GetChar(l) == 0) {
                             LogErrorC(&result.Location, "unterminated comment");
                             break;
                         }
                     }
-                    else if (*l->Cursor == 0) {
+                    else if (GetChar(l) == 0) {
                         LogErrorC(&result.Location, "unterminated comment");
                         break;
                     }
@@ -610,7 +650,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '%':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_PERCENT_EQUALS;
             }
@@ -621,13 +661,13 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '<':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_LT_EQUALS;
             }
-            else if (*l->Cursor == '<') {
+            else if (GetChar(l) == '<') {
                 IncrementCursor(l);
-                if (*l->Cursor == '=') {
+                if (GetChar(l) == '=') {
                     IncrementCursor(l);
                     result.Kind = TK_LT_LT_EQUALS;
                 }
@@ -642,13 +682,13 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '>':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_GT_EQUALS;
             }
-            else if (*l->Cursor == '>') {
+            else if (GetChar(l) == '>') {
                 IncrementCursor(l);
-                if (*l->Cursor == '=') {
+                if (GetChar(l) == '=') {
                     IncrementCursor(l);
                     result.Kind = TK_GT_GT_EQUALS;
                 }
@@ -663,7 +703,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '=':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_EQUALS_EQUALS;
             }
@@ -674,7 +714,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '!':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_EXCLAMATION_EQUALS;
             }
@@ -685,11 +725,11 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '&':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_AMPERSAND_EQUALS;
             }
-            else if (*l->Cursor == '&') {
+            else if (GetChar(l) == '&') {
                 IncrementCursor(l);
                 result.Kind = TK_AMPERSAND_AMPERSAND;
             }
@@ -700,7 +740,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '^':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_CARET_EQUALS;
             }
@@ -711,11 +751,11 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         case '|':
             IncrementCursor(l);
-            if (*l->Cursor == '=') {
+            if (GetChar(l) == '=') {
                 IncrementCursor(l);
                 result.Kind = TK_PIPE_EQUALS;
             }
-            else if (*l->Cursor == '|') {
+            else if (GetChar(l) == '|') {
                 IncrementCursor(l);
                 result.Kind = TK_PIPE_PIPE;
             }
@@ -758,7 +798,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
         default:
             result.Kind = TK_UNKNOWN;
-            result.Value.OffendingChar = *l->Cursor;
+            result.Value.OffendingChar = GetChar(l);
             IncrementCursor(l);
             break;
         }
