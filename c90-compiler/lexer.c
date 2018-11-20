@@ -74,8 +74,11 @@ void FreeToken(PTOKEN t) {
                   ((c) >= 'A' && (c) <= 'F') || \
                   ((c) >= 'a' && (c) <= 'f'))
 
-static char DecodeTrigraph(PLEXER l) {
+static char DecodeTrigraph(PLEXER l, int *charLength) {
     if (l->Cursor[0] == '?' && l->Cursor[1] == '?') {
+        if (charLength)
+            *charLength = 3;
+
         switch (l->Cursor[2]) {
             case '=':  return '#';
             case '(':  return '[';
@@ -89,48 +92,90 @@ static char DecodeTrigraph(PLEXER l) {
         }
     }
 
+    if (charLength)
+        *charLength = 1;
+
     return *l->Cursor;
 }
 
+static char DecodeNewLineEscape(
+    PLEXER l, int *charLength, int *trailingWhitespaceLength
+)
+{
+    int firstCharLength;
+    char firstChar = DecodeTrigraph(l, &firstCharLength);
+
+    if (firstChar == '\\') {
+        bool isOnlyWhitespace = true;
+        int lengthWithoutNewLine = firstCharLength;
+
+        while (l->Cursor[lengthWithoutNewLine] != '\n') {
+            if (!IsWhitespace(l->Cursor[lengthWithoutNewLine])) {
+                isOnlyWhitespace = false;
+                break;
+            }
+
+            ++lengthWithoutNewLine;
+        }
+
+        if (isOnlyWhitespace) {
+            int totalLength = lengthWithoutNewLine + 1;
+
+            if (charLength)
+                *charLength = totalLength;
+
+            if (trailingWhitespaceLength) {
+                int length = lengthWithoutNewLine - firstCharLength;
+                *trailingWhitespaceLength = length;
+            }
+
+            return ' ';
+        }
+    }
+
+    if (charLength)
+        *charLength = firstCharLength;
+    if (trailingWhitespaceLength)
+        *trailingWhitespaceLength = -1;
+
+    return firstChar;
+}
+
 static char GetChar(PLEXER l) {
-    return DecodeTrigraph(l);
+    return DecodeNewLineEscape(l, NULL, NULL);
 }
 
 static void IncrementCursor(PLEXER l) {
-    if (*l->Cursor == '\n') {
-        ++l->Cursor;
+    int charLength;
+    int trailingWhitespaceLength;
+    char charValue = DecodeNewLineEscape(
+        l, &charLength, &trailingWhitespaceLength
+    );
+
+    if (charValue == '\n') {
         ++l->CurrentLocation.Line;
         l->CurrentLocation.Column = 0;
         l->CurrentFlags |= TOKENFLAG_BOL;
-        return;
+    }
+    else if (trailingWhitespaceLength < 0) {
+        l->CurrentLocation.Column += charLength;
+
+        if (!IsWhitespace(charValue))
+            l->CurrentFlags &= ~TOKENFLAG_BOL;
+    }
+    else {
+        if (trailingWhitespaceLength > 0) {
+            LogWarningC(
+                &l->CurrentLocation,
+                "backslash and newline separated by space"
+            );
+        }
+
+        ++l->CurrentLocation.Line;
+        l->CurrentLocation.Column = 0;
     }
 
-    if (
-        l->Cursor[0] == '?' && l->Cursor[1] == '?' &&
-        (
-            l->Cursor[2] == '=' ||
-            l->Cursor[2] == '(' ||
-            l->Cursor[2] == '/' ||
-            l->Cursor[2] == ')' ||
-            l->Cursor[2] == '\'' ||
-            l->Cursor[2] == '<' ||
-            l->Cursor[2] == '!' ||
-            l->Cursor[2] == '>' ||
-            l->Cursor[2] == '-'
-        )
-    )
-    {
-        l->Cursor += 3;
-        l->CurrentLocation.Column += 3;
-        l->CurrentFlags &= ~TOKENFLAG_BOL;
-        return;
-    }
-
-    if (!IsWhitespace(*l->Cursor))
-        l->CurrentFlags &= ~TOKENFLAG_BOL;
-
-    ++l->Cursor;
-    ++l->CurrentLocation.Column;
+    l->Cursor += charLength;
 }
 
 static void IncrementCursorBy(PLEXER l, unsigned amount) {
@@ -516,28 +561,6 @@ static TOKEN ReadTokenOnce(PLEXER l) {
 
     while (IsWhitespace(GetChar(l)))
         IncrementCursor(l);
-
-    if (l->CurrentModes & LM_PP_DIRECTIVE && GetChar(l) == '\\') {
-        bool is_only_whitespace = true;
-        unsigned chars_before_newline = 0;
-
-        while (l->Cursor[chars_before_newline + 1] != '\n') {
-            if (!IsWhitespace(l->Cursor[chars_before_newline + 1])) {
-                is_only_whitespace = false;
-                break;
-            }
-            ++chars_before_newline;
-        }
-
-        if (is_only_whitespace) {
-            if (chars_before_newline) {
-                LogWarningC(&l->CurrentLocation, "backslash and newline separated by space");
-            }
-            IncrementCursorBy(l, chars_before_newline + 1);
-            while (IsWhitespace(GetChar(l)))
-                IncrementCursor(l);
-        }
-    }
 
     result.Flags = l->CurrentFlags;
     result.Location = l->CurrentLocation;
