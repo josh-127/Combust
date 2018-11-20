@@ -503,7 +503,7 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t) {
 }
 
 static TOKEN ReadTokenOnce(PLEXER l) {
-    TOKEN result;
+    TOKEN result = { 0 };
 
     while (IsWhitespace(GetChar(l))) {
         if (GetChar(l) == '\n')
