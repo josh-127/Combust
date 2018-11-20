@@ -22,4 +22,4 @@ clean:
 	rm -f $(TARGET)
 
 $(TARGET): $(CFILES) $(HFILES)
-	gcc $(CFLAGS) -o$@ $^
+	gcc $(CFLAGS) -o$@ $(CFILES)
