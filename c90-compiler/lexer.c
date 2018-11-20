@@ -74,7 +74,7 @@ void FreeToken(PTOKEN t) {
                   ((c) >= 'A' && (c) <= 'F') || \
                   ((c) >= 'a' && (c) <= 'f'))
 
-static char GetChar(PLEXER l) {
+static char DecodeTrigraph(PLEXER l) {
     if (l->Cursor[0] == '?' && l->Cursor[1] == '?') {
         switch (l->Cursor[2]) {
             case '=':  return '#';
@@ -92,11 +92,16 @@ static char GetChar(PLEXER l) {
     return *l->Cursor;
 }
 
+static char GetChar(PLEXER l) {
+    return DecodeTrigraph(l);
+}
+
 static void IncrementCursor(PLEXER l) {
     if (*l->Cursor == '\n') {
+        ++l->Cursor;
         ++l->CurrentLocation.Line;
         l->CurrentLocation.Column = 0;
-        ++l->Cursor;
+        l->CurrentFlags |= TOKENFLAG_BOL;
         return;
     }
 
@@ -115,10 +120,14 @@ static void IncrementCursor(PLEXER l) {
         )
     )
     {
-        l->CurrentLocation.Column += 3;
         l->Cursor += 3;
+        l->CurrentLocation.Column += 3;
+        l->CurrentFlags &= ~TOKENFLAG_BOL;
         return;
     }
+
+    if (!IsWhitespace(*l->Cursor))
+        l->CurrentFlags &= ~TOKENFLAG_BOL;
 
     ++l->Cursor;
     ++l->CurrentLocation.Column;
@@ -505,11 +514,8 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t) {
 static TOKEN ReadTokenOnce(PLEXER l) {
     TOKEN result = { 0 };
 
-    while (IsWhitespace(GetChar(l))) {
-        if (GetChar(l) == '\n')
-            l->CurrentFlags |= TOKENFLAG_BOL;
+    while (IsWhitespace(GetChar(l)))
         IncrementCursor(l);
-    }
 
     if (l->CurrentModes & LM_PP_DIRECTIVE && GetChar(l) == '\\') {
         bool is_only_whitespace = true;
@@ -811,6 +817,5 @@ static TOKEN ReadTokenOnce(PLEXER l) {
         result.Length = l->CurrentLocation.Column - result.Location.Column;
     }
 
-    l->CurrentFlags &= ~TOKENFLAG_BOL;
     return result;
 }
