@@ -22,7 +22,7 @@ struct tagLexer {
 };
 
 PLEXER CreateLexer(PSOURCE_FILE input) {
-    PLEXER lexer = malloc(sizeof(Lexer));
+    PLEXER lexer                  = calloc(sizeof(Lexer));
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentMode            = LM_DEFAULT;
@@ -245,7 +245,7 @@ static void ReadIdentifier(PLEXER l, PTOKEN t) {
     else if (o("return"))   t->Kind = TK_KW_return;
     else {
         t->Kind = TK_IDENTIFIER;
-        t->Value.IdentifierName = malloc(length + 1);
+        t->Value.IdentifierName = calloc(length + 1);
         strncpy(t->Value.IdentifierName, l->Cursor, length);
         t->Value.IdentifierName[length] = 0;
     }
@@ -261,7 +261,7 @@ static void ReadSuffix(PLEXER l, char **suffix, int *length) {
     while (IsLetter(l->Cursor[*length]))
         ++*length;
 
-    *suffix = malloc(*length + 1);
+    *suffix = calloc(*length + 1);
     for (i = 0; i < *length; ++i)
         (*suffix)[i] = l->Cursor[i];
     (*suffix)[*length] = 0;
@@ -549,7 +549,7 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t) {
         ++length;
     }
 
-    t->Value.StringValue = malloc(length + 1);
+    t->Value.StringValue = calloc(length + 1);
 
     IncrementCursor(l);
     for (i = 0; GetChar(l) != '"'; ++i)
