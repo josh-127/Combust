@@ -21,8 +21,8 @@ typedef struct {
     int        Length;
 } SOURCE_RANGE, *PSOURCE_RANGE;
 
-SOURCE_FILE OpenSourceFile(const char *fileName);
-void        CloseSourceFile(SOURCE_FILE *obj);
+int  OpenSourceFile(const char *fileName, PSOURCE_FILE sourceFile);
+void CloseSourceFile(SOURCE_FILE *obj);
 
 /* error.c */
 int g_ErrorsLogged;

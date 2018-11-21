@@ -21,9 +21,17 @@ static int g_fileProcess = PROCESS_COMPILE_ASSEMBLE_LINK;
 
 static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
-        SOURCE_FILE sourceFile = OpenSourceFile(argv[optind]);
-        PLEXER lexer = CreateLexer(&sourceFile);
+        SOURCE_FILE sourceFile;
+        PLEXER lexer;
         TOKEN t = { 0 };
+
+        if (OpenSourceFile(argv[optind], &sourceFile)) {
+            LogFatal("cannot open %s", argv[optind]);
+            continue;
+        }
+
+        lexer = CreateLexer(&sourceFile);
+
         while (t.Kind != TK_EOF) {
             t = ReadTokenDirect(lexer);
             FreeToken(&t);
