@@ -3,7 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-int OpenSourceFile(const char *fileName, PSOURCE_FILE sourceFile) {
+int OpenSourceFile(
+    IN  const char   *fileName,
+    OUT PSOURCE_FILE  sourceFile
+)
+{
     FILE        *file;
     int          length;
     int          lineCount;
@@ -43,7 +47,10 @@ int OpenSourceFile(const char *fileName, PSOURCE_FILE sourceFile) {
     return 0;
 }
 
-void CloseSourceFile(PSOURCE_FILE obj) {
+void CloseSourceFile(
+    THIS PSOURCE_FILE obj
+)
+{
     free(obj->Lines);
     free(obj->Contents);
     free(obj->FileName);

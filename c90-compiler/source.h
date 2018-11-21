@@ -19,7 +19,12 @@ typedef struct tagSOURCE_RANGE {
     int        Length;
 } SOURCE_RANGE, *PSOURCE_RANGE;
 
-int  OpenSourceFile(const char *fileName, PSOURCE_FILE sourceFile);
-void CloseSourceFile(SOURCE_FILE *obj);
+int  OpenSourceFile(
+    IN  const char   *fileName,
+    OUT PSOURCE_FILE  sourceFile
+);
+void CloseSourceFile(
+    THIS SOURCE_FILE *obj
+);
 
 #endif

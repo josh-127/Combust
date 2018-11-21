@@ -41,9 +41,20 @@ typedef struct {
 
 typedef struct tagLexer Lexer, *PLEXER;
 
-PLEXER CreateLexer(PSOURCE_FILE input);
-void   DeleteLexer(PLEXER l);
-TOKEN  ReadTokenDirect(PLEXER l);
-void   FreeToken(PTOKEN t);
+PLEXER CreateLexer(
+    IN PSOURCE_FILE input
+);
+
+void DeleteLexer(
+    THIS PLEXER l
+);
+
+TOKEN ReadTokenDirect(
+    THIS PLEXER l
+);
+
+void FreeToken(
+    THIS PTOKEN t
+);
 
 #endif
