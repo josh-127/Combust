@@ -11,8 +11,6 @@
 #define LM_PP_DIRECTIVE_KW           2
 #define LM_PP_ANGLED_STRING_CONSTANT 4
 
-typedef enum { false, true = !false } bool;
-
 struct tagLexer {
     PSOURCE_FILE  Source;
     char         *Cursor;
@@ -111,12 +109,12 @@ static char DecodeNewLineEscape(
     char firstChar = DecodeTrigraph(l, &firstCharLength);
 
     if (firstChar == '\\') {
-        bool isOnlyWhitespace = true;
+        BOOL isOnlyWhitespace = TRUE;
         int lengthWithoutNewLine = firstCharLength;
 
         while (l->Cursor[lengthWithoutNewLine] != '\n') {
             if (!IsWhitespace(l->Cursor[lengthWithoutNewLine])) {
-                isOnlyWhitespace = false;
+                isOnlyWhitespace = FALSE;
                 break;
             }
 

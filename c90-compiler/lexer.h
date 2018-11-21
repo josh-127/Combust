@@ -1,5 +1,6 @@
 #ifndef PTC_CL_LEXER_H
 #define PTC_CL_LEXER_H
+#include "common.h"
 #include "source.h"
 
 #define TOKENFLAG_BOL 1

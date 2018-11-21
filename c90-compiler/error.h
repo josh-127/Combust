@@ -1,5 +1,6 @@
 #ifndef PTC_CL_ERROR_H
 #define PTC_CL_ERROR_H
+#include "common.h"
 #include "source.h"
 
 extern char *g_ProgramName;
