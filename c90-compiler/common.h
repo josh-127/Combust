@@ -4,19 +4,19 @@
 extern char *g_ProgramName;
 
 /* source.c */
-typedef struct {
+typedef struct tagSOURCE_FILE {
     char  *FileName;
     char  *Contents;
     char **Lines;
 } SOURCE_FILE, *PSOURCE_FILE;
 
-typedef struct {
+typedef struct tagSOURCE_LOC {
     SOURCE_FILE *Source;
     int          Line;
     int          Column;
 } SOURCE_LOC, *PSOURCE_LOC;
 
-typedef struct {
+typedef struct tagSOURCE_RANGE {
     SOURCE_LOC Base;
     int        Length;
 } SOURCE_RANGE, *PSOURCE_RANGE;
