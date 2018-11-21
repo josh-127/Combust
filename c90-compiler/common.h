@@ -12,15 +12,15 @@ typedef struct {
 
 typedef struct {
     SOURCE_FILE *Source;
-    unsigned     Line;
-    unsigned     Column;
+    int          Line;
+    int          Column;
 } SOURCE_LOC, *PSOURCE_LOC;
 
-SOURCE_FILE OpenSourceFile(const char *fname);
-void        CloseSourceFile(SOURCE_FILE *sf);
+SOURCE_FILE OpenSourceFile(const char *fileName);
+void        CloseSourceFile(SOURCE_FILE *obj);
 
 /* error.c */
-unsigned g_ErrorsLogged;
+int g_ErrorsLogged;
 
 void LogError   (const char *format, ...);
 void LogWarning (const char *format, ...);

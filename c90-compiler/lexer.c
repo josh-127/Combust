@@ -13,12 +13,12 @@
 typedef enum { false, true = !false } bool;
 
 struct tagLexer {
-    PSOURCE_FILE Source;
-    char        *Cursor;
-    uint32_t     CurrentMode;
-    int          CurrentFlags;
-    SOURCE_LOC   CurrentLocation;
-    TOKEN        CurrentToken;
+    PSOURCE_FILE  Source;
+    char         *Cursor;
+    uint32_t      CurrentMode;
+    int           CurrentFlags;
+    SOURCE_LOC    CurrentLocation;
+    TOKEN         CurrentToken;
 };
 
 PLEXER CreateLexer(PSOURCE_FILE input) {
@@ -179,14 +179,14 @@ static void IncrementCursor(PLEXER l) {
     l->Cursor += charLength;
 }
 
-static void IncrementCursorBy(PLEXER l, unsigned amount) {
+static void IncrementCursorBy(PLEXER l, int amount) {
     while (amount--)
         IncrementCursor(l);
 }
 
 /* Precondition: GetChar(l) is [_A-Za-z] */
 static void ReadIdentifier(PLEXER l, PTOKEN t) {
-    unsigned length = 0;
+    int length = 0;
 
     while ((l->Cursor[length] == '_') ||
            (l->Cursor[length] == '$') ||
@@ -254,8 +254,8 @@ static void ReadIdentifier(PLEXER l, PTOKEN t) {
     IncrementCursorBy(l, length);
 }
 
-static void ReadSuffix(PLEXER l, char **suffix, unsigned *length) {
-    unsigned i;
+static void ReadSuffix(PLEXER l, char **suffix, int *length) {
+    int i;
 
     *length = 0;
     while (IsLetter(l->Cursor[*length]))
@@ -287,7 +287,7 @@ static int SkipLongSuffix(char **cursor) {
 }
 
 static void SkipIntSuffixes(PLEXER l, PTOKEN t) {
-    unsigned suffixLength = 0;
+    int suffixLength = 0;
     char *suffix;
     char *suffixCursor;
 
@@ -300,7 +300,9 @@ static void SkipIntSuffixes(PLEXER l, PTOKEN t) {
         SkipUnsignedSuffix(&suffixCursor);
 
     if (IsLetter(*suffixCursor)) {
-        LogErrorC(&t->Location, "invalid suffix \"%s\" on integer constant", suffix);
+        LogErrorC(
+            &t->Location, "invalid suffix \"%s\" on integer constant", suffix
+        );
     }
 
     free(suffix);
@@ -312,7 +314,7 @@ static void ReadFractionalLiteral(PLEXER l, PTOKEN t) {
     float doubleFrac = 0.0;
     float doubleExp = 0.1;
     char *suffix;
-    unsigned suffixLength;
+    int suffixLength;
 
     for (; IsDecimal(GetChar(l)); IncrementCursor(l)) {
         floatFrac += floatExp * (GetChar(l) - '0');
@@ -388,7 +390,7 @@ static void ReadDecimalLiteral(PLEXER l, PTOKEN t) {
 
 static void ReadNumericalLiteral(PLEXER l, PTOKEN t) {
     if (GetChar(l) == '0') {
-        unsigned wholeLength = 0;
+        int wholeLength = 0;
 
         do {
             IncrementCursor(l);
@@ -418,7 +420,7 @@ static char ReadChar(PLEXER l) {
     char result;
 
     if (GetChar(l) == '\\') {
-        unsigned digitCount;
+        int digitCount;
 
         IncrementCursor(l);
 
@@ -496,9 +498,9 @@ static void ReadCharLiteral(PLEXER l, PTOKEN t) {
     }
 }
 
-static void CountUnescapedChar(PLEXER l, unsigned *length) {
+static void CountUnescapedChar(PLEXER l, int *length) {
     if (l->Cursor[*length] == '\\') {
-        unsigned j;
+        int j;
         ++*length;
 
         switch (l->Cursor[*length]) {
@@ -529,9 +531,9 @@ static void CountUnescapedChar(PLEXER l, unsigned *length) {
 
 /* Precondition: GetChar(l) == '"' */
 static void ReadStringLiteral(PLEXER l, PTOKEN t) {
-    unsigned length = 0;
-    unsigned unescapedLength = 1;
-    unsigned i;
+    int length = 0;
+    int unescapedLength = 1;
+    int i;
 
     t->Kind = TK_STR_CONSTANT;
 
@@ -838,7 +840,9 @@ static TOKEN ReadTokenOnce(PLEXER l) {
     }
 
     if (result.Kind == TK_COMMENT) {
-        result.Length = (unsigned) (l->Cursor - &l->Source->Lines[result.Location.Line][result.Location.Column]);
+        int line = result.Location.Line;
+        int column = result.Location.Column;
+        result.Length = (int) (l->Cursor - &l->Source->Lines[line][column]);
     }
     else {
         result.Length = l->CurrentLocation.Column - result.Location.Column;

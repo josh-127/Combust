@@ -34,7 +34,7 @@ typedef union {
 typedef struct {
     int         Flags;
     SOURCE_LOC  Location;
-    unsigned    Length;
+    int         Length;
     TOKEN_KIND  Kind;
     TOKEN_VALUE Value;
 } TOKEN, *PTOKEN;

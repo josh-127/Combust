@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-unsigned g_ErrorsLogged = 0;
+int g_ErrorsLogged = 0;
 
 #define RED       "\x1b[31m"
 #define GREEN     "\x1b[32m"
@@ -57,8 +57,8 @@ static void LogMessageC(
     va_list     args
 )
 {
-    unsigned i;
     char *line = loc->Source->Lines[loc->Line];
+    int i;
 
     fprintf(stderr, loc_msg,
             loc->Source->FileName, loc->Line + 1, loc->Column + 1);
