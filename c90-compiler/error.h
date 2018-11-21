@@ -1,30 +1,9 @@
-#ifndef PTC_CL_COMMON_H
-#define PTC_CL_COMMON_H
+#ifndef PTC_CL_ERROR_H
+#define PTC_CL_ERROR_H
+#include "source.h"
 
 extern char *g_ProgramName;
 
-/* source.c */
-typedef struct tagSOURCE_FILE {
-    char  *FileName;
-    char  *Contents;
-    char **Lines;
-} SOURCE_FILE, *PSOURCE_FILE;
-
-typedef struct tagSOURCE_LOC {
-    SOURCE_FILE *Source;
-    int          Line;
-    int          Column;
-} SOURCE_LOC, *PSOURCE_LOC;
-
-typedef struct tagSOURCE_RANGE {
-    SOURCE_LOC Base;
-    int        Length;
-} SOURCE_RANGE, *PSOURCE_RANGE;
-
-int  OpenSourceFile(const char *fileName, PSOURCE_FILE sourceFile);
-void CloseSourceFile(SOURCE_FILE *obj);
-
-/* error.c */
 int g_ErrorsLogged;
 
 void LogError         (const char *format, ...);
@@ -36,6 +15,5 @@ void LogFatalAt       (PSOURCE_LOC loc, const char *format, ...);
 void LogErrorAtRange  (PSOURCE_RANGE range, const char *format, ...);
 void LogWarningAtRange(PSOURCE_RANGE range, const char *format, ...);
 void LogFatalAtRange  (PSOURCE_RANGE range, const char *format, ...);
-
 
 #endif

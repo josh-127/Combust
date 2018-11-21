@@ -3,8 +3,9 @@ TARGET	:= ptc-cl
 CFLAGS	:= -g -ansi -Wall -Wextra -pedantic-errors
 
 HFILES	:= \
-	common.h \
+	error.h \
 	lexer.h \
+	source.h \
 	syntax.h \
 	syntax-kinds.def
 

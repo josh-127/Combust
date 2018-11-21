@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "error.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>

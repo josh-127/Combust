@@ -1,5 +1,6 @@
-#include "common.h"
+#include "error.h"
 #include "lexer.h"
+#include "source.h"
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
