@@ -1,15 +1,21 @@
 #include "lexer.h"
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define LM_DEFAULT                   0
+#define LM_PP_DIRECTIVE              1
+#define LM_PP_DIRECTIVE_KW           2
+#define LM_PP_ANGLED_STRING_CONSTANT 4
 
 typedef enum { false, true = !false } bool;
 
 struct tagLexer {
     PSOURCE_FILE Source;
     char        *Cursor;
-    LEXER_MODE   CurrentModes;
+    uint32_t     CurrentMode;
     int          CurrentFlags;
     SOURCE_LOC   CurrentLocation;
     TOKEN        CurrentToken;
@@ -19,7 +25,7 @@ PLEXER CreateLexer(PSOURCE_FILE input) {
     PLEXER lexer = malloc(sizeof(Lexer));
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
-    lexer->CurrentModes           = LM_DEFAULT;
+    lexer->CurrentMode            = LM_DEFAULT;
     lexer->CurrentFlags           = TOKENFLAG_BOL;
     lexer->CurrentLocation.Line   = 0;
     lexer->CurrentLocation.Column = 0;
@@ -29,12 +35,6 @@ PLEXER CreateLexer(PSOURCE_FILE input) {
 
 void DeleteLexer(PLEXER l)
 { free(l); }
-
-void EnableLexerMode(PLEXER l, LEXER_MODE modes)
-{ l->CurrentModes |= modes; }
-
-void DisableLexerMode(PLEXER l, LEXER_MODE modes)
-{ l->CurrentModes &= ~modes; }
 
 static TOKEN ReadTokenOnce(PLEXER l);
 
@@ -46,6 +46,7 @@ TOKEN ReadTokenDirect(PLEXER l) {
                       l->CurrentToken.Value.OffendingChar);
         }
         else if (l->CurrentToken.Kind != TK_COMMENT) {
+
             return l->CurrentToken;
         }
     }
@@ -197,7 +198,7 @@ static void ReadIdentifier(PLEXER l, PTOKEN t) {
     }
 
 #define o(kw) (length == ((sizeof(kw) - 1) / sizeof(char)) && !strncmp(l->Cursor, kw, length))
-    if (l->CurrentModes & LM_PP_DIRECTIVE_KW) {
+    if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
              if (o("if"))       t->Kind = TK_PP_if;
         else if (o("ifdef"))    t->Kind = TK_PP_ifdef;
         else if (o("ifndef"))   t->Kind = TK_PP_ifndef;
@@ -562,10 +563,13 @@ static TOKEN ReadTokenOnce(PLEXER l) {
     while (IsWhitespace(GetChar(l)))
         IncrementCursor(l);
 
+    if (l->CurrentFlags & TOKENFLAG_BOL)
+        l->CurrentMode = LM_DEFAULT;
+
     result.Flags = l->CurrentFlags;
     result.Location = l->CurrentLocation;
 
-    if (result.Flags & TOKENFLAG_BOL && GetChar(l) == '#') {
+    if ((result.Flags & TOKENFLAG_BOL) && GetChar(l) == '#') {
         IncrementCursor(l);
         result.Kind = TK_PP_HASH;
     }
@@ -838,6 +842,20 @@ static TOKEN ReadTokenOnce(PLEXER l) {
     }
     else {
         result.Length = l->CurrentLocation.Column - result.Location.Column;
+    }
+
+    if (l->CurrentMode == LM_DEFAULT && result.Kind == TK_PP_HASH) {
+        l->CurrentMode |= LM_PP_DIRECTIVE;
+        l->CurrentMode |= LM_PP_DIRECTIVE_KW;
+    }
+    else if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
+        l->CurrentMode &= ~LM_PP_DIRECTIVE_KW;
+
+        if (result.Kind == TK_PP_include)
+            l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
+    }
+    else if (l->CurrentMode & LM_PP_ANGLED_STRING_CONSTANT) {
+        l->CurrentMode &= ~LM_PP_ANGLED_STRING_CONSTANT;
     }
 
     return result;

@@ -39,20 +39,10 @@ typedef struct {
     TOKEN_VALUE Value;
 } TOKEN, *PTOKEN;
 
-typedef enum {
-    LM_DEFAULT             = 0,
-    LM_RAW                 = 1,
-    LM_PP_DIRECTIVE        = 2,
-    LM_PP_DIRECTIVE_KW     = 4,
-    LM_ANGLED_STR_CONSTANT = 8
-} LEXER_MODE;
-
 typedef struct tagLexer Lexer, *PLEXER;
 
 PLEXER CreateLexer(PSOURCE_FILE input);
 void   DeleteLexer(PLEXER l);
-void   EnableLexerMode(PLEXER l, LEXER_MODE modes);
-void   DisableLexerMode(PLEXER l, LEXER_MODE modes);
 TOKEN  ReadTokenDirect(PLEXER l);
 void   FreeToken(PTOKEN t);
 
