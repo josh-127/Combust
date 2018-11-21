@@ -50,7 +50,7 @@ void LogFatal(const char *format, ...) {
     va_end(args);
 }
 
-static void LogMessageC(
+static void LogMessageAt(
     const char *loc_msg,
     PSOURCE_LOC loc,
     const char *format,
@@ -74,27 +74,96 @@ static void LogMessageC(
     fprintf(stderr, "^\n");
 }
 
-void LogErrorC(PSOURCE_LOC loc, const char *format, ...) {
+void LogErrorAt(PSOURCE_LOC loc, const char *format, ...) {
     va_list args;
     ++g_ErrorsLogged;
 
     va_start(args, format);
-    LogMessageC(WHITE_B "%s:%d:%d: " RED_B "error: " WHITE, loc, format, args);
+    LogMessageAt(WHITE_B "%s:%d:%d: " RED_B "error: " WHITE, loc, format, args);
     va_end(args);
 }
 
-void LogWarningC(PSOURCE_LOC loc, const char *format, ...) {
+void LogWarningAt(PSOURCE_LOC loc, const char *format, ...) {
     va_list args;
     va_start(args, format);
-    LogMessageC(WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE, loc, format, args);
+    LogMessageAt(WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE, loc, format, args);
     va_end(args);
 }
 
-void LogFatalC(PSOURCE_LOC loc, const char *format, ...) {
+void LogFatalAt(PSOURCE_LOC loc, const char *format, ...) {
     va_list args;
     ++g_ErrorsLogged;
 
     va_start(args, format);
-    LogMessageC(WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE, loc, format, args);
+    LogMessageAt(WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE, loc, format, args);
+    va_end(args);
+}
+
+static void LogMessageAtRange(
+    const char    *loc_msg,
+    PSOURCE_RANGE  range,
+    const char    *format,
+    va_list        args
+)
+{
+    char *line = range->Base.Source->Lines[range->Base.Line];
+    int i;
+
+    fprintf(
+        stderr,
+        loc_msg,
+        range->Base.Source->FileName,
+        range->Base.Line + 1,
+        range->Base.Column + 1
+    );
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+
+    for (i = 0; line[i] != '\n'; ++i) {
+        if (line[i] == '\t')
+            fprintf(stderr, "    ");
+        else
+            fprintf(stderr, "%c", line[i]);
+    }
+    fprintf(stderr, "\n");
+
+    for (i = 0; i < range->Base.Column; ++i)
+        fprintf(stderr, line[i] == '\t' ? "    " : " ");
+    fprintf(stderr, "^");
+
+    for (
+        i = range->Base.Column;
+        i < range->Base.Column + range->Length - 1;
+        ++i
+    )
+    {
+        fprintf(stderr, line[i] == '\t' ? "~~~~" : "~");
+    }
+
+    fprintf(stderr, "\n");
+}
+
+void LogErrorAtRange(PSOURCE_RANGE range, const char *format, ...) {
+    va_list args;
+    ++g_ErrorsLogged;
+
+    va_start(args, format);
+    LogMessageAtRange(WHITE_B "%s:%d:%d: " RED_B "error: " WHITE, range, format, args);
+    va_end(args);
+}
+
+void LogWarningAtRange(PSOURCE_RANGE range, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    LogMessageAtRange(WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE, range, format, args);
+    va_end(args);
+}
+
+void LogFatalAtRange(PSOURCE_RANGE range, const char *format, ...) {
+    va_list args;
+    ++g_ErrorsLogged;
+
+    va_start(args, format);
+    LogMessageAtRange(WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE, range, format, args);
     va_end(args);
 }

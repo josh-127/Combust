@@ -32,11 +32,10 @@ typedef union {
 } TOKEN_VALUE;
 
 typedef struct {
-    int         Flags;
-    SOURCE_LOC  Location;
-    int         Length;
-    TOKEN_KIND  Kind;
-    TOKEN_VALUE Value;
+    int          Flags;
+    SOURCE_RANGE Location;
+    TOKEN_KIND   Kind;
+    TOKEN_VALUE  Value;
 } TOKEN, *PTOKEN;
 
 typedef struct tagLexer Lexer, *PLEXER;

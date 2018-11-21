@@ -22,7 +22,7 @@ struct tagLexer {
 };
 
 PLEXER CreateLexer(PSOURCE_FILE input) {
-    PLEXER lexer                  = calloc(sizeof(Lexer));
+    PLEXER lexer                  = calloc(1, sizeof(Lexer));
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentMode            = LM_DEFAULT;
@@ -42,8 +42,11 @@ TOKEN ReadTokenDirect(PLEXER l) {
     for (;;) {
         l->CurrentToken = ReadTokenOnce(l);
         if (l->CurrentToken.Kind == TK_UNKNOWN) {
-            LogErrorC(&l->CurrentToken.Location, "stray '%c' in program",
-                      l->CurrentToken.Value.OffendingChar);
+            LogErrorAtRange(
+                &l->CurrentToken.Location,
+                "stray '%c' in program",
+                l->CurrentToken.Value.OffendingChar
+            );
         }
         else if (l->CurrentToken.Kind != TK_COMMENT) {
 
@@ -166,7 +169,7 @@ static void IncrementCursor(PLEXER l) {
     }
     else {
         if (trailingWhitespaceLength > 0) {
-            LogWarningC(
+            LogWarningAt(
                 &l->CurrentLocation,
                 "backslash and newline separated by space"
             );
@@ -182,6 +185,15 @@ static void IncrementCursor(PLEXER l) {
 static void IncrementCursorBy(PLEXER l, int amount) {
     while (amount--)
         IncrementCursor(l);
+}
+
+static void GetTokenRange(PLEXER l, PTOKEN t, PSOURCE_RANGE range) {
+    int line = t->Location.Base.Line;
+    int column = t->Location.Base.Column;
+    const char *base = &l->Source->Lines[line][column];
+
+    range->Base = t->Location.Base;
+    range->Length = (int) (l->Cursor - base);
 }
 
 /* Precondition: GetChar(l) is [_A-Za-z] */
@@ -245,7 +257,7 @@ static void ReadIdentifier(PLEXER l, PTOKEN t) {
     else if (o("return"))   t->Kind = TK_KW_return;
     else {
         t->Kind = TK_IDENTIFIER;
-        t->Value.IdentifierName = calloc(length + 1);
+        t->Value.IdentifierName = calloc(length + 1, sizeof(char));
         strncpy(t->Value.IdentifierName, l->Cursor, length);
         t->Value.IdentifierName[length] = 0;
     }
@@ -261,7 +273,7 @@ static void ReadSuffix(PLEXER l, char **suffix, int *length) {
     while (IsLetter(l->Cursor[*length]))
         ++*length;
 
-    *suffix = calloc(*length + 1);
+    *suffix = calloc(*length + 1, sizeof(char));
     for (i = 0; i < *length; ++i)
         (*suffix)[i] = l->Cursor[i];
     (*suffix)[*length] = 0;
@@ -300,8 +312,11 @@ static void SkipIntSuffixes(PLEXER l, PTOKEN t) {
         SkipUnsignedSuffix(&suffixCursor);
 
     if (IsLetter(*suffixCursor)) {
-        LogErrorC(
-            &t->Location, "invalid suffix \"%s\" on integer constant", suffix
+        SOURCE_RANGE range;
+        GetTokenRange(l, t, &range);
+
+        LogErrorAtRange(
+            &range, "invalid suffix \"%s\" on integer constant", suffix
         );
     }
 
@@ -335,7 +350,14 @@ static void ReadFractionalLiteral(PLEXER l, PTOKEN t) {
     }
 
     if (suffixLength > 1) {
-        LogErrorC(&t->Location, "invalid suffix \"%s\" on floating constant", suffix);
+        SOURCE_RANGE range;
+        GetTokenRange(l, t, &range);
+
+        LogErrorAtRange(
+            &range,
+            "invalid suffix \"%s\" on floating constant",
+            suffix
+        );
     }
 
     free(suffix);
@@ -367,7 +389,14 @@ static void ReadOctalLiteral(PLEXER l, PTOKEN t) {
             t->Value.IntValue = (t->Value.IntValue * 8) - (GetChar(l) - '0');
         }
         else {
-            LogErrorC(&t->Location, "invalid digit \"%c\" in octal constant", GetChar(l));
+            SOURCE_RANGE range;
+            GetTokenRange(l, t, &range);
+
+            LogErrorAtRange(
+                &range,
+                "invalid digit \"%c\" in octal constant",
+                GetChar(l)
+            );
         }
     }
     SkipIntSuffixes(l, t);
@@ -470,11 +499,14 @@ static char ReadChar(PLEXER l) {
 
 /* Precondition: GetChar(l) == '\'' */
 static void ReadCharLiteral(PLEXER l, PTOKEN t) {
+    SOURCE_RANGE range;
+
     IncrementCursor(l);
     t->Kind = TK_INT_CONSTANT;
 
     if (GetChar(l) == '\n') {
-        LogErrorC(&t->Location, "missing terminating ' character");
+        GetTokenRange(l, t, &range);
+        LogErrorAtRange(&range, "missing terminating ' character");
     }
     else {
         t->Value.IntValue = ReadChar(l);
@@ -485,7 +517,8 @@ static void ReadCharLiteral(PLEXER l, PTOKEN t) {
         else {
             while (GetChar(l) != '\'') {
                 if (GetChar(l) == '\n') {
-                    LogErrorC(&t->Location, "missing terminating ' character");
+                    GetTokenRange(l, t, &range);
+                    LogErrorAtRange(&range, "missing terminating ' character");
                     return;
                 }
 
@@ -493,7 +526,12 @@ static void ReadCharLiteral(PLEXER l, PTOKEN t) {
             }
 
             IncrementCursor(l);
-            LogWarningC(&t->Location, "character constant too long for its type");
+
+            GetTokenRange(l, t, &range);
+            LogWarningAtRange(
+                &range,
+                "character constant too long for its type"
+            );
         }
     }
 }
@@ -539,7 +577,10 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t) {
 
     while (l->Cursor[unescapedLength] != '"') {
         if (l->Cursor[unescapedLength] == '\n') {
-            LogErrorC(&t->Location, "missing terminating \" character");
+            SOURCE_RANGE range;
+            GetTokenRange(l, t, &range);
+
+            LogErrorAtRange(&range, "missing terminating \" character");
             IncrementCursorBy(l, unescapedLength);
             t->Value.StringValue = 0;
             return;
@@ -549,7 +590,7 @@ static void ReadStringLiteral(PLEXER l, PTOKEN t) {
         ++length;
     }
 
-    t->Value.StringValue = calloc(length + 1);
+    t->Value.StringValue = calloc(length + 1, sizeof(char));
 
     IncrementCursor(l);
     for (i = 0; GetChar(l) != '"'; ++i)
@@ -569,7 +610,7 @@ static TOKEN ReadTokenOnce(PLEXER l) {
         l->CurrentMode = LM_DEFAULT;
 
     result.Flags = l->CurrentFlags;
-    result.Location = l->CurrentLocation;
+    result.Location.Base = l->CurrentLocation;
 
     if ((result.Flags & TOKENFLAG_BOL) && GetChar(l) == '#') {
         IncrementCursor(l);
@@ -657,6 +698,8 @@ static TOKEN ReadTokenOnce(PLEXER l) {
                 result.Kind = TK_COMMENT;
 
                 for (;;) {
+                    SOURCE_RANGE range;
+
                     if (GetChar(l) == '*') {
                         IncrementCursor(l);
 
@@ -665,12 +708,14 @@ static TOKEN ReadTokenOnce(PLEXER l) {
                             break;
                         }
                         else if (GetChar(l) == 0) {
-                            LogErrorC(&result.Location, "unterminated comment");
+                            GetTokenRange(l, &result, &range);
+                            LogErrorAtRange(&range, "unterminated comment");
                             break;
                         }
                     }
                     else if (GetChar(l) == 0) {
-                        LogErrorC(&result.Location, "unterminated comment");
+                        GetTokenRange(l, &result, &range);
+                        LogErrorAtRange(&range, "unterminated comment");
                         break;
                     }
                     else {
@@ -840,12 +885,15 @@ static TOKEN ReadTokenOnce(PLEXER l) {
     }
 
     if (result.Kind == TK_COMMENT) {
-        int line = result.Location.Line;
-        int column = result.Location.Column;
-        result.Length = (int) (l->Cursor - &l->Source->Lines[line][column]);
+        int line = result.Location.Base.Line;
+        int column = result.Location.Base.Column;
+        const char *base = &l->Source->Lines[line][column];
+        result.Location.Length = (int) (l->Cursor - base);
     }
     else {
-        result.Length = l->CurrentLocation.Column - result.Location.Column;
+        int end = l->CurrentLocation.Column;
+        int start = result.Location.Base.Column;
+        result.Location.Length = end - start;
     }
 
     if (l->CurrentMode == LM_DEFAULT && result.Kind == TK_PP_HASH) {

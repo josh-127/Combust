@@ -16,18 +16,26 @@ typedef struct {
     int          Column;
 } SOURCE_LOC, *PSOURCE_LOC;
 
+typedef struct {
+    SOURCE_LOC Base;
+    int        Length;
+} SOURCE_RANGE, *PSOURCE_RANGE;
+
 SOURCE_FILE OpenSourceFile(const char *fileName);
 void        CloseSourceFile(SOURCE_FILE *obj);
 
 /* error.c */
 int g_ErrorsLogged;
 
-void LogError   (const char *format, ...);
-void LogWarning (const char *format, ...);
-void LogFatal   (const char *format, ...);
-void LogErrorC  (PSOURCE_LOC loc, const char *format, ...);
-void LogWarningC(PSOURCE_LOC loc, const char *format, ...);
-void LogFatalC  (PSOURCE_LOC loc, const char *format, ...);
+void LogError         (const char *format, ...);
+void LogWarning       (const char *format, ...);
+void LogFatal         (const char *format, ...);
+void LogErrorAt       (PSOURCE_LOC loc, const char *format, ...);
+void LogWarningAt     (PSOURCE_LOC loc, const char *format, ...);
+void LogFatalAt       (PSOURCE_LOC loc, const char *format, ...);
+void LogErrorAtRange  (PSOURCE_RANGE range, const char *format, ...);
+void LogWarningAtRange(PSOURCE_RANGE range, const char *format, ...);
+void LogFatalAtRange  (PSOURCE_RANGE range, const char *format, ...);
 
 
 #endif

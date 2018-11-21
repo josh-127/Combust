@@ -18,7 +18,7 @@ SOURCE_FILE OpenSourceFile(const char *fileName) {
     fseek(file, 0, SEEK_END);
     length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    result.Contents = calloc(length + 2);
+    result.Contents = calloc(length + 2, sizeof(char));
     fread(result.Contents, length, 1, file);
     result.Contents[length] = '\n';
     result.Contents[length + 1] = 0;
@@ -30,7 +30,7 @@ SOURCE_FILE OpenSourceFile(const char *fileName) {
             ++lineCount;
     }
 
-    result.Lines = calloc(lineCount * sizeof(char *));
+    result.Lines = calloc(lineCount, sizeof(char *));
     lineCount = 0;
     result.Lines[0] = result.Contents;
     for (i = 0; i < length; ++i) {
@@ -38,7 +38,7 @@ SOURCE_FILE OpenSourceFile(const char *fileName) {
             result.Lines[++lineCount] = &result.Contents[i + 1];
     }
 
-    result.FileName = calloc(strlen(fileName) + 1);
+    result.FileName = calloc(strlen(fileName) + 1, sizeof(char));
     strcpy(result.FileName, fileName);
     return result;
 }
