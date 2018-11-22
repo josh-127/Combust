@@ -21,10 +21,11 @@ int OpenSourceFile(
     fseek(file, 0, SEEK_END);
     length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    sourceFile->Contents = calloc(length + 2, sizeof(char));
+    sourceFile->Contents = calloc(length + 3, sizeof(char));
     fread(sourceFile->Contents, length, 1, file);
     sourceFile->Contents[length] = '\n';
-    sourceFile->Contents[length + 1] = 0;
+    sourceFile->Contents[length + 1] = '\n';
+    sourceFile->Contents[length + 2] = 0;
     fclose(file);
 
     lineCount = 1;
