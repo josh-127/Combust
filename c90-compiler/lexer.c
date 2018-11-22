@@ -524,48 +524,70 @@ static void ReadNumericalLiteral(
     }
 }
 
-static char ReadChar(THIS PLEXER l) {
-    char result;
+static int ReadCharEscapeSequence(THIS PLEXER l) {
+    int result;
 
     if (GetChar(l) == '\\') {
+        SOURCE_RANGE errorRange;
         int digitCount;
+
+        errorRange.Base = l->CurrentLocation;
+        errorRange.Length = 2;
 
         IncrementCursor(l);
 
         switch (GetChar(l)) {
-        case '\'':  IncrementCursor(l); result = '\''; break;
-        case '"':   IncrementCursor(l); result = '\"'; break;
-        case '?':   IncrementCursor(l); result = '\?'; break;
-        case '\\':  IncrementCursor(l); result = '\\'; break;
-        case 'a':   IncrementCursor(l); result = '\a'; break;
-        case 'b':   IncrementCursor(l); result = '\b'; break;
-        case 'f':   IncrementCursor(l); result = '\f'; break;
-        case 'n':   IncrementCursor(l); result = '\n'; break;
-        case 'r':   IncrementCursor(l); result = '\r'; break;
-        case 't':   IncrementCursor(l); result = '\t'; break;
-        case 'v':   IncrementCursor(l); result = '\v'; break;
+            case '\'': IncrementCursor(l); result = '\''; break;
+            case '"':  IncrementCursor(l); result = '\"'; break;
+            case '?':  IncrementCursor(l); result = '\?'; break;
+            case '\\': IncrementCursor(l); result = '\\'; break;
+            case 'a':  IncrementCursor(l); result = '\a'; break;
+            case 'b':  IncrementCursor(l); result = '\b'; break;
+            case 'f':  IncrementCursor(l); result = '\f'; break;
+            case 'n':  IncrementCursor(l); result = '\n'; break;
+            case 'r':  IncrementCursor(l); result = '\r'; break;
+            case 't':  IncrementCursor(l); result = '\t'; break;
+            case 'v':  IncrementCursor(l); result = '\v'; break;
 
-        case '0': case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
-            result = 0;
-            digitCount = 0;
-            while (digitCount < 3 && IsOctal(GetChar(l))) {
-                result = (result * 8) + (GetChar(l) - '0');
-                ++digitCount;
+            case '0': case '1': case '2': case '3':
+            case '4': case '5': case '6': case '7':
+                result = 0;
+                digitCount = 0;
+
+                while (digitCount < 3 && IsOctal(GetChar(l))) {
+                    result = (result * 8) + (GetChar(l) - '0');
+                    ++digitCount;
+                    IncrementCursor(l);
+                }
+
+                break;
+
+            case 'x':
                 IncrementCursor(l);
-            }
-            break;
+                result = 0;
 
-        case 'x':
-            IncrementCursor(l);
-            result = 0;
-            for (; IsHex(GetChar(l)); IncrementCursor(l)) {
-                result *= 16;
-                if (GetChar(l) <= '9')      result += GetChar(l) - '0';
-                else if (GetChar(l) <= 'F') result += GetChar(l) - 'A' + 10;
-                else if (GetChar(l) <= 'f') result += GetChar(l) - 'a' + 10;
-            }
-            break;
+                for (; IsHex(GetChar(l)); IncrementCursor(l)) {
+                    result *= 16;
+                    if (GetChar(l) <= '9')
+                        result += GetChar(l) - '0';
+                    else if (GetChar(l) <= 'F')
+                        result += GetChar(l) - 'A' + 10;
+                    else if (GetChar(l) <= 'f')
+                        result += GetChar(l) - 'a' + 10;
+                }
+
+                break;
+
+            default:
+                IncrementCursor(l);
+
+                LogErrorAtRange(
+                    &errorRange,
+                    "unknown escape sequence: '\\%c'",
+                    GetChar(l)
+                );
+
+                break;
         }
     }
     else {
@@ -592,7 +614,7 @@ static void ReadCharLiteral(
         LogErrorAtRange(&range, "missing terminating ' character");
     }
     else {
-        t->Value.IntValue = ReadChar(l);
+        t->Value.IntValue = ReadCharEscapeSequence(l);
 
         if (GetChar(l) == '\'') {
             IncrementCursor(l);
@@ -619,41 +641,6 @@ static void ReadCharLiteral(
     }
 }
 
-static void CountUnescapedChar(
-    THIS   PLEXER  l,
-    IN_OUT int    *length
-)
-{
-    if (l->Cursor[*length] == '\\') {
-        int j;
-        ++*length;
-
-        switch (l->Cursor[*length]) {
-        case '\'':  case '"':   case '?':
-        case '\\':  case 'a':   case 'b':
-        case 'f':   case 'n':   case 'r':
-        case 't':   case 'v':
-            ++*length;
-            break;
-
-        case '0': case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
-            for (j = 0; j < 3 && IsOctal(l->Cursor[*length]); ++j)
-                ++*length;
-            break;
-
-        case 'x':
-            ++*length;
-            while (IsHex(l->Cursor[*length]))
-                ++*length;
-            break;
-        }
-    }
-    else {
-        ++*length;
-    }
-}
-
 /* Precondition: GetChar(l) == '"' */
 static void ReadStringLiteral(
     THIS PLEXER l,
@@ -661,34 +648,39 @@ static void ReadStringLiteral(
 )
 {
     int length = 0;
-    int unescapedLength = 1;
-    int i;
+    int capacity = 12;
 
     t->Kind = TK_STR_CONSTANT;
+    IncrementCursor(l);
 
-    while (l->Cursor[unescapedLength] != '"') {
-        if (l->Cursor[unescapedLength] == '\n') {
+    t->Value.StringValue = calloc(capacity + 1, sizeof(char));
+    t->Value.StringValue[0] = 0;
+
+    while (GetChar(l) != '"') {
+        if (GetChar(l) == '\n') {
             SOURCE_RANGE range;
             GetTokenRange(l, t, &range);
 
             LogErrorAtRange(&range, "missing terminating \" character");
-            IncrementCursorBy(l, unescapedLength);
-            t->Value.StringValue = 0;
+
+            if (t->Value.StringValue != NULL)
+                free(t->Value.StringValue);
+
+            t->Value.StringValue = NULL;
             return;
         }
 
-        CountUnescapedChar(l, &unescapedLength);
+        if (length >= capacity) {
+            capacity *= 2;
+            t->Value.StringValue = realloc(t->Value.StringValue, capacity + 1);
+        }
+
+        t->Value.StringValue[length] = ReadCharEscapeSequence(l);
         ++length;
     }
 
-    t->Value.StringValue = calloc(length + 1, sizeof(char));
-
     IncrementCursor(l);
-    for (i = 0; GetChar(l) != '"'; ++i)
-        t->Value.StringValue[i] = ReadChar(l);
-
     t->Value.StringValue[length] = 0;
-    IncrementCursor(l);
 }
 
 static TOKEN ReadTokenOnce(THIS PLEXER l)
