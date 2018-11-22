@@ -161,8 +161,16 @@ static char DecodeNewLineEscape(
     return firstChar;
 }
 
+static char GetCharEx(
+    THIS PLEXER  l,
+    OUT  int    *charLength
+)
+{
+    return DecodeNewLineEscape(l, charLength, NULL);
+}
+
 static char GetChar(THIS PLEXER l) {
-    return DecodeNewLineEscape(l, NULL, NULL);
+    return GetCharEx(l, NULL);
 }
 
 static void IncrementCursor(THIS PLEXER l) {
@@ -227,18 +235,33 @@ static void ReadIdentifier(
     OUT  PTOKEN t
 )
 {
-    int length = 0;
+    PSOURCE_FILE source = t->Location.Base.Source;
 
-    while ((l->Cursor[length] == '_') ||
-           (l->Cursor[length] == '$') ||
-           (l->Cursor[length] >= 'A' && l->Cursor[length] <= 'Z') ||
-           (l->Cursor[length] >= 'a' && l->Cursor[length] <= 'z') ||
-           (l->Cursor[length] >= '0' && l->Cursor[length] <= '9'))
-    {
-        ++length;
+    int line   = t->Location.Base.Line,
+        column = t->Location.Base.Column,
+        length;
+
+    const char *start = &source->Lines[line][column];
+
+    for (;;) {
+        char character = GetChar(l);
+
+        if ((character == '_') ||
+            (character == '$') ||
+            (character >= 'A' && character <= 'Z') ||
+            (character >= 'a' && character <= 'z') ||
+            (character >= '0' && character <= '9'))
+        {
+            IncrementCursor(l);
+        }
+        else {
+            break;
+        }
     }
 
-#define o(kw) (length == ((sizeof(kw) - 1) / sizeof(char)) && !strncmp(l->Cursor, kw, length))
+    length = (int) (l->Cursor - start) / sizeof(char);
+
+#define o(kw) (length == (sizeof(kw) / sizeof(char) - 1) && !strncmp(start, kw, length))
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
              if (o("if"))       t->Kind = TK_PP_if;
         else if (o("ifdef"))    t->Kind = TK_PP_ifdef;
@@ -287,12 +310,10 @@ static void ReadIdentifier(
     else {
         t->Kind = TK_IDENTIFIER;
         t->Value.IdentifierName = calloc(length + 1, sizeof(char));
-        strncpy(t->Value.IdentifierName, l->Cursor, length);
+        strncpy(t->Value.IdentifierName, start, length);
         t->Value.IdentifierName[length] = 0;
     }
 #undef o
-
-    IncrementCursorBy(l, length);
 }
 
 static void ReadSuffix(
