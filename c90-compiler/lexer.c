@@ -579,14 +579,13 @@ static int ReadCharEscapeSequence(THIS PLEXER l) {
                 break;
 
             default:
-                IncrementCursor(l);
-
                 LogErrorAtRange(
                     &errorRange,
                     "unknown escape sequence: '\\%c'",
                     GetChar(l)
                 );
 
+                IncrementCursor(l);
                 break;
         }
     }
