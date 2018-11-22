@@ -50,7 +50,7 @@ TOKEN ReadTokenDirect(
         l->CurrentToken = ReadTokenOnce(l);
         if (l->CurrentToken.Kind == TK_UNKNOWN) {
             LogErrorAtRange(
-                &l->CurrentToken.Location,
+                &l->CurrentToken.LexemeRange,
                 "stray '%c' in program",
                 l->CurrentToken.Value.OffendingChar
             );
@@ -221,11 +221,11 @@ static void GetTokenRange(
     OUT  PSOURCE_RANGE range
 )
 {
-    int line = t->Location.Base.Line;
-    int column = t->Location.Base.Column;
+    int line = t->LexemeRange.Location.Line;
+    int column = t->LexemeRange.Location.Column;
     const char *base = &l->Source->Lines[line][column];
 
-    range->Base = t->Location.Base;
+    range->Location = t->LexemeRange.Location;
     range->Length = (int) (l->Cursor - base);
 }
 
@@ -235,10 +235,10 @@ static void ReadIdentifier(
     OUT  PTOKEN t
 )
 {
-    PSOURCE_FILE source = t->Location.Base.Source;
+    PSOURCE_FILE source = t->LexemeRange.Location.Source;
 
-    int line   = t->Location.Base.Line,
-        column = t->Location.Base.Column,
+    int line   = t->LexemeRange.Location.Line,
+        column = t->LexemeRange.Location.Column,
         length;
 
     const char *start = &source->Lines[line][column];
@@ -531,7 +531,7 @@ static int ReadCharEscapeSequence(THIS PLEXER l) {
         SOURCE_RANGE errorRange;
         int digitCount;
 
-        errorRange.Base = l->CurrentLocation;
+        errorRange.Location = l->CurrentLocation;
         errorRange.Length = 2;
 
         IncrementCursor(l);
@@ -693,7 +693,7 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
         l->CurrentMode = LM_DEFAULT;
 
     result.Flags = l->CurrentFlags;
-    result.Location.Base = l->CurrentLocation;
+    result.LexemeRange.Location = l->CurrentLocation;
 
     if ((result.Flags & TOKENFLAG_BOL) && GetChar(l) == '#') {
         IncrementCursor(l);
@@ -968,15 +968,15 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
     }
 
     if (result.Kind == TK_COMMENT) {
-        int line = result.Location.Base.Line;
-        int column = result.Location.Base.Column;
+        int line = result.LexemeRange.Location.Line;
+        int column = result.LexemeRange.Location.Column;
         const char *base = &l->Source->Lines[line][column];
-        result.Location.Length = (int) (l->Cursor - base);
+        result.LexemeRange.Length = (int) (l->Cursor - base);
     }
     else {
         int end = l->CurrentLocation.Column;
-        int start = result.Location.Base.Column;
-        result.Location.Length = end - start;
+        int start = result.LexemeRange.Location.Column;
+        result.LexemeRange.Length = end - start;
     }
 
     if (l->CurrentMode == LM_DEFAULT && result.Kind == TK_PP_HASH) {

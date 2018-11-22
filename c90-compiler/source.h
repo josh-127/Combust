@@ -15,7 +15,7 @@ typedef struct tagSOURCE_LOC {
 } SOURCE_LOC, *PSOURCE_LOC;
 
 typedef struct tagSOURCE_RANGE {
-    SOURCE_LOC Base;
+    SOURCE_LOC Location;
     int        Length;
 } SOURCE_RANGE, *PSOURCE_RANGE;
 

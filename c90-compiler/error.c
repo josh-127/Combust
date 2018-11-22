@@ -106,15 +106,15 @@ static void LogMessageAtRange(
     va_list        args
 )
 {
-    char *line = range->Base.Source->Lines[range->Base.Line];
+    char *line = range->Location.Source->Lines[range->Location.Line];
     int i;
 
     fprintf(
         stderr,
         loc_msg,
-        range->Base.Source->FileName,
-        range->Base.Line + 1,
-        range->Base.Column + 1
+        range->Location.Source->FileName,
+        range->Location.Line + 1,
+        range->Location.Column + 1
     );
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
@@ -127,13 +127,13 @@ static void LogMessageAtRange(
     }
     fprintf(stderr, "\n");
 
-    for (i = 0; i < range->Base.Column; ++i)
+    for (i = 0; i < range->Location.Column; ++i)
         fprintf(stderr, line[i] == '\t' ? "    " : " ");
     fprintf(stderr, "^");
 
     for (
-        i = range->Base.Column;
-        i < range->Base.Column + range->Length - 1;
+        i = range->Location.Column;
+        i < range->Location.Column + range->Length - 1;
         ++i
     )
     {
