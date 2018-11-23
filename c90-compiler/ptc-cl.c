@@ -1,9 +1,11 @@
 #include "error.h"
 #include "lexer.h"
 #include "source.h"
+#include "syntax.h"
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 char *g_ProgramName;
 
@@ -24,7 +26,9 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
         SOURCE_FILE sourceFile;
         PLEXER lexer;
-        TOKEN t = { 0 };
+        SYNTAX_TOKEN t;
+
+        memset(&t, 0, sizeof(t));
 
         if (OpenSourceFile(argv[optind], &sourceFile)) {
             LogFatal("cannot open %s", argv[optind]);
@@ -33,10 +37,10 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
 
         lexer = CreateLexer(&sourceFile);
 
-        while (t.Kind != TK_EOF) {
-            t = ReadTokenDirect(lexer);
-            FreeToken(&t);
+        while (t.Base.Kind != SK_EOF_TOKEN) {
+            ReadTokenDirect(lexer, &t);
         }
+
         DeleteLexer(lexer);
         CloseSourceFile(&sourceFile);
     }

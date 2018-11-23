@@ -17,7 +17,7 @@ struct tagLexer {
     uint32_t      CurrentMode;
     int           CurrentFlags;
     SOURCE_LOC    CurrentLocation;
-    TOKEN         CurrentToken;
+    SYNTAX_TOKEN  CurrentToken;
 };
 
 PLEXER CreateLexer(
@@ -28,7 +28,7 @@ PLEXER CreateLexer(
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentMode            = LM_DEFAULT;
-    lexer->CurrentFlags           = TOKENFLAG_BOL;
+    lexer->CurrentFlags           = ST_BEGINNING_OF_LINE;
     lexer->CurrentLocation.Line   = 0;
     lexer->CurrentLocation.Column = 0;
     lexer->CurrentLocation.Source = lexer->Source;
@@ -40,36 +40,28 @@ void DeleteLexer(
 )
 { free(l); }
 
-static TOKEN ReadTokenOnce(THIS PLEXER l);
+static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l);
 
-TOKEN ReadTokenDirect(
-    THIS PLEXER l
+void ReadTokenDirect(
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN token
 )
 {
     for (;;) {
         l->CurrentToken = ReadTokenOnce(l);
-        if (l->CurrentToken.Kind == TK_UNKNOWN) {
+
+        if (l->CurrentToken.Base.Kind == SK_STRAY_TOKEN) {
             LogErrorAtRange(
-                &l->CurrentToken.LexemeRange,
+                &l->CurrentToken.Base.LexemeRange,
                 "stray '%c' in program",
                 l->CurrentToken.Value.OffendingChar
             );
         }
-        else if (l->CurrentToken.Kind != TK_COMMENT) {
-
-            return l->CurrentToken;
+        else if (l->CurrentToken.Base.Kind != SK_COMMENT_TOKEN) {
+            *token = l->CurrentToken;
+            return;
         }
     }
-}
-
-void FreeToken(
-    THIS PTOKEN t
-)
-{
-    if (t->Kind == TK_IDENTIFIER)
-        free(t->Value.IdentifierName);
-    else if (t->Kind == TK_STR_CONSTANT)
-        free(t->Value.StringValue);
 }
 
 #define IsWhitespace(c) ((c) == ' ' || \
@@ -183,13 +175,13 @@ static void IncrementCursor(THIS PLEXER l) {
     if (charValue == '\n') {
         ++l->CurrentLocation.Line;
         l->CurrentLocation.Column = 0;
-        l->CurrentFlags |= TOKENFLAG_BOL;
+        l->CurrentFlags |= ST_BEGINNING_OF_LINE;
     }
     else if (trailingWhitespaceLength < 0) {
         l->CurrentLocation.Column += charLength;
 
         if (!IsWhitespace(charValue))
-            l->CurrentFlags &= ~TOKENFLAG_BOL;
+            l->CurrentFlags &= ~ST_BEGINNING_OF_LINE;
     }
     else {
         if (trailingWhitespaceLength > 0) {
@@ -217,28 +209,28 @@ static void IncrementCursorBy(
 
 static void GetTokenRange(
     THIS PLEXER        l,
-    IN   PTOKEN        t,
+    IN   PSYNTAX_TOKEN t,
     OUT  PSOURCE_RANGE range
 )
 {
-    int line = t->LexemeRange.Location.Line;
-    int column = t->LexemeRange.Location.Column;
+    int line = t->Base.LexemeRange.Location.Line;
+    int column = t->Base.LexemeRange.Location.Column;
     const char *base = &l->Source->Lines[line][column];
 
-    range->Location = t->LexemeRange.Location;
+    range->Location = t->Base.LexemeRange.Location;
     range->Length = (int) (l->Cursor - base);
 }
 
 /* Precondition: GetChar(l) is [_A-Za-z] */
 static void ReadIdentifier(
-    THIS PLEXER l,
-    OUT  PTOKEN t
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN t
 )
 {
-    PSOURCE_FILE source = t->LexemeRange.Location.Source;
+    PSOURCE_FILE source = t->Base.LexemeRange.Location.Source;
 
-    int line   = t->LexemeRange.Location.Line,
-        column = t->LexemeRange.Location.Column,
+    int line   = t->Base.LexemeRange.Location.Line,
+        column = t->Base.LexemeRange.Location.Column,
         length;
 
     const char *start = &source->Lines[line][column];
@@ -263,52 +255,52 @@ static void ReadIdentifier(
 
 #define o(kw) (length == (sizeof(kw) / sizeof(char) - 1) && !strncmp(start, kw, length))
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
-             if (o("if"))       t->Kind = TK_PP_if;
-        else if (o("ifdef"))    t->Kind = TK_PP_ifdef;
-        else if (o("ifndef"))   t->Kind = TK_PP_ifndef;
-        else if (o("elif"))     t->Kind = TK_PP_elif;
-        else if (o("endif"))    t->Kind = TK_PP_endif;
-        else if (o("include"))  t->Kind = TK_PP_include;
-        else if (o("define"))   t->Kind = TK_PP_define;
-        else if (o("undef"))    t->Kind = TK_PP_undef;
-        else if (o("line"))     t->Kind = TK_PP_line;
-        else if (o("error"))    t->Kind = TK_PP_error;
-        else if (o("warning"))  t->Kind = TK_PP_warning;
+             if (o("if"))       t->Base.Kind = SK_IF_DIRECTIVE_KEYWORD;
+        else if (o("ifdef"))    t->Base.Kind = SK_IFDEF_DIRECTIVE_KEYWORD;
+        else if (o("ifndef"))   t->Base.Kind = SK_IFNDEF_DIRECTIVE_KEYWORD;
+        else if (o("elif"))     t->Base.Kind = SK_ELIF_DIRECTIVE_KEYWORD;
+        else if (o("endif"))    t->Base.Kind = SK_ENDIF_DIRECTIVE_KEYWORD;
+        else if (o("include"))  t->Base.Kind = SK_INCLUDE_DIRECTIVE_KEYWORD;
+        else if (o("define"))   t->Base.Kind = SK_DEFINE_DIRECTIVE_KEYWORD;
+        else if (o("undef"))    t->Base.Kind = SK_UNDEF_DIRECTIVE_KEYWORD;
+        else if (o("line"))     t->Base.Kind = SK_LINE_DIRECTIVE_KEYWORD;
+        else if (o("error"))    t->Base.Kind = SK_ERROR_DIRECTIVE_KEYWORD;
+        else if (o("warning"))  t->Base.Kind = SK_WARNING_DIRECTIVE_KEYWORD;
     }
-    else if (o("const"))    t->Kind = TK_KW_const;
-    else if (o("extern"))   t->Kind = TK_KW_extern;
-    else if (o("static"))   t->Kind = TK_KW_static;
-    else if (o("auto"))     t->Kind = TK_KW_auto;
-    else if (o("volatile")) t->Kind = TK_KW_volatile;
-    else if (o("unsigned")) t->Kind = TK_KW_unsigned;
-    else if (o("signed"))   t->Kind = TK_KW_signed;
-    else if (o("void"))     t->Kind = TK_KW_void;
-    else if (o("char"))     t->Kind = TK_KW_char;
-    else if (o("short"))    t->Kind = TK_KW_short;
-    else if (o("int"))      t->Kind = TK_KW_int;
-    else if (o("long"))     t->Kind = TK_KW_long;
-    else if (o("float"))    t->Kind = TK_KW_float;
-    else if (o("double"))   t->Kind = TK_KW_double;
-    else if (o("enum"))     t->Kind = TK_KW_enum;
-    else if (o("struct"))   t->Kind = TK_KW_struct;
-    else if (o("union"))    t->Kind = TK_KW_union;
-    else if (o("typedef"))  t->Kind = TK_KW_typedef;
-    else if (o("sizeof"))   t->Kind = TK_KW_sizeof;
-    else if (o("register")) t->Kind = TK_KW_register;
-    else if (o("goto"))     t->Kind = TK_KW_goto;
-    else if (o("if"))       t->Kind = TK_KW_if;
-    else if (o("else"))     t->Kind = TK_KW_else;
-    else if (o("switch"))   t->Kind = TK_KW_switch;
-    else if (o("case"))     t->Kind = TK_KW_case;
-    else if (o("default"))  t->Kind = TK_KW_default;
-    else if (o("do"))       t->Kind = TK_KW_do;
-    else if (o("while"))    t->Kind = TK_KW_while;
-    else if (o("for"))      t->Kind = TK_KW_for;
-    else if (o("break"))    t->Kind = TK_KW_break;
-    else if (o("continue")) t->Kind = TK_KW_continue;
-    else if (o("return"))   t->Kind = TK_KW_return;
+    else if (o("const"))    t->Base.Kind = SK_CONST_KEYWORD;
+    else if (o("extern"))   t->Base.Kind = SK_EXTERN_KEYWORD;
+    else if (o("static"))   t->Base.Kind = SK_STATIC_KEYWORD;
+    else if (o("auto"))     t->Base.Kind = SK_AUTO_KEYWORD;
+    else if (o("volatile")) t->Base.Kind = SK_VOLATILE_KEYWORD;
+    else if (o("unsigned")) t->Base.Kind = SK_UNSIGNED_KEYWORD;
+    else if (o("signed"))   t->Base.Kind = SK_SIGNED_KEYWORD;
+    else if (o("void"))     t->Base.Kind = SK_VOID_KEYWORD;
+    else if (o("char"))     t->Base.Kind = SK_CHAR_KEYWORD;
+    else if (o("short"))    t->Base.Kind = SK_SHORT_KEYWORD;
+    else if (o("int"))      t->Base.Kind = SK_INT_KEYWORD;
+    else if (o("long"))     t->Base.Kind = SK_LONG_KEYWORD;
+    else if (o("float"))    t->Base.Kind = SK_FLOAT_KEYWORD;
+    else if (o("double"))   t->Base.Kind = SK_DOUBLE_KEYWORD;
+    else if (o("enum"))     t->Base.Kind = SK_ENUM_KEYWORD;
+    else if (o("struct"))   t->Base.Kind = SK_STRUCT_KEYWORD;
+    else if (o("union"))    t->Base.Kind = SK_UNION_KEYWORD;
+    else if (o("typedef"))  t->Base.Kind = SK_TYPEDEF_KEYWORD;
+    else if (o("sizeof"))   t->Base.Kind = SK_SIZEOF_KEYWORD;
+    else if (o("register")) t->Base.Kind = SK_REGISTER_KEYWORD;
+    else if (o("goto"))     t->Base.Kind = SK_GOTO_KEYWORD;
+    else if (o("if"))       t->Base.Kind = SK_IF_KEYWORD;
+    else if (o("else"))     t->Base.Kind = SK_ELSE_KEYWORD;
+    else if (o("switch"))   t->Base.Kind = SK_SWITCH_KEYWORD;
+    else if (o("case"))     t->Base.Kind = SK_CASE_KEYWORD;
+    else if (o("default"))  t->Base.Kind = SK_DEFAULT_KEYWORD;
+    else if (o("do"))       t->Base.Kind = SK_DO_KEYWORD;
+    else if (o("while"))    t->Base.Kind = SK_WHILE_KEYWORD;
+    else if (o("for"))      t->Base.Kind = SK_FOR_KEYWORD;
+    else if (o("break"))    t->Base.Kind = SK_BREAK_KEYWORD;
+    else if (o("continue")) t->Base.Kind = SK_CONTINUE_KEYWORD;
+    else if (o("return"))   t->Base.Kind = SK_RETURN_KEYWORD;
     else {
-        t->Kind = TK_IDENTIFIER;
+        t->Base.Kind = SK_IDENTIFIER_TOKEN;
         t->Value.IdentifierName = calloc(length + 1, sizeof(char));
         strncpy(t->Value.IdentifierName, start, length);
         t->Value.IdentifierName[length] = 0;
@@ -354,8 +346,8 @@ static int SkipLongSuffix(IN_OUT char **cursor) {
 }
 
 static void SkipIntSuffixes(
-    THIS PLEXER l,
-    IN   PTOKEN t
+    THIS PLEXER        l,
+    IN   PSYNTAX_TOKEN t
 )
 {
     int suffixLength = 0;
@@ -383,8 +375,8 @@ static void SkipIntSuffixes(
 }
 
 static void ReadFractionalLiteral(
-    THIS PLEXER l,
-    IN   PTOKEN t
+    THIS PLEXER        l,
+    IN   PSYNTAX_TOKEN t
 )
 {
     float floatFrac = 0.0F;
@@ -404,11 +396,11 @@ static void ReadFractionalLiteral(
     ReadSuffix(l, &suffix, &suffixLength);
 
     if (*suffix == 'f' || *suffix == 'F') {
-        t->Kind = TK_FLOAT_CONSTANT;
+        t->Base.Kind = SK_FLOAT_CONSTANT_TOKEN;
         t->Value.FloatValue = t->Value.IntValue + floatFrac;
     }
     else {
-        t->Kind = TK_DOUBLE_CONSTANT;
+        t->Base.Kind = SK_DOUBLE_CONSTANT_TOKEN;
         t->Value.DoubleValue = t->Value.IntValue + doubleFrac;
     }
 
@@ -427,14 +419,16 @@ static void ReadFractionalLiteral(
 }
 
 static void ReadHexLiteral(
-    THIS PLEXER l,
-    OUT  PTOKEN t
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN t
 )
 {
-    t->Kind = TK_INT_CONSTANT;
+    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
     t->Value.IntValue = 0;
+
     while (IsHex(GetChar(l))) {
         t->Value.IntValue *= 16;
+
         if (GetChar(l) <= '9')
             t->Value.IntValue += GetChar(l) - '0';
         else if (GetChar(l) <= 'F')
@@ -449,12 +443,13 @@ static void ReadHexLiteral(
 }
 
 static void ReadOctalLiteral(
-    THIS PLEXER l,
-    OUT  PTOKEN t
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN t
 )
 {
-    t->Kind = TK_INT_CONSTANT;
+    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
     t->Value.IntValue = 0;
+
     for (; IsDecimal(GetChar(l)); IncrementCursor(l)) {
         if (IsOctal(GetChar(l))) {
             t->Value.IntValue = (t->Value.IntValue * 8) - (GetChar(l) - '0');
@@ -470,16 +465,18 @@ static void ReadOctalLiteral(
             );
         }
     }
+
     SkipIntSuffixes(l, t);
 }
 
 static void ReadDecimalLiteral(
-    THIS PLEXER l,
-    OUT  PTOKEN t
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN t
 )
 {
-    t->Kind = TK_INT_CONSTANT;
+    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
     t->Value.IntValue = 0;
+
     for (; IsDecimal(GetChar(l)); IncrementCursor(l))
         t->Value.IntValue = (t->Value.IntValue * 10) + (GetChar(l) - '0');
 
@@ -493,8 +490,8 @@ static void ReadDecimalLiteral(
 }
 
 static void ReadNumericalLiteral(
-    THIS PLEXER l,
-    OUT  PTOKEN t
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN t
 )
 {
     if (GetChar(l) == '0') {
@@ -599,14 +596,14 @@ static int ReadCharEscapeSequence(THIS PLEXER l) {
 
 /* Precondition: GetChar(l) == '\'' */
 static void ReadCharLiteral(
-    THIS PLEXER l,
-    OUT  PTOKEN t
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN t
 )
 {
     SOURCE_RANGE range;
 
     IncrementCursor(l);
-    t->Kind = TK_INT_CONSTANT;
+    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
 
     if (GetChar(l) == '\n') {
         GetTokenRange(l, t, &range);
@@ -642,14 +639,14 @@ static void ReadCharLiteral(
 
 /* Precondition: GetChar(l) == '"' */
 static void ReadStringLiteral(
-    THIS PLEXER l,
-    OUT  PTOKEN t
+    THIS PLEXER        l,
+    OUT  PSYNTAX_TOKEN t
 )
 {
     int length = 0;
     int capacity = 12;
 
-    t->Kind = TK_STR_CONSTANT;
+    t->Base.Kind = SK_STRING_CONSTANT_TOKEN;
     IncrementCursor(l);
 
     t->Value.StringValue = calloc(capacity + 1, sizeof(char));
@@ -682,37 +679,84 @@ static void ReadStringLiteral(
     t->Value.StringValue[length] = 0;
 }
 
-static TOKEN ReadTokenOnce(THIS PLEXER l)
+static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
 {
-    TOKEN result = { 0 };
+    SYNTAX_TOKEN result;
+    memset(&result, 0, sizeof(result));
 
     while (IsWhitespace(GetChar(l)))
         IncrementCursor(l);
 
-    if (l->CurrentFlags & TOKENFLAG_BOL)
+    if (l->CurrentFlags & ST_BEGINNING_OF_LINE)
         l->CurrentMode = LM_DEFAULT;
 
     result.Flags = l->CurrentFlags;
-    result.LexemeRange.Location = l->CurrentLocation;
+    result.Base.LexemeRange.Location = l->CurrentLocation;
 
-    if ((result.Flags & TOKENFLAG_BOL) && GetChar(l) == '#') {
+    if ((result.Flags & ST_BEGINNING_OF_LINE) && GetChar(l) == '#') {
         IncrementCursor(l);
-        result.Kind = TK_PP_HASH;
+        result.Base.Kind = SK_HASH_TOKEN;
     }
     else {
         switch (GetChar(l)) {
-        case 0: result.Kind = TK_EOF; break;
-        case '(': IncrementCursor(l); result.Kind = TK_LPAREN;    break;
-        case ')': IncrementCursor(l); result.Kind = TK_RPAREN;    break;
-        case '[': IncrementCursor(l); result.Kind = TK_LBRACKET;  break;
-        case ']': IncrementCursor(l); result.Kind = TK_RBRACKET;  break;
-        case '{': IncrementCursor(l); result.Kind = TK_LBRACE;    break;
-        case '}': IncrementCursor(l); result.Kind = TK_RBRACE;    break;
-        case ';': IncrementCursor(l); result.Kind = TK_SEMICOLON; break;
-        case ',': IncrementCursor(l); result.Kind = TK_COMMA;     break;
-        case '~': IncrementCursor(l); result.Kind = TK_TILDE;     break;
-        case '?': IncrementCursor(l); result.Kind = TK_QUESTION;  break;
-        case ':': IncrementCursor(l); result.Kind = TK_COLON;     break;
+        case 0:
+            result.Base.Kind = SK_EOF_TOKEN;
+            break;
+
+        case '(':
+            IncrementCursor(l);
+            result.Base.Kind = SK_LPAREN_TOKEN;
+            break;
+
+        case ')':
+            IncrementCursor(l);
+            result.Base.Kind = SK_RPAREN_TOKEN;
+            break;
+
+        case '[':
+            IncrementCursor(l);
+            result.Base.Kind = SK_LBRACKET_TOKEN;
+            break;
+
+        case ']':
+            IncrementCursor(l);
+            result.Base.Kind = SK_RBRACKET_TOKEN;
+            break;
+
+        case '{':
+            IncrementCursor(l);
+            result.Base.Kind = SK_LBRACE_TOKEN;
+            break;
+
+        case '}':
+            IncrementCursor(l);
+            result.Base.Kind = SK_RBRACE_TOKEN;
+            break;
+
+        case ';':
+            IncrementCursor(l);
+            result.Base.Kind = SK_SEMICOLON_TOKEN;
+            break;
+
+        case ',':
+            IncrementCursor(l);
+            result.Base.Kind = SK_COMMA_TOKEN;
+            break;
+
+        case '~':
+            IncrementCursor(l);
+            result.Base.Kind = SK_TILDE_TOKEN;
+            break;
+
+        case '?':
+            IncrementCursor(l);
+            result.Base.Kind = SK_QUESTION_TOKEN;
+            break;
+
+        case ':':
+            IncrementCursor(l);
+            result.Base.Kind = SK_COLON_TOKEN;
+            break;
 
         case '.':
             IncrementCursor(l);
@@ -721,7 +765,7 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
                 ReadFractionalLiteral(l, &result);
             }
             else {
-                result.Kind = TK_DOT;
+                result.Base.Kind = SK_DOT_TOKEN;
             }
             break;
 
@@ -729,14 +773,14 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_PLUS_EQUALS;
+                result.Base.Kind = SK_PLUS_EQUALS_TOKEN;
             }
             else if (GetChar(l) == '+') {
                 IncrementCursor(l);
-                result.Kind = TK_PLUS_PLUS;
+                result.Base.Kind = SK_PLUS_PLUS_TOKEN;
             }
             else {
-                result.Kind = TK_PLUS;
+                result.Base.Kind = SK_PLUS_TOKEN;
             }
             break;
 
@@ -744,18 +788,18 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_MINUS_EQUALS;
+                result.Base.Kind = SK_MINUS_EQUALS_TOKEN;
             }
             else if (GetChar(l) == '-') {
                 IncrementCursor(l);
-                result.Kind = TK_MINUS_MINUS;
+                result.Base.Kind = SK_MINUS_MINUS_TOKEN;
             }
             else if (GetChar(l) == '>') {
                 IncrementCursor(l);
-                result.Kind = TK_MINUS_GT;
+                result.Base.Kind = SK_MINUS_GT_TOKEN;
             }
             else {
-                result.Kind = TK_MINUS;
+                result.Base.Kind = SK_MINUS_TOKEN;
             }
             break;
 
@@ -763,10 +807,10 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_ASTERISK_EQUALS;
+                result.Base.Kind = SK_ASTERISK_EQUALS_TOKEN;
             }
             else {
-                result.Kind = TK_ASTERISK;
+                result.Base.Kind = SK_ASTERISK_TOKEN;
             }
             break;
 
@@ -774,11 +818,11 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_SLASH_EQUALS;
+                result.Base.Kind = SK_SLASH_EQUALS_TOKEN;
             }
             else if (GetChar(l) == '*') {
                 IncrementCursor(l);
-                result.Kind = TK_COMMENT;
+                result.Base.Kind = SK_COMMENT_TOKEN;
 
                 for (;;) {
                     SOURCE_RANGE range;
@@ -807,7 +851,7 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
                 }
             }
             else {
-                result.Kind = TK_SLASH;
+                result.Base.Kind = SK_SLASH_TOKEN;
             }
             break;
 
@@ -815,10 +859,10 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_PERCENT_EQUALS;
+                result.Base.Kind = SK_PERCENT_EQUALS_TOKEN;
             }
             else {
-                result.Kind = TK_PERCENT;
+                result.Base.Kind = SK_PERCENT_TOKEN;
             }
             break;
 
@@ -826,20 +870,20 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_LT_EQUALS;
+                result.Base.Kind = SK_LT_EQUALS_TOKEN;
             }
             else if (GetChar(l) == '<') {
                 IncrementCursor(l);
                 if (GetChar(l) == '=') {
                     IncrementCursor(l);
-                    result.Kind = TK_LT_LT_EQUALS;
+                    result.Base.Kind = SK_LT_LT_EQUALS_TOKEN;
                 }
                 else {
-                    result.Kind = TK_LT_LT;
+                    result.Base.Kind = SK_LT_LT_TOKEN;
                 }
             }
             else {
-                result.Kind = TK_LT;
+                result.Base.Kind = SK_LT_TOKEN;
             }
             break;
 
@@ -847,20 +891,20 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_GT_EQUALS;
+                result.Base.Kind = SK_GT_EQUALS_TOKEN;
             }
             else if (GetChar(l) == '>') {
                 IncrementCursor(l);
                 if (GetChar(l) == '=') {
                     IncrementCursor(l);
-                    result.Kind = TK_GT_GT_EQUALS;
+                    result.Base.Kind = SK_GT_GT_EQUALS_TOKEN;
                 }
                 else {
-                    result.Kind = TK_GT_GT;
+                    result.Base.Kind = SK_GT_GT_TOKEN;
                 }
             }
             else {
-                result.Kind = TK_GT;
+                result.Base.Kind = SK_GT_TOKEN;
             }
             break;
 
@@ -868,10 +912,10 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_EQUALS_EQUALS;
+                result.Base.Kind = SK_EQUALS_EQUALS_TOKEN;
             }
             else {
-                result.Kind = TK_EQUALS;
+                result.Base.Kind = SK_EQUALS_TOKEN;
             }
             break;
 
@@ -879,10 +923,10 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_EXCLAMATION_EQUALS;
+                result.Base.Kind = SK_EXCLAMATION_EQUALS_TOKEN;
             }
             else {
-                result.Kind = TK_EXCLAMATION;
+                result.Base.Kind = SK_EXCLAMATION_TOKEN;
             }
             break;
 
@@ -890,14 +934,14 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_AMPERSAND_EQUALS;
+                result.Base.Kind = SK_AMPERSAND_EQUALS_TOKEN;
             }
             else if (GetChar(l) == '&') {
                 IncrementCursor(l);
-                result.Kind = TK_AMPERSAND_AMPERSAND;
+                result.Base.Kind = SK_AMPERSAND_AMPERSAND_TOKEN;
             }
             else {
-                result.Kind = TK_AMPERSAND;
+                result.Base.Kind = SK_AMPERSAND_TOKEN;
             }
             break;
 
@@ -905,10 +949,10 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_CARET_EQUALS;
+                result.Base.Kind = SK_CARET_EQUALS_TOKEN;
             }
             else {
-                result.Kind = TK_CARET;
+                result.Base.Kind = SK_CARET_TOKEN;
             } 
             break;
 
@@ -916,14 +960,14 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             IncrementCursor(l);
             if (GetChar(l) == '=') {
                 IncrementCursor(l);
-                result.Kind = TK_PIPE_EQUALS;
+                result.Base.Kind = SK_PIPE_EQUALS_TOKEN;
             }
             else if (GetChar(l) == '|') {
                 IncrementCursor(l);
-                result.Kind = TK_PIPE_PIPE;
+                result.Base.Kind = SK_PIPE_PIPE_TOKEN;
             }
             else {
-                result.Kind = TK_PIPE;
+                result.Base.Kind = SK_PIPE_TOKEN;
             }
             break;
 
@@ -960,33 +1004,33 @@ static TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         default:
-            result.Kind = TK_UNKNOWN;
+            result.Base.Kind = SK_STRAY_TOKEN;
             result.Value.OffendingChar = GetChar(l);
             IncrementCursor(l);
             break;
         }
     }
 
-    if (result.Kind == TK_COMMENT) {
-        int line = result.LexemeRange.Location.Line;
-        int column = result.LexemeRange.Location.Column;
+    if (result.Base.Kind == SK_COMMENT_TOKEN) {
+        int line = result.Base.LexemeRange.Location.Line;
+        int column = result.Base.LexemeRange.Location.Column;
         const char *base = &l->Source->Lines[line][column];
-        result.LexemeRange.Length = (int) (l->Cursor - base);
+        result.Base.LexemeRange.Length = (int) (l->Cursor - base);
     }
     else {
         int end = l->CurrentLocation.Column;
-        int start = result.LexemeRange.Location.Column;
-        result.LexemeRange.Length = end - start;
+        int start = result.Base.LexemeRange.Location.Column;
+        result.Base.LexemeRange.Length = end - start;
     }
 
-    if (l->CurrentMode == LM_DEFAULT && result.Kind == TK_PP_HASH) {
+    if (l->CurrentMode == LM_DEFAULT && result.Base.Kind == SK_HASH_TOKEN) {
         l->CurrentMode |= LM_PP_DIRECTIVE;
         l->CurrentMode |= LM_PP_DIRECTIVE_KW;
     }
     else if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
         l->CurrentMode &= ~LM_PP_DIRECTIVE_KW;
 
-        if (result.Kind == TK_PP_include)
+        if (result.Base.Kind == SK_INCLUDE_DIRECTIVE_KEYWORD)
             l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
     }
     else if (l->CurrentMode & LM_PP_ANGLED_STRING_CONSTANT) {
