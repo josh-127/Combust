@@ -53,8 +53,9 @@ PSYNTAX_TOKEN ReadTokenDirect(
         l->CurrentToken = ReadTokenOnce(l);
 
         if (l->CurrentToken.Base.Kind == SK_STRAY_TOKEN) {
-            LogErrorAtRange(
+            LogAtRange(
                 &l->CurrentToken.Base.LexemeRange,
+                LL_ERROR,
                 "stray '%c' in program",
                 l->CurrentToken.Value.OffendingChar
             );
@@ -186,8 +187,9 @@ static void IncrementCursor(THIS PLEXER l) {
     }
     else {
         if (trailingWhitespaceLength > 0) {
-            LogWarningAt(
+            LogAt(
                 &l->CurrentLocation,
+                LL_WARNING,
                 "backslash and newline separated by space"
             );
         }
@@ -367,8 +369,11 @@ static void SkipIntSuffixes(
         SOURCE_RANGE range;
         GetTokenRange(l, t, &range);
 
-        LogErrorAtRange(
-            &range, "invalid suffix \"%s\" on integer constant", suffix
+        LogAtRange(
+            &range,
+            LL_ERROR,
+            "invalid suffix \"%s\" on integer constant",
+            suffix
         );
     }
 
@@ -409,8 +414,9 @@ static void ReadFractionalLiteral(
         SOURCE_RANGE range;
         GetTokenRange(l, t, &range);
 
-        LogErrorAtRange(
+        LogAtRange(
             &range,
+            LL_ERROR,
             "invalid suffix \"%s\" on floating constant",
             suffix
         );
@@ -459,8 +465,9 @@ static void ReadOctalLiteral(
             SOURCE_RANGE range;
             GetTokenRange(l, t, &range);
 
-            LogErrorAtRange(
+            LogAtRange(
                 &range,
+                LL_ERROR,
                 "invalid digit \"%c\" in octal constant",
                 GetChar(l)
             );
@@ -577,8 +584,9 @@ static int ReadCharEscapeSequence(THIS PLEXER l) {
                 break;
 
             default:
-                LogErrorAtRange(
+                LogAtRange(
                     &errorRange,
+                    LL_ERROR,
                     "unknown escape sequence: '\\%c'",
                     GetChar(l)
                 );
@@ -608,7 +616,11 @@ static void ReadCharLiteral(
 
     if (GetChar(l) == '\n') {
         GetTokenRange(l, t, &range);
-        LogErrorAtRange(&range, "missing terminating ' character");
+        LogAtRange(
+            &range,
+            LL_ERROR,
+            "missing terminating ' character"
+        );
     }
     else {
         t->Value.IntValue = ReadCharEscapeSequence(l);
@@ -620,7 +632,11 @@ static void ReadCharLiteral(
             while (GetChar(l) != '\'') {
                 if (GetChar(l) == '\n') {
                     GetTokenRange(l, t, &range);
-                    LogErrorAtRange(&range, "missing terminating ' character");
+                    LogAtRange(
+                        &range,
+                        LL_ERROR,
+                        "missing terminating ' character"
+                    );
                     return;
                 }
 
@@ -630,8 +646,9 @@ static void ReadCharLiteral(
             IncrementCursor(l);
 
             GetTokenRange(l, t, &range);
-            LogWarningAtRange(
+            LogAtRange(
                 &range,
+                LL_WARNING,
                 "character constant too long for its type"
             );
         }
@@ -658,7 +675,11 @@ static void ReadStringLiteral(
             SOURCE_RANGE range;
             GetTokenRange(l, t, &range);
 
-            LogErrorAtRange(&range, "missing terminating \" character");
+            LogAtRange(
+                &range,
+                LL_ERROR,
+                "missing terminating \" character"
+            );
 
             if (t->Value.StringValue != NULL)
                 free(t->Value.StringValue);
@@ -837,13 +858,21 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
                         }
                         else if (GetChar(l) == 0) {
                             GetTokenRange(l, &result, &range);
-                            LogErrorAtRange(&range, "unterminated comment");
+                            LogAtRange(
+                                &range,
+                                LL_ERROR,
+                                "unterminated comment"
+                            );
                             break;
                         }
                     }
                     else if (GetChar(l) == 0) {
                         GetTokenRange(l, &result, &range);
-                        LogErrorAtRange(&range, "unterminated comment");
+                        LogAtRange(
+                            &range,
+                            LL_ERROR,
+                            "unterminated comment"
+                        );
                         break;
                     }
                     else {

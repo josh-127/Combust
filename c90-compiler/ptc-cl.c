@@ -29,7 +29,7 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
         PSYNTAX_TOKEN t;
 
         if (OpenSourceFile(argv[optind], &sourceFile)) {
-            LogFatal("cannot open %s", argv[optind]);
+            Log(LL_FATAL, "cannot open %s", argv[optind]);
             continue;
         }
 
@@ -49,7 +49,7 @@ static void ProcessFiles(int optind, int argc, char **argv) {
     if (g_fileProcess == PROCESS_PREPROCESS)
         PreprocessFiles(optind, argc, argv);
     else
-        LogFatal("not implemented yet");
+        Log(LL_FATAL, "not implemented yet");
 }
 
 #define OPTION_VERSION 0
@@ -99,7 +99,7 @@ Options:\n\
     }
 
     if (optind == argc) {
-        LogFatal("no input files");
+        Log(LL_FATAL, "no input files");
         fprintf(stderr, "compilation terminated\n");
     }
     else {

@@ -25,28 +25,53 @@ static void LogMessage(const char *header, const char *format, va_list args) {
     fprintf(stderr, "\n");
 }
 
-void LogError(const char *format, ...) {
+void Log(
+    LOG_LEVEL   level,
+    const char *format,
+    ...
+)
+{
     va_list args;
-    ++g_ErrorsLogged;
+
+    if (level >= LL_ERROR)
+        ++g_ErrorsLogged;
 
     va_start(args, format);
-    LogMessage(WHITE_B "%s: " RED_B "error: " WHITE, format, args);
-    va_end(args);
-}
 
-void LogWarning(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    LogMessage(WHITE_B "%s: " YELLOW_B "warning: " WHITE, format, args);
-    va_end(args);
-}
+    switch (level) {
+        case LL_INFO:
+            LogMessage(
+                WHITE_B "%s: " WHITE,
+                format,
+                args
+            );
+            break;
 
-void LogFatal(const char *format, ...) {
-    va_list args;
-    ++g_ErrorsLogged;
+        case LL_WARNING:
+            LogMessage(
+                WHITE_B "%s: " YELLOW_B "warning: " WHITE,
+                format,
+                args
+            );
+            break;
 
-    va_start(args, format);
-    LogMessage(WHITE_B "%s: " RED_B "fatal error: " WHITE, format, args);
+        case LL_ERROR:
+            LogMessage(
+                WHITE_B "%s: " RED_B "error: " WHITE,
+                format,
+                args
+            );
+            break;
+
+        case LL_FATAL:
+            LogMessage(
+                WHITE_B "%s: " RED_B "fatal error: " WHITE,
+                format,
+                args
+            );
+            break;
+    }
+
     va_end(args);
 }
 
@@ -74,28 +99,58 @@ static void LogMessageAt(
     fprintf(stderr, "^\n");
 }
 
-void LogErrorAt(PSOURCE_LOC loc, const char *format, ...) {
+void LogAt(
+    PSOURCE_LOC  loc,
+    LOG_LEVEL    level,
+    const char  *format,
+    ...
+)
+{
     va_list args;
-    ++g_ErrorsLogged;
+
+    if (level >= LL_ERROR)
+        ++g_ErrorsLogged;
 
     va_start(args, format);
-    LogMessageAt(WHITE_B "%s:%d:%d: " RED_B "error: " WHITE, loc, format, args);
-    va_end(args);
-}
+    
+    switch (level) {
+        case LL_INFO:
+            LogMessageAt(
+                WHITE_B "%s:%d:%d: " WHITE,
+                loc,
+                format,
+                args
+            );
+            break;
 
-void LogWarningAt(PSOURCE_LOC loc, const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    LogMessageAt(WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE, loc, format, args);
-    va_end(args);
-}
+        case LL_WARNING:
+            LogMessageAt(
+                WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE,
+                loc,
+                format,
+                args
+            );
+            break;
 
-void LogFatalAt(PSOURCE_LOC loc, const char *format, ...) {
-    va_list args;
-    ++g_ErrorsLogged;
+        case LL_ERROR:
+            LogMessageAt(
+                WHITE_B "%s:%d:%d: " RED_B "error: " WHITE,
+                loc,
+                format,
+                args
+            );
+            break;
 
-    va_start(args, format);
-    LogMessageAt(WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE, loc, format, args);
+        case LL_FATAL:
+            LogMessageAt(
+                WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE,
+                loc,
+                format,
+                args
+            );
+            break;
+    }
+
     va_end(args);
 }
 
@@ -143,27 +198,57 @@ static void LogMessageAtRange(
     fprintf(stderr, "\n");
 }
 
-void LogErrorAtRange(PSOURCE_RANGE range, const char *format, ...) {
+void LogAtRange(
+    PSOURCE_RANGE  range,
+    LOG_LEVEL      level,
+    const char    *format,
+    ...
+)
+{
     va_list args;
-    ++g_ErrorsLogged;
+    
+    if (level >= LL_ERROR)
+        ++g_ErrorsLogged;
 
     va_start(args, format);
-    LogMessageAtRange(WHITE_B "%s:%d:%d: " RED_B "error: " WHITE, range, format, args);
-    va_end(args);
-}
 
-void LogWarningAtRange(PSOURCE_RANGE range, const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    LogMessageAtRange(WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE, range, format, args);
-    va_end(args);
-}
+    switch (level) {
+        case LL_INFO:
+            LogMessageAtRange(
+                WHITE_B "%s:%d:%d: " WHITE,
+                range,
+                format,
+                args
+            );
+            break;
 
-void LogFatalAtRange(PSOURCE_RANGE range, const char *format, ...) {
-    va_list args;
-    ++g_ErrorsLogged;
+        case LL_WARNING:
+            LogMessageAtRange(
+                WHITE_B "%s:%d:%d: " YELLOW_B "warning: " WHITE,
+                range,
+                format,
+                args
+            );
+            break;
 
-    va_start(args, format);
-    LogMessageAtRange(WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE, range, format, args);
+        case LL_ERROR:
+            LogMessageAtRange(
+                WHITE_B "%s:%d:%d: " RED_B "error: " WHITE,
+                range,
+                format,
+                args
+            );
+            break;
+
+        case LL_FATAL:
+            LogMessageAtRange(
+                WHITE_B "%s:%d:%d: " RED_B "fatal error: " WHITE,
+                range,
+                format,
+                args
+            );
+            break;
+    }
+
     va_end(args);
 }
