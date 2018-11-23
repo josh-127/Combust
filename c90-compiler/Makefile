@@ -3,15 +3,15 @@ TARGET	:= ptc-cl
 CFLAGS	:= -g -ansi -Wall -Wextra -pedantic-errors
 
 HFILES	:= \
-	error.h \
 	lexer.h \
+	logger.h \
 	source.h \
 	syntax.h \
 	syntax-kinds.def
 
 CFILES	:= \
-	error.c \
 	lexer.c \
+	logger.c \
 	ptc-cl.c \
 	source.c \
 	syntax.c

@@ -1,5 +1,5 @@
-#include "error.h"
 #include "lexer.h"
+#include "logger.h"
 #include "source.h"
 #include "syntax.h"
 #include <getopt.h>

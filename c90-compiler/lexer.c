@@ -1,5 +1,5 @@
 #include "lexer.h"
-#include "error.h"
+#include "logger.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
