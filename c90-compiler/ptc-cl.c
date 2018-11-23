@@ -26,9 +26,7 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
         SOURCE_FILE sourceFile;
         PLEXER lexer;
-        SYNTAX_TOKEN t;
-
-        memset(&t, 0, sizeof(t));
+        PSYNTAX_TOKEN t;
 
         if (OpenSourceFile(argv[optind], &sourceFile)) {
             LogFatal("cannot open %s", argv[optind]);
@@ -37,9 +35,10 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
 
         lexer = CreateLexer(&sourceFile);
 
-        while (t.Base.Kind != SK_EOF_TOKEN) {
-            ReadTokenDirect(lexer, &t);
+        do {
+            t = ReadTokenDirect(lexer);
         }
+        while (t->Base.Kind != SK_EOF_TOKEN);
 
         DeleteLexer(lexer);
         CloseSourceFile(&sourceFile);

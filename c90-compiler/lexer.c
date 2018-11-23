@@ -29,8 +29,6 @@ PLEXER CreateLexer(
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentMode            = LM_DEFAULT;
     lexer->CurrentFlags           = ST_BEGINNING_OF_LINE;
-    lexer->CurrentLocation.Line   = 0;
-    lexer->CurrentLocation.Column = 0;
     lexer->CurrentLocation.Source = lexer->Source;
     return lexer;
 }
@@ -38,16 +36,20 @@ PLEXER CreateLexer(
 void DeleteLexer(
     THIS PLEXER l
 )
-{ free(l); }
+{
+    DeleteSyntaxNode((PSYNTAX_NODE) &l->CurrentToken);
+    free(l);
+}
 
 static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l);
 
-void ReadTokenDirect(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN token
+PSYNTAX_TOKEN ReadTokenDirect(
+    THIS PLEXER l
 )
 {
     for (;;) {
+        DeleteSyntaxNode((PSYNTAX_NODE) &l->CurrentToken);
+
         l->CurrentToken = ReadTokenOnce(l);
 
         if (l->CurrentToken.Base.Kind == SK_STRAY_TOKEN) {
@@ -58,8 +60,7 @@ void ReadTokenDirect(
             );
         }
         else if (l->CurrentToken.Base.Kind != SK_COMMENT_TOKEN) {
-            *token = l->CurrentToken;
-            return;
+            return &l->CurrentToken;
         }
     }
 }

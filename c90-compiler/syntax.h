@@ -1,13 +1,19 @@
 #ifndef PTC_CL_SYNTAX_H
 #define PTC_CL_SYNTAX_H
+#include "common.h"
+#include "source.h"
 #include <stdint.h>
 
 #define ST_BEGINNING_OF_LINE 1
 
 typedef enum tagSYNTAX_KIND {
-#define SK(name) SK_##name,
+    SK_UNINITIALIZED,
+
+#define Token(name) SK_##name,
+#define Node(name) SK_##name,
 #include "syntax-kinds.def"
-#undef SK
+#undef Token
+#undef Node
 
     SYNTAX_KIND_CARDINAL
 } SYNTAX_KIND;
@@ -31,5 +37,9 @@ typedef struct tagSYNTAX_TOKEN {
     SYNTAX_TOKEN_VALUE Value;
     uint32_t           Flags;
 } SYNTAX_TOKEN, *PSYNTAX_TOKEN;
+
+void DeleteSyntaxNode(
+    THIS PSYNTAX_NODE obj
+);
 
 #endif

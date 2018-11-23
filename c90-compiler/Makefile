@@ -13,7 +13,8 @@ CFILES	:= \
 	error.c \
 	lexer.c \
 	ptc-cl.c \
-	source.c
+	source.c \
+	syntax.c
 
 .PHONY: all clean
 

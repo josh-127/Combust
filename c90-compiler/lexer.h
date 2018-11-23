@@ -14,9 +14,8 @@ void DeleteLexer(
     THIS PLEXER l
 );
 
-void ReadTokenDirect(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN token
+PSYNTAX_TOKEN ReadTokenDirect(
+    THIS PLEXER l
 );
 
 #endif
