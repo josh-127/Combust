@@ -29,8 +29,8 @@ yum install valgrind
 yum install vim-minimal
 ```
 
-### Building c90-compiler
+### Building 7cc
 ```
-cd c90-compiler
+cd 7cc
 make
 ```

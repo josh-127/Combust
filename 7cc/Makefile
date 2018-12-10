@@ -1,4 +1,4 @@
-TARGET	:= ptc-cl
+TARGET	:= 7cc
 
 CFLAGS	:= -g -ansi -Wall -Wextra -pedantic-errors
 
@@ -10,9 +10,9 @@ HFILES	:= \
 	syntax-kinds.def
 
 CFILES	:= \
+	7cc.c \
 	lexer.c \
 	logger.c \
-	ptc-cl.c \
 	source.c \
 	syntax.c
 
