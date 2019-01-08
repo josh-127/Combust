@@ -9,7 +9,7 @@ Building
 ### Installing Requirements
 | Dependency       | Version  |
 |------------------|----------|
-| CentOS           | 7.5.1804 |
+| CentOS           | 7.6.1810 |
 | GNU Make         | 3.82     |
 | GNU GCC          | 4.8.5    |
 ```
