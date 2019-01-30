@@ -1,4 +1,4 @@
-TARGET	:= 7cc
+TARGET	:= compile
 
 CFLAGS	:= -g -ansi -Wall -Wextra -pedantic-errors
 
@@ -10,7 +10,7 @@ HFILES	:= \
 	syntax-kinds.def
 
 CFILES	:= \
-	7cc.c \
+	main.c \
 	lexer.c \
 	logger.c \
 	source.c \

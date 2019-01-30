@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
             break;
 
         case OPTION_VERSION:
-            printf("7cc 0.1-snapshot\n");
+            printf("compiler 0.1-snapshot\n");
             return EXIT_FAILURE;
 
         case OPTION_HELP:
