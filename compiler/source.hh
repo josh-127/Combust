@@ -1,6 +1,6 @@
 #ifndef PTC_CL_SOURCE_H
 #define PTC_CL_SOURCE_H
-#include "common.h"
+#include "common.hh"
 
 typedef struct tagSOURCE_FILE {
     char  *FileName;

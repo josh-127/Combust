@@ -1,7 +1,7 @@
-#include "lexer.h"
-#include "logger.h"
-#include "source.h"
-#include "syntax.h"
+#include "lexer.hh"
+#include "logger.hh"
+#include "source.hh"
+#include "syntax.hh"
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>

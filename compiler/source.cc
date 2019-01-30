@@ -1,4 +1,4 @@
-#include "source.h"
+#include "source.hh"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +21,7 @@ int OpenSourceFile(
     fseek(file, 0, SEEK_END);
     length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    sourceFile->Contents = calloc(length + 3, sizeof(char));
+    sourceFile->Contents = static_cast<char*>(calloc(length + 3, sizeof(char)));
     fread(sourceFile->Contents, length, 1, file);
     sourceFile->Contents[length] = '\n';
     sourceFile->Contents[length + 1] = '\n';
@@ -34,7 +34,7 @@ int OpenSourceFile(
             ++lineCount;
     }
 
-    sourceFile->Lines = calloc(lineCount, sizeof(char *));
+    sourceFile->Lines = static_cast<char**>(calloc(lineCount, sizeof(char *)));
     lineCount = 0;
     sourceFile->Lines[0] = sourceFile->Contents;
     for (i = 0; i < length; ++i) {
@@ -42,7 +42,7 @@ int OpenSourceFile(
             sourceFile->Lines[++lineCount] = &sourceFile->Contents[i + 1];
     }
 
-    sourceFile->FileName = calloc(strlen(fileName) + 1, sizeof(char));
+    sourceFile->FileName = static_cast<char*>(calloc(strlen(fileName) + 1, sizeof(char)));
     strcpy(sourceFile->FileName, fileName);
 
     return 0;

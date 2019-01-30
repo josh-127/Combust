@@ -1,4 +1,4 @@
-#include "syntax.h"
+#include "syntax.hh"
 #include <stdlib.h>
 
 static BOOL g_tokenMask[] = {

@@ -1,5 +1,5 @@
-#include "lexer.h"
-#include "logger.h"
+#include "lexer.hh"
+#include "logger.hh"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -24,7 +24,7 @@ PLEXER CreateLexer(
     IN PSOURCE_FILE input
 )
 {
-    PLEXER lexer                  = calloc(1, sizeof(Lexer));
+    PLEXER lexer                  = static_cast<PLEXER>(calloc(1, sizeof(Lexer)));
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentMode            = LM_DEFAULT;
@@ -304,7 +304,7 @@ static void ReadIdentifier(
     else if (o("return"))   t->Base.Kind = SK_RETURN_KEYWORD;
     else {
         t->Base.Kind = SK_IDENTIFIER_TOKEN;
-        t->Value.IdentifierName = calloc(length + 1, sizeof(char));
+        t->Value.IdentifierName = static_cast<char*>(calloc(length + 1, sizeof(char)));
         strncpy(t->Value.IdentifierName, start, length);
         t->Value.IdentifierName[length] = 0;
     }
@@ -323,7 +323,7 @@ static void ReadSuffix(
     while (IsLetter(l->Cursor[*length]))
         ++*length;
 
-    *suffix = calloc(*length + 1, sizeof(char));
+    *suffix = static_cast<char*>(calloc(*length + 1, sizeof(char)));
     for (i = 0; i < *length; ++i)
         (*suffix)[i] = l->Cursor[i];
     (*suffix)[*length] = 0;
@@ -667,7 +667,7 @@ static void ReadStringLiteral(
     t->Base.Kind = SK_STRING_CONSTANT_TOKEN;
     IncrementCursor(l);
 
-    t->Value.StringValue = calloc(capacity + 1, sizeof(char));
+    t->Value.StringValue = static_cast<char*>(calloc(capacity + 1, sizeof(char)));
     t->Value.StringValue[0] = 0;
 
     while (GetChar(l) != '"') {
@@ -690,7 +690,7 @@ static void ReadStringLiteral(
 
         if (length >= capacity) {
             capacity *= 2;
-            t->Value.StringValue = realloc(t->Value.StringValue, capacity + 1);
+            t->Value.StringValue = static_cast<char*>(realloc(t->Value.StringValue, capacity + 1));
         }
 
         t->Value.StringValue[length] = ReadCharEscapeSequence(l);

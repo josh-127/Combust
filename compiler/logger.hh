@@ -1,11 +1,11 @@
 #ifndef PTC_CL_LOGGER_H
 #define PTC_CL_LOGGER_H
-#include "common.h"
-#include "source.h"
+#include "common.hh"
+#include "source.hh"
 
 extern char *g_ProgramName;
 
-int g_ErrorsLogged;
+extern int g_ErrorsLogged;
 
 typedef enum tagLOG_LEVEL {
     LL_INFO,

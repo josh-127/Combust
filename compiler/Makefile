@@ -1,20 +1,20 @@
-TARGET	:= compile
+TARGET		:= compile
 
-CFLAGS	:= -g -ansi -Wall -Wextra -pedantic-errors
+CXXFLAGS	:= -g -Wall -Wextra
 
-HFILES	:= \
-	lexer.h \
-	logger.h \
-	source.h \
-	syntax.h \
+HHFILES	:= \
+	lexer.hh \
+	logger.hh \
+	source.hh \
+	syntax.hh \
 	syntax-kinds.def
 
-CFILES	:= \
-	main.c \
-	lexer.c \
-	logger.c \
-	source.c \
-	syntax.c
+CCFILES	:= \
+	main.cc \
+	lexer.cc \
+	logger.cc \
+	source.cc \
+	syntax.cc
 
 .PHONY: all clean
 
@@ -23,5 +23,5 @@ all: $(TARGET)
 clean:
 	rm -f $(TARGET)
 
-$(TARGET): $(CFILES) $(HFILES)
-	gcc $(CFLAGS) -o$@ $(CFILES)
+$(TARGET): $(CCFILES) $(HHFILES)
+	g++ $(CXXFLAGS) -o$@ $(CCFILES)

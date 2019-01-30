@@ -1,7 +1,7 @@
 #ifndef PTC_CL_SYNTAX_H
 #define PTC_CL_SYNTAX_H
-#include "common.h"
-#include "source.h"
+#include "common.hh"
+#include "source.hh"
 #include <stdint.h>
 
 #define ST_BEGINNING_OF_LINE 1
