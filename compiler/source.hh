@@ -2,22 +2,28 @@
 #define PTC_CL_SOURCE_H
 #include "common.hh"
 
-typedef struct tagSOURCE_FILE {
+struct SOURCE_FILE {
     char  *FileName;
     char  *Contents;
     char **Lines;
-} SOURCE_FILE, *PSOURCE_FILE;
+};
 
-typedef struct tagSOURCE_LOC {
+using PSOURCE_FILE = SOURCE_FILE*;
+
+struct SOURCE_LOC {
     SOURCE_FILE *Source;
     int          Line;
     int          Column;
-} SOURCE_LOC, *PSOURCE_LOC;
+};
 
-typedef struct tagSOURCE_RANGE {
+using PSOURCE_LOC = SOURCE_LOC*;
+
+struct SOURCE_RANGE {
     SOURCE_LOC Location;
     int        Length;
-} SOURCE_RANGE, *PSOURCE_RANGE;
+};
+
+using PSOURCE_RANGE = SOURCE_RANGE*;
 
 int  OpenSourceFile(
     IN  const char   *fileName,

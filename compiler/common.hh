@@ -6,6 +6,6 @@
 #define IN_OUT
 #define THIS
 
-typedef enum tagBOOL { FALSE, TRUE = !FALSE } BOOL;
+enum BOOL { FALSE, TRUE = !FALSE };
 
 #endif

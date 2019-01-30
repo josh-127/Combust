@@ -7,12 +7,12 @@ extern char *g_ProgramName;
 
 extern int g_ErrorsLogged;
 
-typedef enum tagLOG_LEVEL {
+enum LOG_LEVEL {
     LL_INFO,
     LL_WARNING,
     LL_ERROR,
     LL_FATAL
-} LOG_LEVEL;
+};
 
 void Log(
     LOG_LEVEL   level,
