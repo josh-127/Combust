@@ -120,12 +120,12 @@ static char DecodeNewLineEscape(
     char firstChar = DecodeTrigraph(l, &firstCharLength);
 
     if (firstChar == '\\') {
-        BOOL isOnlyWhitespace = TRUE;
+        bool isOnlyWhitespace = true;
         int lengthWithoutNewLine = firstCharLength;
 
         while (l->Cursor[lengthWithoutNewLine] != '\n') {
             if (!IsWhitespace(l->Cursor[lengthWithoutNewLine])) {
-                isOnlyWhitespace = FALSE;
+                isOnlyWhitespace = false;
                 break;
             }
 

@@ -1,9 +1,9 @@
 #include "syntax.hh"
 #include <stdlib.h>
 
-static BOOL g_tokenMask[] = {
-#define Token(name) TRUE,
-#define Node(name) FALSE
+static bool g_tokenMask[] = {
+#define Token(name) true,
+#define Node(name) false,
 #include "syntax-kinds.def"
 #undef Node
 #undef Token

@@ -6,6 +6,4 @@
 #define IN_OUT
 #define THIS
 
-enum BOOL { FALSE, TRUE = !FALSE };
-
 #endif
