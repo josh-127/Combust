@@ -24,7 +24,7 @@ PLEXER CreateLexer(
     IN PSOURCE_FILE input
 )
 {
-    PLEXER lexer                  = static_cast<PLEXER>(calloc(1, sizeof(Lexer)));
+    PLEXER lexer                  = new Lexer;
     lexer->Source                 = input;
     lexer->Cursor                 = lexer->Source->Contents;
     lexer->CurrentMode            = LM_DEFAULT;
@@ -38,7 +38,7 @@ void DeleteLexer(
 )
 {
     DeleteSyntaxNode((PSYNTAX_NODE) &l->CurrentToken);
-    free(l);
+    delete l;
 }
 
 static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l);
@@ -304,7 +304,7 @@ static void ReadIdentifier(
     else if (o("return"))   t->Base.Kind = SK_RETURN_KEYWORD;
     else {
         t->Base.Kind = SK_IDENTIFIER_TOKEN;
-        t->Value.IdentifierName = static_cast<char*>(calloc(length + 1, sizeof(char)));
+        t->Value.IdentifierName = new char[length + 1];
         strncpy(t->Value.IdentifierName, start, length);
         t->Value.IdentifierName[length] = 0;
     }
@@ -323,7 +323,7 @@ static void ReadSuffix(
     while (IsLetter(l->Cursor[*length]))
         ++*length;
 
-    *suffix = static_cast<char*>(calloc(*length + 1, sizeof(char)));
+    *suffix = new char[*length + 1];
     for (i = 0; i < *length; ++i)
         (*suffix)[i] = l->Cursor[i];
     (*suffix)[*length] = 0;
@@ -377,7 +377,7 @@ static void SkipIntSuffixes(
         );
     }
 
-    free(suffix);
+    delete[] suffix;
 }
 
 static void ReadFractionalLiteral(
@@ -422,7 +422,7 @@ static void ReadFractionalLiteral(
         );
     }
 
-    free(suffix);
+    delete[] suffix;
 }
 
 static void ReadHexLiteral(
@@ -667,7 +667,7 @@ static void ReadStringLiteral(
     t->Base.Kind = SK_STRING_CONSTANT_TOKEN;
     IncrementCursor(l);
 
-    t->Value.StringValue = static_cast<char*>(calloc(capacity + 1, sizeof(char)));
+    t->Value.StringValue = new char[capacity + 1];
     t->Value.StringValue[0] = 0;
 
     while (GetChar(l) != '"') {
@@ -682,7 +682,7 @@ static void ReadStringLiteral(
             );
 
             if (t->Value.StringValue != NULL)
-                free(t->Value.StringValue);
+                delete[] t->Value.StringValue;
 
             t->Value.StringValue = NULL;
             return;

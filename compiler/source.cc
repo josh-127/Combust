@@ -21,7 +21,7 @@ int OpenSourceFile(
     fseek(file, 0, SEEK_END);
     length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    sourceFile->Contents = static_cast<char*>(calloc(length + 3, sizeof(char)));
+    sourceFile->Contents = new char[length + 3];
     fread(sourceFile->Contents, length, 1, file);
     sourceFile->Contents[length] = '\n';
     sourceFile->Contents[length + 1] = '\n';
@@ -34,7 +34,7 @@ int OpenSourceFile(
             ++lineCount;
     }
 
-    sourceFile->Lines = static_cast<char**>(calloc(lineCount, sizeof(char *)));
+    sourceFile->Lines = new char*[lineCount];
     lineCount = 0;
     sourceFile->Lines[0] = sourceFile->Contents;
     for (i = 0; i < length; ++i) {
@@ -42,7 +42,7 @@ int OpenSourceFile(
             sourceFile->Lines[++lineCount] = &sourceFile->Contents[i + 1];
     }
 
-    sourceFile->FileName = static_cast<char*>(calloc(strlen(fileName) + 1, sizeof(char)));
+    sourceFile->FileName = new char[strlen(fileName) + 1];
     strcpy(sourceFile->FileName, fileName);
 
     return 0;
@@ -52,7 +52,7 @@ void CloseSourceFile(
     THIS PSOURCE_FILE obj
 )
 {
-    free(obj->Lines);
-    free(obj->Contents);
-    free(obj->FileName);
+    delete[] obj->Lines;
+    delete[] obj->Contents;
+    delete[] obj->FileName;
 }

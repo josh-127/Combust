@@ -17,8 +17,8 @@ void DeleteSyntaxNode(
         PSYNTAX_TOKEN token = (PSYNTAX_TOKEN) obj;
 
         if (token->Base.Kind == SK_IDENTIFIER_TOKEN)
-            free(token->Value.IdentifierName);
+            delete[] token->Value.IdentifierName;
         else if (token->Base.Kind == SK_STRING_CONSTANT_TOKEN)
-            free(token->Value.StringValue);
+            delete[] token->Value.StringValue;
     }
 }
