@@ -24,25 +24,25 @@ private:
     void IncrementCursor();
     void IncrementCursorBy(IN int amount);
     void GetTokenRange(
-        IN  PSYNTAX_TOKEN t,
-        OUT PSOURCE_RANGE range
+        const SYNTAX_TOKEN& t,
+        OUT   PSOURCE_RANGE range
     ) noexcept;
-    void ReadIdentifier(OUT PSYNTAX_TOKEN t);
+    void ReadIdentifier(SYNTAX_TOKEN& t);
     void ReadSuffix(
         OUT char** suffix,
         OUT int*   length
     );
     int SkipUnsignedSuffix(IN_OUT char** cursor);
     int SkipLongSuffix(IN_OUT char** cursor);
-    void SkipIntSuffixes(IN PSYNTAX_TOKEN t);
-    void ReadFractionalLiteral(IN PSYNTAX_TOKEN t);
-    void ReadHexLiteral(OUT PSYNTAX_TOKEN t);
-    void ReadOctalLiteral(OUT PSYNTAX_TOKEN t);
-    void ReadDecimalLiteral(OUT PSYNTAX_TOKEN t);
-    void ReadNumericalLiteral(OUT PSYNTAX_TOKEN t);
+    void SkipIntSuffixes(const SYNTAX_TOKEN& t);
+    void ReadFractionalLiteral(SYNTAX_TOKEN& t);
+    void ReadHexLiteral(SYNTAX_TOKEN& t);
+    void ReadOctalLiteral(SYNTAX_TOKEN& t);
+    void ReadDecimalLiteral(SYNTAX_TOKEN& t);
+    void ReadNumericalLiteral(SYNTAX_TOKEN& t);
     int ReadCharEscapeSequence();
-    void ReadCharLiteral(OUT PSYNTAX_TOKEN t);
-    void ReadStringLiteral(OUT PSYNTAX_TOKEN t);
+    void ReadCharLiteral(SYNTAX_TOKEN& t);
+    void ReadStringLiteral(SYNTAX_TOKEN& t);
     SYNTAX_TOKEN ReadTokenOnce();
 
 private:

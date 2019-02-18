@@ -153,21 +153,21 @@ void Lexer::IncrementCursorBy(IN   int    amount) {
 }
 
 void Lexer::GetTokenRange(
-    IN   PSYNTAX_TOKEN t,
-    OUT  PSOURCE_RANGE range
+    const SYNTAX_TOKEN& t,
+    OUT   PSOURCE_RANGE range
 ) noexcept {
-    int line{ t->Base.LexemeRange.Location.Line };
-    int column{ t->Base.LexemeRange.Location.Column };
+    int line{ t.Base.LexemeRange.Location.Line };
+    int column{ t.Base.LexemeRange.Location.Column };
     const char *base{ &l->Source->Lines[line][column] };
 
     // TODO: Re-implement length calculation.
-    range->Location = t->Base.LexemeRange.Location;
+    range->Location = t.Base.LexemeRange.Location;
     range->Length = 1;
     //range->Length = static_cast<int>(l->Cursor - base);
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
-void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
+void Lexer::ReadIdentifier(SYNTAX_TOKEN& t) {
     std::string name{ };
 
     for (;;) {
@@ -189,53 +189,53 @@ void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
 
 #define o(kw) (name == kw)
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
-             if (o("if"))       t->Base.Kind = SK_IF_DIRECTIVE_KEYWORD;
-        else if (o("ifdef"))    t->Base.Kind = SK_IFDEF_DIRECTIVE_KEYWORD;
-        else if (o("ifndef"))   t->Base.Kind = SK_IFNDEF_DIRECTIVE_KEYWORD;
-        else if (o("elif"))     t->Base.Kind = SK_ELIF_DIRECTIVE_KEYWORD;
-        else if (o("endif"))    t->Base.Kind = SK_ENDIF_DIRECTIVE_KEYWORD;
-        else if (o("include"))  t->Base.Kind = SK_INCLUDE_DIRECTIVE_KEYWORD;
-        else if (o("define"))   t->Base.Kind = SK_DEFINE_DIRECTIVE_KEYWORD;
-        else if (o("undef"))    t->Base.Kind = SK_UNDEF_DIRECTIVE_KEYWORD;
-        else if (o("line"))     t->Base.Kind = SK_LINE_DIRECTIVE_KEYWORD;
-        else if (o("error"))    t->Base.Kind = SK_ERROR_DIRECTIVE_KEYWORD;
-        else if (o("warning"))  t->Base.Kind = SK_WARNING_DIRECTIVE_KEYWORD;
+             if (o("if"))       t.Base.Kind = SK_IF_DIRECTIVE_KEYWORD;
+        else if (o("ifdef"))    t.Base.Kind = SK_IFDEF_DIRECTIVE_KEYWORD;
+        else if (o("ifndef"))   t.Base.Kind = SK_IFNDEF_DIRECTIVE_KEYWORD;
+        else if (o("elif"))     t.Base.Kind = SK_ELIF_DIRECTIVE_KEYWORD;
+        else if (o("endif"))    t.Base.Kind = SK_ENDIF_DIRECTIVE_KEYWORD;
+        else if (o("include"))  t.Base.Kind = SK_INCLUDE_DIRECTIVE_KEYWORD;
+        else if (o("define"))   t.Base.Kind = SK_DEFINE_DIRECTIVE_KEYWORD;
+        else if (o("undef"))    t.Base.Kind = SK_UNDEF_DIRECTIVE_KEYWORD;
+        else if (o("line"))     t.Base.Kind = SK_LINE_DIRECTIVE_KEYWORD;
+        else if (o("error"))    t.Base.Kind = SK_ERROR_DIRECTIVE_KEYWORD;
+        else if (o("warning"))  t.Base.Kind = SK_WARNING_DIRECTIVE_KEYWORD;
     }
-    else if (o("const"))    t->Base.Kind = SK_CONST_KEYWORD;
-    else if (o("extern"))   t->Base.Kind = SK_EXTERN_KEYWORD;
-    else if (o("static"))   t->Base.Kind = SK_STATIC_KEYWORD;
-    else if (o("auto"))     t->Base.Kind = SK_AUTO_KEYWORD;
-    else if (o("volatile")) t->Base.Kind = SK_VOLATILE_KEYWORD;
-    else if (o("unsigned")) t->Base.Kind = SK_UNSIGNED_KEYWORD;
-    else if (o("signed"))   t->Base.Kind = SK_SIGNED_KEYWORD;
-    else if (o("void"))     t->Base.Kind = SK_VOID_KEYWORD;
-    else if (o("char"))     t->Base.Kind = SK_CHAR_KEYWORD;
-    else if (o("short"))    t->Base.Kind = SK_SHORT_KEYWORD;
-    else if (o("int"))      t->Base.Kind = SK_INT_KEYWORD;
-    else if (o("long"))     t->Base.Kind = SK_LONG_KEYWORD;
-    else if (o("float"))    t->Base.Kind = SK_FLOAT_KEYWORD;
-    else if (o("double"))   t->Base.Kind = SK_DOUBLE_KEYWORD;
-    else if (o("enum"))     t->Base.Kind = SK_ENUM_KEYWORD;
-    else if (o("struct"))   t->Base.Kind = SK_STRUCT_KEYWORD;
-    else if (o("union"))    t->Base.Kind = SK_UNION_KEYWORD;
-    else if (o("typedef"))  t->Base.Kind = SK_TYPEDEF_KEYWORD;
-    else if (o("sizeof"))   t->Base.Kind = SK_SIZEOF_KEYWORD;
-    else if (o("register")) t->Base.Kind = SK_REGISTER_KEYWORD;
-    else if (o("goto"))     t->Base.Kind = SK_GOTO_KEYWORD;
-    else if (o("if"))       t->Base.Kind = SK_IF_KEYWORD;
-    else if (o("else"))     t->Base.Kind = SK_ELSE_KEYWORD;
-    else if (o("switch"))   t->Base.Kind = SK_SWITCH_KEYWORD;
-    else if (o("case"))     t->Base.Kind = SK_CASE_KEYWORD;
-    else if (o("default"))  t->Base.Kind = SK_DEFAULT_KEYWORD;
-    else if (o("do"))       t->Base.Kind = SK_DO_KEYWORD;
-    else if (o("while"))    t->Base.Kind = SK_WHILE_KEYWORD;
-    else if (o("for"))      t->Base.Kind = SK_FOR_KEYWORD;
-    else if (o("break"))    t->Base.Kind = SK_BREAK_KEYWORD;
-    else if (o("continue")) t->Base.Kind = SK_CONTINUE_KEYWORD;
-    else if (o("return"))   t->Base.Kind = SK_RETURN_KEYWORD;
+    else if (o("const"))    t.Base.Kind = SK_CONST_KEYWORD;
+    else if (o("extern"))   t.Base.Kind = SK_EXTERN_KEYWORD;
+    else if (o("static"))   t.Base.Kind = SK_STATIC_KEYWORD;
+    else if (o("auto"))     t.Base.Kind = SK_AUTO_KEYWORD;
+    else if (o("volatile")) t.Base.Kind = SK_VOLATILE_KEYWORD;
+    else if (o("unsigned")) t.Base.Kind = SK_UNSIGNED_KEYWORD;
+    else if (o("signed"))   t.Base.Kind = SK_SIGNED_KEYWORD;
+    else if (o("void"))     t.Base.Kind = SK_VOID_KEYWORD;
+    else if (o("char"))     t.Base.Kind = SK_CHAR_KEYWORD;
+    else if (o("short"))    t.Base.Kind = SK_SHORT_KEYWORD;
+    else if (o("int"))      t.Base.Kind = SK_INT_KEYWORD;
+    else if (o("long"))     t.Base.Kind = SK_LONG_KEYWORD;
+    else if (o("float"))    t.Base.Kind = SK_FLOAT_KEYWORD;
+    else if (o("double"))   t.Base.Kind = SK_DOUBLE_KEYWORD;
+    else if (o("enum"))     t.Base.Kind = SK_ENUM_KEYWORD;
+    else if (o("struct"))   t.Base.Kind = SK_STRUCT_KEYWORD;
+    else if (o("union"))    t.Base.Kind = SK_UNION_KEYWORD;
+    else if (o("typedef"))  t.Base.Kind = SK_TYPEDEF_KEYWORD;
+    else if (o("sizeof"))   t.Base.Kind = SK_SIZEOF_KEYWORD;
+    else if (o("register")) t.Base.Kind = SK_REGISTER_KEYWORD;
+    else if (o("goto"))     t.Base.Kind = SK_GOTO_KEYWORD;
+    else if (o("if"))       t.Base.Kind = SK_IF_KEYWORD;
+    else if (o("else"))     t.Base.Kind = SK_ELSE_KEYWORD;
+    else if (o("switch"))   t.Base.Kind = SK_SWITCH_KEYWORD;
+    else if (o("case"))     t.Base.Kind = SK_CASE_KEYWORD;
+    else if (o("default"))  t.Base.Kind = SK_DEFAULT_KEYWORD;
+    else if (o("do"))       t.Base.Kind = SK_DO_KEYWORD;
+    else if (o("while"))    t.Base.Kind = SK_WHILE_KEYWORD;
+    else if (o("for"))      t.Base.Kind = SK_FOR_KEYWORD;
+    else if (o("break"))    t.Base.Kind = SK_BREAK_KEYWORD;
+    else if (o("continue")) t.Base.Kind = SK_CONTINUE_KEYWORD;
+    else if (o("return"))   t.Base.Kind = SK_RETURN_KEYWORD;
     else {
-        t->Base.Kind = SK_IDENTIFIER_TOKEN;
-        t->Value.IdentifierName = name;
+        t.Base.Kind = SK_IDENTIFIER_TOKEN;
+        t.Value.IdentifierName = name;
     }
 #undef o
 }
@@ -273,7 +273,7 @@ int Lexer::SkipLongSuffix(IN_OUT char **cursor) {
     return 0;
 }
 
-void Lexer::SkipIntSuffixes(IN   PSYNTAX_TOKEN t) {
+void Lexer::SkipIntSuffixes(const SYNTAX_TOKEN& t) {
     int suffixLength{ 0 };
     char *suffix;
     char *suffixCursor;
@@ -301,7 +301,7 @@ void Lexer::SkipIntSuffixes(IN   PSYNTAX_TOKEN t) {
     delete[] suffix;
 }
 
-void Lexer::ReadFractionalLiteral(IN   PSYNTAX_TOKEN t) {
+void Lexer::ReadFractionalLiteral(SYNTAX_TOKEN& t) {
     float floatFrac{ 0.0F };
     float floatExp{ 0.1F };
     double doubleFrac{ 0.0 };
@@ -319,12 +319,12 @@ void Lexer::ReadFractionalLiteral(IN   PSYNTAX_TOKEN t) {
     ReadSuffix(&suffix, &suffixLength);
 
     if (*suffix == 'f' || *suffix == 'F') {
-        t->Base.Kind = SK_FLOAT_CONSTANT_TOKEN;
-        t->Value.FloatValue = t->Value.IntValue + floatFrac;
+        t.Base.Kind = SK_FLOAT_CONSTANT_TOKEN;
+        t.Value.FloatValue = t.Value.IntValue + floatFrac;
     }
     else {
-        t->Base.Kind = SK_DOUBLE_CONSTANT_TOKEN;
-        t->Value.DoubleValue = t->Value.IntValue + doubleFrac;
+        t.Base.Kind = SK_DOUBLE_CONSTANT_TOKEN;
+        t.Value.DoubleValue = t.Value.IntValue + doubleFrac;
     }
 
     if (suffixLength > 1) {
@@ -342,19 +342,19 @@ void Lexer::ReadFractionalLiteral(IN   PSYNTAX_TOKEN t) {
     delete[] suffix;
 }
 
-void Lexer::ReadHexLiteral(OUT  PSYNTAX_TOKEN t) {
-    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
-    t->Value.IntValue = 0;
+void Lexer::ReadHexLiteral(SYNTAX_TOKEN& t) {
+    t.Base.Kind = SK_INT_CONSTANT_TOKEN;
+    t.Value.IntValue = 0;
 
     while (IsHex(GetChar())) {
-        t->Value.IntValue *= 16;
+        t.Value.IntValue *= 16;
 
         if (GetChar() <= '9')
-            t->Value.IntValue += GetChar() - '0';
+            t.Value.IntValue += GetChar() - '0';
         else if (GetChar() <= 'F')
-            t->Value.IntValue += GetChar() - 'A' + 10;
+            t.Value.IntValue += GetChar() - 'A' + 10;
         else
-            t->Value.IntValue += GetChar() - 'a' + 10;
+            t.Value.IntValue += GetChar() - 'a' + 10;
 
         IncrementCursor();
     }
@@ -362,13 +362,13 @@ void Lexer::ReadHexLiteral(OUT  PSYNTAX_TOKEN t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadOctalLiteral(OUT  PSYNTAX_TOKEN t) {
-    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
-    t->Value.IntValue = 0;
+void Lexer::ReadOctalLiteral(SYNTAX_TOKEN& t) {
+    t.Base.Kind = SK_INT_CONSTANT_TOKEN;
+    t.Value.IntValue = 0;
 
     for (; IsDecimal(GetChar()); IncrementCursor()) {
         if (IsOctal(GetChar())) {
-            t->Value.IntValue = (t->Value.IntValue * 8) - (GetChar() - '0');
+            t.Value.IntValue = (t.Value.IntValue * 8) - (GetChar() - '0');
         }
         else {
             SOURCE_RANGE range{ };
@@ -386,12 +386,12 @@ void Lexer::ReadOctalLiteral(OUT  PSYNTAX_TOKEN t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadDecimalLiteral(OUT  PSYNTAX_TOKEN t) {
-    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
-    t->Value.IntValue = 0;
+void Lexer::ReadDecimalLiteral(SYNTAX_TOKEN& t) {
+    t.Base.Kind = SK_INT_CONSTANT_TOKEN;
+    t.Value.IntValue = 0;
 
     for (; IsDecimal(GetChar()); IncrementCursor())
-        t->Value.IntValue = (t->Value.IntValue * 10) + (GetChar() - '0');
+        t.Value.IntValue = (t.Value.IntValue * 10) + (GetChar() - '0');
 
     if (GetChar() == '.') {
         IncrementCursor();
@@ -402,7 +402,7 @@ void Lexer::ReadDecimalLiteral(OUT  PSYNTAX_TOKEN t) {
     }
 }
 
-void Lexer::ReadNumericalLiteral(OUT  PSYNTAX_TOKEN t) {
+void Lexer::ReadNumericalLiteral(SYNTAX_TOKEN& t) {
     if (GetChar() == '0') {
         int wholeLength{ 0 };
 
@@ -505,11 +505,11 @@ int Lexer::ReadCharEscapeSequence() {
 }
 
 /* Precondition: GetChar() == '\'' */
-void Lexer::ReadCharLiteral(OUT  PSYNTAX_TOKEN t) {
+void Lexer::ReadCharLiteral(SYNTAX_TOKEN& t) {
     SOURCE_RANGE range{ };
 
     IncrementCursor();
-    t->Base.Kind = SK_INT_CONSTANT_TOKEN;
+    t.Base.Kind = SK_INT_CONSTANT_TOKEN;
 
     if (GetChar() == '\n') {
         GetTokenRange(t, &range);
@@ -520,7 +520,7 @@ void Lexer::ReadCharLiteral(OUT  PSYNTAX_TOKEN t) {
         );
     }
     else {
-        t->Value.IntValue = ReadCharEscapeSequence();
+        t.Value.IntValue = ReadCharEscapeSequence();
 
         if (GetChar() == '\'') {
             IncrementCursor();
@@ -553,11 +553,11 @@ void Lexer::ReadCharLiteral(OUT  PSYNTAX_TOKEN t) {
 }
 
 /* Precondition: GetChar() == '"' */
-void Lexer::ReadStringLiteral(OUT  PSYNTAX_TOKEN t) {
-    t->Base.Kind = SK_STRING_CONSTANT_TOKEN;
+void Lexer::ReadStringLiteral(SYNTAX_TOKEN& t) {
+    t.Base.Kind = SK_STRING_CONSTANT_TOKEN;
     IncrementCursor();
 
-    t->Value.StringValue.clear();
+    t.Value.StringValue.clear();
 
     while (GetChar() != '"') {
         if (GetChar() == '\n') {
@@ -570,11 +570,11 @@ void Lexer::ReadStringLiteral(OUT  PSYNTAX_TOKEN t) {
                 "missing terminating \" character"
             );
 
-            t->Value.StringValue = "";
+            t.Value.StringValue = "";
             return;
         }
 
-        t->Value.StringValue += ReadCharEscapeSequence();
+        t.Value.StringValue += ReadCharEscapeSequence();
     }
 
     IncrementCursor();
@@ -613,7 +613,7 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
 
         case '.':
             IncrementCursor();
-            if (IsDecimal(GetChar())) { result.Value.IntValue = 0; ReadFractionalLiteral(&result); }
+            if (IsDecimal(GetChar())) { result.Value.IntValue = 0; ReadFractionalLiteral(result); }
             else { result.Base.Kind = SK_DOT_TOKEN; }
             break;
 
@@ -659,7 +659,7 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
                             break;
                         }
                         else if (GetChar() == 0) {
-                            GetTokenRange(&result, &range);
+                            GetTokenRange(result, &range);
                             LogAtRange(
                                 &range,
                                 LL_ERROR,
@@ -669,7 +669,7 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
                         }
                     }
                     else if (GetChar() == 0) {
-                        GetTokenRange(&result, &range);
+                        GetTokenRange(result, &range);
                         LogAtRange(
                             &range,
                             LL_ERROR,
@@ -776,15 +776,15 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
         case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p':
         case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x':
         case 'y': case 'z': 
-            ReadIdentifier(&result);
+            ReadIdentifier(result);
             break;
 
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            ReadNumericalLiteral(&result);
+            ReadNumericalLiteral(result);
             break;
 
-        case '\'': ReadCharLiteral(&result); break;
-        case '"': ReadStringLiteral(&result); break;
+        case '\'': ReadCharLiteral(result); break;
+        case '"': ReadStringLiteral(result); break;
 
         default:
             result.Base.Kind = SK_STRAY_TOKEN;
