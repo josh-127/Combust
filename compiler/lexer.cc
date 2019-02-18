@@ -12,7 +12,7 @@
 #define LM_PP_ANGLED_STRING_CONSTANT 4
 
 struct LEXER_IMPL {
-    PSOURCE_FILE Source;
+    SourceFile*  Source;
     char*        Cursor;
     uint32_t     CurrentMode;
     int          CurrentFlags;
@@ -20,7 +20,7 @@ struct LEXER_IMPL {
     SYNTAX_TOKEN CurrentToken;
 };
 
-Lexer::Lexer(IN PSOURCE_FILE input) :
+Lexer::Lexer(IN SourceFile* input) :
     l{ new LEXER_IMPL{ } }
 {
     l->Source                 = input;
@@ -206,7 +206,7 @@ void Lexer::GetTokenRange(
 
 /* Precondition: GetChar() is [_A-Za-z] */
 void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
-    PSOURCE_FILE source{ t->Base.LexemeRange.Location.Source };
+    SourceFile* source{ t->Base.LexemeRange.Location.Source };
 
     int line{ t->Base.LexemeRange.Location.Line };
     int column{ t->Base.LexemeRange.Location.Column };

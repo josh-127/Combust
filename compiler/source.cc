@@ -3,52 +3,50 @@
 #include <stdlib.h>
 #include <string.h>
 
-int OpenSourceFile(
-    IN  const char   *fileName,
-    OUT PSOURCE_FILE  sourceFile
-)
+SourceFile::SourceFile(IN const char* fileName) :
+    FileName{ nullptr },
+    Contents{ nullptr },
+    Lines{ nullptr },
+    IsOpen{ false }
 {
     FILE* file{ fopen(fileName, "rb") };
     if (!file) {
-        return -1;
+        return;
     }
 
     fseek(file, 0, SEEK_END);
 
     int length{ static_cast<int>(ftell(file)) };
     fseek(file, 0, SEEK_SET);
-    sourceFile->Contents = new char[length + 3]{ };
-    fread(sourceFile->Contents, length, 1, file);
-    sourceFile->Contents[length] = '\n';
-    sourceFile->Contents[length + 1] = '\n';
-    sourceFile->Contents[length + 2] = 0;
+    Contents = new char[length + 3]{ };
+    fread(Contents, length, 1, file);
+    Contents[length] = '\n';
+    Contents[length + 1] = '\n';
+    Contents[length + 2] = 0;
     fclose(file);
 
     int lineCount{ 1 };
     for (int i{ 0 }; i < length; ++i) {
-        if (sourceFile->Contents[i] == '\n')
+        if (Contents[i] == '\n')
             ++lineCount;
     }
 
-    sourceFile->Lines = new char*[lineCount]{ };
+    Lines = new char*[lineCount]{ };
     lineCount = 0;
-    sourceFile->Lines[0] = sourceFile->Contents;
+    Lines[0] = Contents;
     for (int i{ 0 }; i < length; ++i) {
-        if (sourceFile->Contents[i] == '\n')
-            sourceFile->Lines[++lineCount] = &sourceFile->Contents[i + 1];
+        if (Contents[i] == '\n')
+            Lines[++lineCount] = &Contents[i + 1];
     }
 
-    sourceFile->FileName = new char[strlen(fileName) + 1]{ };
-    strcpy(sourceFile->FileName, fileName);
+    FileName = new char[strlen(fileName) + 1]{ };
+    strcpy(FileName, fileName);
 
-    return 0;
+    IsOpen = true;
 }
 
-void CloseSourceFile(
-    THIS PSOURCE_FILE obj
-)
-{
-    delete[] obj->Lines;
-    delete[] obj->Contents;
-    delete[] obj->FileName;
+SourceFile::~SourceFile() {
+    delete[] Lines;
+    delete[] Contents;
+    delete[] FileName;
 }

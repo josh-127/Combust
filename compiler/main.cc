@@ -24,15 +24,15 @@ static int g_fileProcess{ PROCESS_COMPILE_ASSEMBLE_LINK };
 
 static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
-        SOURCE_FILE sourceFile;
         PSYNTAX_TOKEN t;
 
-        if (OpenSourceFile(argv[optind], &sourceFile)) {
+        SourceFile* sourceFile{ new SourceFile{ argv[optind] } };
+        if (!sourceFile->IsOpen) {
             Log(LL_FATAL, "cannot open %s", argv[optind]);
             continue;
         }
 
-        Lexer* lexer{ new Lexer{ &sourceFile } };
+        Lexer* lexer{ new Lexer{ sourceFile } };
 
         do {
             t = lexer->ReadTokenDirect();
@@ -40,7 +40,7 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
         while (t->Base.Kind != SK_EOF_TOKEN);
 
         delete lexer;
-        CloseSourceFile(&sourceFile);
+        delete sourceFile;
     }
 }
 

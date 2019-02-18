@@ -8,7 +8,7 @@ struct LEXER_IMPL;
 
 class Lexer {
 public:
-    Lexer(IN PSOURCE_FILE input);
+    Lexer(IN SourceFile* input);
     virtual ~Lexer();
 
     PSYNTAX_TOKEN ReadTokenDirect();
