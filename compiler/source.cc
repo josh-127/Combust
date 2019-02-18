@@ -21,7 +21,7 @@ int OpenSourceFile(
     fseek(file, 0, SEEK_END);
     length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    sourceFile->Contents = new char[length + 3];
+    sourceFile->Contents = new char[length + 3]{ };
     fread(sourceFile->Contents, length, 1, file);
     sourceFile->Contents[length] = '\n';
     sourceFile->Contents[length + 1] = '\n';
@@ -34,7 +34,7 @@ int OpenSourceFile(
             ++lineCount;
     }
 
-    sourceFile->Lines = new char*[lineCount];
+    sourceFile->Lines = new char*[lineCount]{ };
     lineCount = 0;
     sourceFile->Lines[0] = sourceFile->Contents;
     for (i = 0; i < length; ++i) {
@@ -42,7 +42,7 @@ int OpenSourceFile(
             sourceFile->Lines[++lineCount] = &sourceFile->Contents[i + 1];
     }
 
-    sourceFile->FileName = new char[strlen(fileName) + 1];
+    sourceFile->FileName = new char[strlen(fileName) + 1]{ };
     strcpy(sourceFile->FileName, fileName);
 
     return 0;

@@ -11,46 +11,35 @@
 #define LM_PP_DIRECTIVE_KW           2
 #define LM_PP_ANGLED_STRING_CONSTANT 4
 
-struct tagLexer {
-    PSOURCE_FILE  Source;
-    char         *Cursor;
-    uint32_t      CurrentMode;
-    int           CurrentFlags;
-    SOURCE_LOC    CurrentLocation;
-    SYNTAX_TOKEN  CurrentToken;
+struct LEXER_IMPL {
+    PSOURCE_FILE Source;
+    char*        Cursor;
+    uint32_t     CurrentMode;
+    int          CurrentFlags;
+    SOURCE_LOC   CurrentLocation;
+    SYNTAX_TOKEN CurrentToken;
 };
 
-PLEXER CreateLexer(
-    IN PSOURCE_FILE input
-)
+Lexer::Lexer(IN PSOURCE_FILE input) :
+    l{ new LEXER_IMPL{ } }
 {
-    PLEXER lexer                  = new Lexer;
-    lexer->Source                 = input;
-    lexer->Cursor                 = lexer->Source->Contents;
-    lexer->CurrentMode            = LM_DEFAULT;
-    lexer->CurrentFlags           = ST_BEGINNING_OF_LINE;
-    lexer->CurrentLocation.Source = lexer->Source;
-    return lexer;
+    l->Source                 = input;
+    l->Cursor                 = l->Source->Contents;
+    l->CurrentMode            = LM_DEFAULT;
+    l->CurrentFlags           = ST_BEGINNING_OF_LINE;
+    l->CurrentLocation.Source = l->Source;
 }
 
-void DeleteLexer(
-    THIS PLEXER l
-)
-{
+Lexer::~Lexer() {
     DeleteSyntaxNode((PSYNTAX_NODE) &l->CurrentToken);
     delete l;
 }
 
-static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l);
-
-PSYNTAX_TOKEN ReadTokenDirect(
-    THIS PLEXER l
-)
-{
+PSYNTAX_TOKEN Lexer::ReadTokenDirect() {
     for (;;) {
         DeleteSyntaxNode((PSYNTAX_NODE) &l->CurrentToken);
 
-        l->CurrentToken = ReadTokenOnce(l);
+        l->CurrentToken = ReadTokenOnce();
 
         if (l->CurrentToken.Base.Kind == SK_STRAY_TOKEN) {
             LogAtRange(
@@ -66,27 +55,33 @@ PSYNTAX_TOKEN ReadTokenDirect(
     }
 }
 
-#define IsWhitespace(c) ((c) == ' ' || \
-                         (c) == '\n' || \
-                         (c) == '\r' || \
-                         (c) == '\t')
+inline bool IsWhitespace(char c) {
+    return c == ' ' ||
+           c == '\n' ||
+           c == '\r' ||
+           c == '\t';
+}
 
-#define IsLetter(c) (((c) >= 'A' && (c) <= 'Z') || \
-                     ((c) >= 'a' && (c) <= 'z'))
+inline bool IsLetter(char c) {
+    return (c >= 'A' && c <= 'Z') ||
+           (c >= 'a' && c <= 'z');
+}
 
-#define IsDecimal(c) ((c) >= '0' && (c) <= '9')
+inline bool IsDecimal(char c) {
+    return c >= '0' && c <= '9';
+}
 
-#define IsOctal(c) ((c) >= '0' && (c) <= '7')
+inline bool IsOctal(char c) {
+    return c >= '0' && c <= '7';
+}
 
-#define IsHex(c) (((c) >= '0' && (c) <= '9') || \
-                  ((c) >= 'A' && (c) <= 'F') || \
-                  ((c) >= 'a' && (c) <= 'f'))
+inline bool IsHex(char c) {
+    return (c >= '0' && c <= '9') ||
+           (c >= 'A' && c <= 'F') ||
+           (c >= 'a' && c <= 'f');
+}
 
-static char DecodeTrigraph(
-    THIS PLEXER  l,
-    OUT  int    *charLength
-)
-{
+char Lexer::DecodeTrigraph(OUT int* charLength) {
     if (l->Cursor[0] == '?' && l->Cursor[1] == '?') {
         if (charLength)
             *charLength = 3;
@@ -110,14 +105,12 @@ static char DecodeTrigraph(
     return *l->Cursor;
 }
 
-static char DecodeNewLineEscape(
-    THIS PLEXER  l,
+char Lexer::DecodeNewLineEscape(
     OUT  int    *charLength,
     OUT  int    *trailingWhitespaceLength
-)
-{
+) {
     int firstCharLength;
-    char firstChar = DecodeTrigraph(l, &firstCharLength);
+    char firstChar = DecodeTrigraph(&firstCharLength);
 
     if (firstChar == '\\') {
         bool isOnlyWhitespace = true;
@@ -155,23 +148,19 @@ static char DecodeNewLineEscape(
     return firstChar;
 }
 
-static char GetCharEx(
-    THIS PLEXER  l,
-    OUT  int    *charLength
-)
-{
-    return DecodeNewLineEscape(l, charLength, NULL);
+char Lexer::GetCharEx(OUT  int    *charLength) {
+    return DecodeNewLineEscape(charLength, NULL);
 }
 
-static char GetChar(THIS PLEXER l) {
-    return GetCharEx(l, NULL);
+char Lexer::GetChar() {
+    return GetCharEx(NULL);
 }
 
-static void IncrementCursor(THIS PLEXER l) {
+void Lexer::IncrementCursor() {
     int charLength;
     int trailingWhitespaceLength;
     char charValue = DecodeNewLineEscape(
-        l, &charLength, &trailingWhitespaceLength
+        &charLength, &trailingWhitespaceLength
     );
 
     if (charValue == '\n') {
@@ -201,21 +190,15 @@ static void IncrementCursor(THIS PLEXER l) {
     l->Cursor += charLength;
 }
 
-static void IncrementCursorBy(
-    THIS PLEXER l,
-    IN   int    amount
-)
-{
+void Lexer::IncrementCursorBy(IN   int    amount) {
     while (amount--)
-        IncrementCursor(l);
+        IncrementCursor();
 }
 
-static void GetTokenRange(
-    THIS PLEXER        l,
+void Lexer::GetTokenRange(
     IN   PSYNTAX_TOKEN t,
     OUT  PSOURCE_RANGE range
-)
-{
+) {
     int line = t->Base.LexemeRange.Location.Line;
     int column = t->Base.LexemeRange.Location.Column;
     const char *base = &l->Source->Lines[line][column];
@@ -224,12 +207,8 @@ static void GetTokenRange(
     range->Length = (int) (l->Cursor - base);
 }
 
-/* Precondition: GetChar(l) is [_A-Za-z] */
-static void ReadIdentifier(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN t
-)
-{
+/* Precondition: GetChar() is [_A-Za-z] */
+void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
     PSOURCE_FILE source = t->Base.LexemeRange.Location.Source;
 
     int line   = t->Base.LexemeRange.Location.Line,
@@ -239,7 +218,7 @@ static void ReadIdentifier(
     const char *start = &source->Lines[line][column];
 
     for (;;) {
-        char character = GetChar(l);
+        char character = GetChar();
 
         if ((character == '_') ||
             (character == '$') ||
@@ -247,7 +226,7 @@ static void ReadIdentifier(
             (character >= 'a' && character <= 'z') ||
             (character >= '0' && character <= '9'))
         {
-            IncrementCursor(l);
+            IncrementCursor();
         }
         else {
             break;
@@ -304,33 +283,31 @@ static void ReadIdentifier(
     else if (o("return"))   t->Base.Kind = SK_RETURN_KEYWORD;
     else {
         t->Base.Kind = SK_IDENTIFIER_TOKEN;
-        t->Value.IdentifierName = new char[length + 1];
+        t->Value.IdentifierName = new char[length + 1]{ };
         strncpy(t->Value.IdentifierName, start, length);
         t->Value.IdentifierName[length] = 0;
     }
 #undef o
 }
 
-static void ReadSuffix(
-    THIS PLEXER   l,
+void Lexer::ReadSuffix(
     OUT  char   **suffix,
     OUT  int     *length
-)
-{
+) {
     int i;
 
     *length = 0;
     while (IsLetter(l->Cursor[*length]))
         ++*length;
 
-    *suffix = new char[*length + 1];
+    *suffix = new char[*length + 1]{ };
     for (i = 0; i < *length; ++i)
         (*suffix)[i] = l->Cursor[i];
     (*suffix)[*length] = 0;
-    IncrementCursorBy(l, *length);
+    IncrementCursorBy(*length);
 }
 
-static int SkipUnsignedSuffix(IN_OUT char **cursor) {
+int Lexer::SkipUnsignedSuffix(IN_OUT char **cursor) {
     if (**cursor == 'U' || **cursor == 'u') {
         ++*cursor;
         return 1;
@@ -338,7 +315,7 @@ static int SkipUnsignedSuffix(IN_OUT char **cursor) {
     return 0;
 }
 
-static int SkipLongSuffix(IN_OUT char **cursor) {
+int Lexer::SkipLongSuffix(IN_OUT char **cursor) {
     if (**cursor == 'L' || **cursor == 'l') {
         ++*cursor;
         if (**cursor == 'L' || **cursor == 'l')
@@ -348,16 +325,12 @@ static int SkipLongSuffix(IN_OUT char **cursor) {
     return 0;
 }
 
-static void SkipIntSuffixes(
-    THIS PLEXER        l,
-    IN   PSYNTAX_TOKEN t
-)
-{
+void Lexer::SkipIntSuffixes(IN   PSYNTAX_TOKEN t) {
     int suffixLength = 0;
     char *suffix;
     char *suffixCursor;
 
-    ReadSuffix(l, &suffix, &suffixLength);
+    ReadSuffix(&suffix, &suffixLength);
     suffixCursor = suffix;
 
     if (SkipUnsignedSuffix(&suffixCursor))
@@ -367,7 +340,7 @@ static void SkipIntSuffixes(
 
     if (IsLetter(*suffixCursor)) {
         SOURCE_RANGE range;
-        GetTokenRange(l, t, &range);
+        GetTokenRange(t, &range);
 
         LogAtRange(
             &range,
@@ -380,11 +353,7 @@ static void SkipIntSuffixes(
     delete[] suffix;
 }
 
-static void ReadFractionalLiteral(
-    THIS PLEXER        l,
-    IN   PSYNTAX_TOKEN t
-)
-{
+void Lexer::ReadFractionalLiteral(IN   PSYNTAX_TOKEN t) {
     float floatFrac = 0.0F;
     float floatExp = 0.1F;
     float doubleFrac = 0.0;
@@ -392,14 +361,14 @@ static void ReadFractionalLiteral(
     char *suffix;
     int suffixLength;
 
-    for (; IsDecimal(GetChar(l)); IncrementCursor(l)) {
-        floatFrac += floatExp * (GetChar(l) - '0');
-        doubleFrac += doubleExp * (GetChar(l) - '0');
+    for (; IsDecimal(GetChar()); IncrementCursor()) {
+        floatFrac += floatExp * (GetChar() - '0');
+        doubleFrac += doubleExp * (GetChar() - '0');
         floatExp *= 0.1F;
         doubleExp *= 0.1;
     }
 
-    ReadSuffix(l, &suffix, &suffixLength);
+    ReadSuffix(&suffix, &suffixLength);
 
     if (*suffix == 'f' || *suffix == 'F') {
         t->Base.Kind = SK_FLOAT_CONSTANT_TOKEN;
@@ -412,7 +381,7 @@ static void ReadFractionalLiteral(
 
     if (suffixLength > 1) {
         SOURCE_RANGE range;
-        GetTokenRange(l, t, &range);
+        GetTokenRange(t, &range);
 
         LogAtRange(
             &range,
@@ -425,160 +394,144 @@ static void ReadFractionalLiteral(
     delete[] suffix;
 }
 
-static void ReadHexLiteral(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN t
-)
-{
+void Lexer::ReadHexLiteral(OUT  PSYNTAX_TOKEN t) {
     t->Base.Kind = SK_INT_CONSTANT_TOKEN;
     t->Value.IntValue = 0;
 
-    while (IsHex(GetChar(l))) {
+    while (IsHex(GetChar())) {
         t->Value.IntValue *= 16;
 
-        if (GetChar(l) <= '9')
-            t->Value.IntValue += GetChar(l) - '0';
-        else if (GetChar(l) <= 'F')
-            t->Value.IntValue += GetChar(l) - 'A' + 10;
+        if (GetChar() <= '9')
+            t->Value.IntValue += GetChar() - '0';
+        else if (GetChar() <= 'F')
+            t->Value.IntValue += GetChar() - 'A' + 10;
         else
-            t->Value.IntValue += GetChar(l) - 'a' + 10;
+            t->Value.IntValue += GetChar() - 'a' + 10;
 
-        IncrementCursor(l);
+        IncrementCursor();
     }
 
-    SkipIntSuffixes(l, t);
+    SkipIntSuffixes(t);
 }
 
-static void ReadOctalLiteral(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN t
-)
-{
+void Lexer::ReadOctalLiteral(OUT  PSYNTAX_TOKEN t) {
     t->Base.Kind = SK_INT_CONSTANT_TOKEN;
     t->Value.IntValue = 0;
 
-    for (; IsDecimal(GetChar(l)); IncrementCursor(l)) {
-        if (IsOctal(GetChar(l))) {
-            t->Value.IntValue = (t->Value.IntValue * 8) - (GetChar(l) - '0');
+    for (; IsDecimal(GetChar()); IncrementCursor()) {
+        if (IsOctal(GetChar())) {
+            t->Value.IntValue = (t->Value.IntValue * 8) - (GetChar() - '0');
         }
         else {
             SOURCE_RANGE range;
-            GetTokenRange(l, t, &range);
+            GetTokenRange(t, &range);
 
             LogAtRange(
                 &range,
                 LL_ERROR,
                 "invalid digit \"%c\" in octal constant",
-                GetChar(l)
+                GetChar()
             );
         }
     }
 
-    SkipIntSuffixes(l, t);
+    SkipIntSuffixes(t);
 }
 
-static void ReadDecimalLiteral(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN t
-)
-{
+void Lexer::ReadDecimalLiteral(OUT  PSYNTAX_TOKEN t) {
     t->Base.Kind = SK_INT_CONSTANT_TOKEN;
     t->Value.IntValue = 0;
 
-    for (; IsDecimal(GetChar(l)); IncrementCursor(l))
-        t->Value.IntValue = (t->Value.IntValue * 10) + (GetChar(l) - '0');
+    for (; IsDecimal(GetChar()); IncrementCursor())
+        t->Value.IntValue = (t->Value.IntValue * 10) + (GetChar() - '0');
 
-    if (GetChar(l) == '.') {
-        IncrementCursor(l);
-        ReadFractionalLiteral(l, t);
+    if (GetChar() == '.') {
+        IncrementCursor();
+        ReadFractionalLiteral(t);
     }
     else {
-        SkipIntSuffixes(l, t);
+        SkipIntSuffixes(t);
     }
 }
 
-static void ReadNumericalLiteral(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN t
-)
-{
-    if (GetChar(l) == '0') {
+void Lexer::ReadNumericalLiteral(OUT  PSYNTAX_TOKEN t) {
+    if (GetChar() == '0') {
         int wholeLength = 0;
 
         do {
-            IncrementCursor(l);
+            IncrementCursor();
         }
-        while (GetChar(l) == '0');
+        while (GetChar() == '0');
 
         while (IsDecimal(l->Cursor[wholeLength]))
             ++wholeLength;
 
         if (l->Cursor[wholeLength] == '.') {
-            ReadDecimalLiteral(l, t);
+            ReadDecimalLiteral(t);
         }
-        else if (GetChar(l) == 'X' || GetChar(l) == 'x') {
-            IncrementCursor(l);
-            ReadHexLiteral(l, t);
+        else if (GetChar() == 'X' || GetChar() == 'x') {
+            IncrementCursor();
+            ReadHexLiteral(t);
         }
         else {
-            ReadOctalLiteral(l, t);
+            ReadOctalLiteral(t);
         }
     }
     else {
-        ReadDecimalLiteral(l, t);
+        ReadDecimalLiteral(t);
     }
 }
 
-static int ReadCharEscapeSequence(THIS PLEXER l) {
+int Lexer::ReadCharEscapeSequence() {
     int result;
 
-    if (GetChar(l) == '\\') {
+    if (GetChar() == '\\') {
         SOURCE_RANGE errorRange;
         int digitCount;
 
         errorRange.Location = l->CurrentLocation;
         errorRange.Length = 2;
 
-        IncrementCursor(l);
+        IncrementCursor();
 
-        switch (GetChar(l)) {
-            case '\'': IncrementCursor(l); result = '\''; break;
-            case '"':  IncrementCursor(l); result = '\"'; break;
-            case '?':  IncrementCursor(l); result = '\?'; break;
-            case '\\': IncrementCursor(l); result = '\\'; break;
-            case 'a':  IncrementCursor(l); result = '\a'; break;
-            case 'b':  IncrementCursor(l); result = '\b'; break;
-            case 'f':  IncrementCursor(l); result = '\f'; break;
-            case 'n':  IncrementCursor(l); result = '\n'; break;
-            case 'r':  IncrementCursor(l); result = '\r'; break;
-            case 't':  IncrementCursor(l); result = '\t'; break;
-            case 'v':  IncrementCursor(l); result = '\v'; break;
+        switch (GetChar()) {
+            case '\'': IncrementCursor(); result = '\''; break;
+            case '"':  IncrementCursor(); result = '\"'; break;
+            case '?':  IncrementCursor(); result = '\?'; break;
+            case '\\': IncrementCursor(); result = '\\'; break;
+            case 'a':  IncrementCursor(); result = '\a'; break;
+            case 'b':  IncrementCursor(); result = '\b'; break;
+            case 'f':  IncrementCursor(); result = '\f'; break;
+            case 'n':  IncrementCursor(); result = '\n'; break;
+            case 'r':  IncrementCursor(); result = '\r'; break;
+            case 't':  IncrementCursor(); result = '\t'; break;
+            case 'v':  IncrementCursor(); result = '\v'; break;
 
             case '0': case '1': case '2': case '3':
             case '4': case '5': case '6': case '7':
                 result = 0;
                 digitCount = 0;
 
-                while (digitCount < 3 && IsOctal(GetChar(l))) {
-                    result = (result * 8) + (GetChar(l) - '0');
+                while (digitCount < 3 && IsOctal(GetChar())) {
+                    result = (result * 8) + (GetChar() - '0');
                     ++digitCount;
-                    IncrementCursor(l);
+                    IncrementCursor();
                 }
 
                 break;
 
             case 'x':
-                IncrementCursor(l);
+                IncrementCursor();
                 result = 0;
 
-                for (; IsHex(GetChar(l)); IncrementCursor(l)) {
+                for (; IsHex(GetChar()); IncrementCursor()) {
                     result *= 16;
-                    if (GetChar(l) <= '9')
-                        result += GetChar(l) - '0';
-                    else if (GetChar(l) <= 'F')
-                        result += GetChar(l) - 'A' + 10;
-                    else if (GetChar(l) <= 'f')
-                        result += GetChar(l) - 'a' + 10;
+                    if (GetChar() <= '9')
+                        result += GetChar() - '0';
+                    else if (GetChar() <= 'F')
+                        result += GetChar() - 'A' + 10;
+                    else if (GetChar() <= 'f')
+                        result += GetChar() - 'a' + 10;
                 }
 
                 break;
@@ -588,34 +541,30 @@ static int ReadCharEscapeSequence(THIS PLEXER l) {
                     &errorRange,
                     LL_ERROR,
                     "unknown escape sequence: '\\%c'",
-                    GetChar(l)
+                    GetChar()
                 );
 
-                IncrementCursor(l);
+                IncrementCursor();
                 break;
         }
     }
     else {
-        result = GetChar(l);
-        IncrementCursor(l);
+        result = GetChar();
+        IncrementCursor();
     }
 
     return result;
 }
 
-/* Precondition: GetChar(l) == '\'' */
-static void ReadCharLiteral(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN t
-)
-{
+/* Precondition: GetChar() == '\'' */
+void Lexer::ReadCharLiteral(OUT  PSYNTAX_TOKEN t) {
     SOURCE_RANGE range;
 
-    IncrementCursor(l);
+    IncrementCursor();
     t->Base.Kind = SK_INT_CONSTANT_TOKEN;
 
-    if (GetChar(l) == '\n') {
-        GetTokenRange(l, t, &range);
+    if (GetChar() == '\n') {
+        GetTokenRange(t, &range);
         LogAtRange(
             &range,
             LL_ERROR,
@@ -623,15 +572,15 @@ static void ReadCharLiteral(
         );
     }
     else {
-        t->Value.IntValue = ReadCharEscapeSequence(l);
+        t->Value.IntValue = ReadCharEscapeSequence();
 
-        if (GetChar(l) == '\'') {
-            IncrementCursor(l);
+        if (GetChar() == '\'') {
+            IncrementCursor();
         }
         else {
-            while (GetChar(l) != '\'') {
-                if (GetChar(l) == '\n') {
-                    GetTokenRange(l, t, &range);
+            while (GetChar() != '\'') {
+                if (GetChar() == '\n') {
+                    GetTokenRange(t, &range);
                     LogAtRange(
                         &range,
                         LL_ERROR,
@@ -640,12 +589,12 @@ static void ReadCharLiteral(
                     return;
                 }
 
-                IncrementCursor(l);
+                IncrementCursor();
             }
 
-            IncrementCursor(l);
+            IncrementCursor();
 
-            GetTokenRange(l, t, &range);
+            GetTokenRange(t, &range);
             LogAtRange(
                 &range,
                 LL_WARNING,
@@ -655,25 +604,21 @@ static void ReadCharLiteral(
     }
 }
 
-/* Precondition: GetChar(l) == '"' */
-static void ReadStringLiteral(
-    THIS PLEXER        l,
-    OUT  PSYNTAX_TOKEN t
-)
-{
+/* Precondition: GetChar() == '"' */
+void Lexer::ReadStringLiteral(OUT  PSYNTAX_TOKEN t) {
     int length = 0;
     int capacity = 12;
 
     t->Base.Kind = SK_STRING_CONSTANT_TOKEN;
-    IncrementCursor(l);
+    IncrementCursor();
 
-    t->Value.StringValue = new char[capacity + 1];
+    t->Value.StringValue = new char[capacity + 1]{ };
     t->Value.StringValue[0] = 0;
 
-    while (GetChar(l) != '"') {
-        if (GetChar(l) == '\n') {
+    while (GetChar() != '"') {
+        if (GetChar() == '\n') {
             SOURCE_RANGE range;
-            GetTokenRange(l, t, &range);
+            GetTokenRange(t, &range);
 
             LogAtRange(
                 &range,
@@ -689,25 +634,28 @@ static void ReadStringLiteral(
         }
 
         if (length >= capacity) {
-            capacity *= 2;
-            t->Value.StringValue = static_cast<char*>(realloc(t->Value.StringValue, capacity + 1));
+            int newCapacity{ capacity * 2 };
+            char* newString{ new char[newCapacity + 1]{ } };
+            memmove(newString, t->Value.StringValue, capacity + 1);
+            delete[] t->Value.StringValue;
+            t->Value.StringValue = newString;
+            capacity = newCapacity;
         }
 
-        t->Value.StringValue[length] = ReadCharEscapeSequence(l);
+        t->Value.StringValue[length] = ReadCharEscapeSequence();
         ++length;
     }
 
-    IncrementCursor(l);
+    IncrementCursor();
     t->Value.StringValue[length] = 0;
 }
 
-static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
-{
+SYNTAX_TOKEN Lexer::ReadTokenOnce() {
     SYNTAX_TOKEN result;
     memset(&result, 0, sizeof(result));
 
-    while (IsWhitespace(GetChar(l)))
-        IncrementCursor(l);
+    while (IsWhitespace(GetChar()))
+        IncrementCursor();
 
     if (l->CurrentFlags & ST_BEGINNING_OF_LINE)
         l->CurrentMode = LM_DEFAULT;
@@ -715,76 +663,76 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
     result.Flags = l->CurrentFlags;
     result.Base.LexemeRange.Location = l->CurrentLocation;
 
-    if ((result.Flags & ST_BEGINNING_OF_LINE) && GetChar(l) == '#') {
-        IncrementCursor(l);
+    if ((result.Flags & ST_BEGINNING_OF_LINE) && GetChar() == '#') {
+        IncrementCursor();
         result.Base.Kind = SK_HASH_TOKEN;
     }
     else {
-        switch (GetChar(l)) {
+        switch (GetChar()) {
         case 0:
             result.Base.Kind = SK_EOF_TOKEN;
             break;
 
         case '(':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_LPAREN_TOKEN;
             break;
 
         case ')':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_RPAREN_TOKEN;
             break;
 
         case '[':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_LBRACKET_TOKEN;
             break;
 
         case ']':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_RBRACKET_TOKEN;
             break;
 
         case '{':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_LBRACE_TOKEN;
             break;
 
         case '}':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_RBRACE_TOKEN;
             break;
 
         case ';':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_SEMICOLON_TOKEN;
             break;
 
         case ',':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_COMMA_TOKEN;
             break;
 
         case '~':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_TILDE_TOKEN;
             break;
 
         case '?':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_QUESTION_TOKEN;
             break;
 
         case ':':
-            IncrementCursor(l);
+            IncrementCursor();
             result.Base.Kind = SK_COLON_TOKEN;
             break;
 
         case '.':
-            IncrementCursor(l);
-            if (IsDecimal(GetChar(l))) {
+            IncrementCursor();
+            if (IsDecimal(GetChar())) {
                 result.Value.IntValue = 0;
-                ReadFractionalLiteral(l, &result);
+                ReadFractionalLiteral(&result);
             }
             else {
                 result.Base.Kind = SK_DOT_TOKEN;
@@ -792,13 +740,13 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '+':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_PLUS_EQUALS_TOKEN;
             }
-            else if (GetChar(l) == '+') {
-                IncrementCursor(l);
+            else if (GetChar() == '+') {
+                IncrementCursor();
                 result.Base.Kind = SK_PLUS_PLUS_TOKEN;
             }
             else {
@@ -807,17 +755,17 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '-':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_MINUS_EQUALS_TOKEN;
             }
-            else if (GetChar(l) == '-') {
-                IncrementCursor(l);
+            else if (GetChar() == '-') {
+                IncrementCursor();
                 result.Base.Kind = SK_MINUS_MINUS_TOKEN;
             }
-            else if (GetChar(l) == '>') {
-                IncrementCursor(l);
+            else if (GetChar() == '>') {
+                IncrementCursor();
                 result.Base.Kind = SK_MINUS_GT_TOKEN;
             }
             else {
@@ -826,9 +774,9 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '*':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_ASTERISK_EQUALS_TOKEN;
             }
             else {
@@ -837,27 +785,27 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '/':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_SLASH_EQUALS_TOKEN;
             }
-            else if (GetChar(l) == '*') {
-                IncrementCursor(l);
+            else if (GetChar() == '*') {
+                IncrementCursor();
                 result.Base.Kind = SK_COMMENT_TOKEN;
 
                 for (;;) {
                     SOURCE_RANGE range;
 
-                    if (GetChar(l) == '*') {
-                        IncrementCursor(l);
+                    if (GetChar() == '*') {
+                        IncrementCursor();
 
-                        if (GetChar(l) == '/') {
-                            IncrementCursor(l);
+                        if (GetChar() == '/') {
+                            IncrementCursor();
                             break;
                         }
-                        else if (GetChar(l) == 0) {
-                            GetTokenRange(l, &result, &range);
+                        else if (GetChar() == 0) {
+                            GetTokenRange(&result, &range);
                             LogAtRange(
                                 &range,
                                 LL_ERROR,
@@ -866,8 +814,8 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
                             break;
                         }
                     }
-                    else if (GetChar(l) == 0) {
-                        GetTokenRange(l, &result, &range);
+                    else if (GetChar() == 0) {
+                        GetTokenRange(&result, &range);
                         LogAtRange(
                             &range,
                             LL_ERROR,
@@ -876,7 +824,7 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
                         break;
                     }
                     else {
-                        IncrementCursor(l);
+                        IncrementCursor();
                     }
                 }
             }
@@ -886,9 +834,9 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '%':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_PERCENT_EQUALS_TOKEN;
             }
             else {
@@ -897,15 +845,15 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '<':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_LT_EQUALS_TOKEN;
             }
-            else if (GetChar(l) == '<') {
-                IncrementCursor(l);
-                if (GetChar(l) == '=') {
-                    IncrementCursor(l);
+            else if (GetChar() == '<') {
+                IncrementCursor();
+                if (GetChar() == '=') {
+                    IncrementCursor();
                     result.Base.Kind = SK_LT_LT_EQUALS_TOKEN;
                 }
                 else {
@@ -918,15 +866,15 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '>':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_GT_EQUALS_TOKEN;
             }
-            else if (GetChar(l) == '>') {
-                IncrementCursor(l);
-                if (GetChar(l) == '=') {
-                    IncrementCursor(l);
+            else if (GetChar() == '>') {
+                IncrementCursor();
+                if (GetChar() == '=') {
+                    IncrementCursor();
                     result.Base.Kind = SK_GT_GT_EQUALS_TOKEN;
                 }
                 else {
@@ -939,9 +887,9 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '=':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_EQUALS_EQUALS_TOKEN;
             }
             else {
@@ -950,9 +898,9 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '!':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_EXCLAMATION_EQUALS_TOKEN;
             }
             else {
@@ -961,13 +909,13 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '&':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_AMPERSAND_EQUALS_TOKEN;
             }
-            else if (GetChar(l) == '&') {
-                IncrementCursor(l);
+            else if (GetChar() == '&') {
+                IncrementCursor();
                 result.Base.Kind = SK_AMPERSAND_AMPERSAND_TOKEN;
             }
             else {
@@ -976,9 +924,9 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '^':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_CARET_EQUALS_TOKEN;
             }
             else {
@@ -987,13 +935,13 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
             break;
 
         case '|':
-            IncrementCursor(l);
-            if (GetChar(l) == '=') {
-                IncrementCursor(l);
+            IncrementCursor();
+            if (GetChar() == '=') {
+                IncrementCursor();
                 result.Base.Kind = SK_PIPE_EQUALS_TOKEN;
             }
-            else if (GetChar(l) == '|') {
-                IncrementCursor(l);
+            else if (GetChar() == '|') {
+                IncrementCursor();
                 result.Base.Kind = SK_PIPE_PIPE_TOKEN;
             }
             else {
@@ -1016,27 +964,27 @@ static SYNTAX_TOKEN ReadTokenOnce(THIS PLEXER l)
         case 'q': case 'r': case 's': case 't':
         case 'u': case 'v': case 'w': case 'x':
         case 'y': case 'z': 
-            ReadIdentifier(l, &result);
+            ReadIdentifier(&result);
             break;
 
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
         case '8': case '9':
-            ReadNumericalLiteral(l, &result);
+            ReadNumericalLiteral(&result);
             break;
 
         case '\'':
-            ReadCharLiteral(l, &result);
+            ReadCharLiteral(&result);
             break;
 
         case '"':
-            ReadStringLiteral(l, &result);
+            ReadStringLiteral(&result);
             break;
 
         default:
             result.Base.Kind = SK_STRAY_TOKEN;
-            result.Value.OffendingChar = GetChar(l);
-            IncrementCursor(l);
+            result.Value.OffendingChar = GetChar();
+            IncrementCursor();
             break;
         }
     }

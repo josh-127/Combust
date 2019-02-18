@@ -25,7 +25,6 @@ static int g_fileProcess = PROCESS_COMPILE_ASSEMBLE_LINK;
 static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
         SOURCE_FILE sourceFile;
-        PLEXER lexer;
         PSYNTAX_TOKEN t;
 
         if (OpenSourceFile(argv[optind], &sourceFile)) {
@@ -33,14 +32,14 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
             continue;
         }
 
-        lexer = CreateLexer(&sourceFile);
+        Lexer* lexer{ new Lexer{ &sourceFile } };
 
         do {
-            t = ReadTokenDirect(lexer);
+            t = lexer->ReadTokenDirect();
         }
         while (t->Base.Kind != SK_EOF_TOKEN);
 
-        DeleteLexer(lexer);
+        delete lexer;
         CloseSourceFile(&sourceFile);
     }
 }
@@ -56,7 +55,7 @@ static void ProcessFiles(int optind, int argc, char **argv) {
 #define OPTION_HELP    1
 
 int main(int argc, char** argv) {
-    static struct option longOptions[] = {
+    static struct option longOptions[] {
         { "version", no_argument, 0, OPTION_VERSION },
         { "help",    no_argument, 0, OPTION_HELP },
         { 0 }
