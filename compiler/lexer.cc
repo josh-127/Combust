@@ -30,8 +30,7 @@ Lexer::Lexer(IN SourceFile* input) :
     l->CurrentLocation.Source = l->Source;
 }
 
-Lexer::~Lexer() {
-}
+Lexer::~Lexer() {}
 
 SYNTAX_TOKEN Lexer::ReadTokenDirect() {
     for (;;) {
@@ -52,29 +51,15 @@ SYNTAX_TOKEN Lexer::ReadTokenDirect() {
 }
 
 constexpr bool IsWhitespace(char c) noexcept {
-    return c == ' ' ||
-           c == '\n' ||
-           c == '\r' ||
-           c == '\t';
+    return c == ' ' || c == '\n' || c == '\r' || c == '\t';
 }
-
 constexpr bool IsLetter(char c) noexcept {
-    return (c >= 'A' && c <= 'Z') ||
-           (c >= 'a' && c <= 'z');
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
-
-constexpr bool IsDecimal(char c) noexcept {
-    return c >= '0' && c <= '9';
-}
-
-constexpr bool IsOctal(char c) noexcept {
-    return c >= '0' && c <= '7';
-}
-
+constexpr bool IsDecimal(char c) noexcept { return c >= '0' && c <= '9'; }
+constexpr bool IsOctal(char c) noexcept { return c >= '0' && c <= '7'; }
 constexpr bool IsHex(char c) noexcept {
-    return (c >= '0' && c <= '9') ||
-           (c >= 'A' && c <= 'F') ||
-           (c >= 'a' && c <= 'f');
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
 char Lexer::Peek(int index) {
@@ -95,7 +80,6 @@ std::tuple<char, int> Lexer::DecodeTrigraph() {
         case '-':  return std::make_tuple('~', 3);
         }
     }
-
     return std::make_tuple(Peek(), 1);
 }
 
@@ -111,7 +95,6 @@ std::tuple<char, int, int> Lexer::DecodeNewLineEscape() {
                 isOnlyWhitespace = false;
                 break;
             }
-
             ++lengthWithoutNewLine;
         }
 
@@ -615,119 +598,44 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
     }
     else {
         switch (GetChar()) {
-        case 0:
-            result.Base.Kind = SK_EOF_TOKEN;
-            break;
-
-        case '(':
-            IncrementCursor();
-            result.Base.Kind = SK_LPAREN_TOKEN;
-            break;
-
-        case ')':
-            IncrementCursor();
-            result.Base.Kind = SK_RPAREN_TOKEN;
-            break;
-
-        case '[':
-            IncrementCursor();
-            result.Base.Kind = SK_LBRACKET_TOKEN;
-            break;
-
-        case ']':
-            IncrementCursor();
-            result.Base.Kind = SK_RBRACKET_TOKEN;
-            break;
-
-        case '{':
-            IncrementCursor();
-            result.Base.Kind = SK_LBRACE_TOKEN;
-            break;
-
-        case '}':
-            IncrementCursor();
-            result.Base.Kind = SK_RBRACE_TOKEN;
-            break;
-
-        case ';':
-            IncrementCursor();
-            result.Base.Kind = SK_SEMICOLON_TOKEN;
-            break;
-
-        case ',':
-            IncrementCursor();
-            result.Base.Kind = SK_COMMA_TOKEN;
-            break;
-
-        case '~':
-            IncrementCursor();
-            result.Base.Kind = SK_TILDE_TOKEN;
-            break;
-
-        case '?':
-            IncrementCursor();
-            result.Base.Kind = SK_QUESTION_TOKEN;
-            break;
-
-        case ':':
-            IncrementCursor();
-            result.Base.Kind = SK_COLON_TOKEN;
-            break;
+        case 0: result.Base.Kind = SK_EOF_TOKEN; break;
+        case '(': IncrementCursor(); result.Base.Kind = SK_LPAREN_TOKEN; break;
+        case ')': IncrementCursor(); result.Base.Kind = SK_RPAREN_TOKEN; break;
+        case '[': IncrementCursor(); result.Base.Kind = SK_LBRACKET_TOKEN; break;
+        case ']': IncrementCursor(); result.Base.Kind = SK_RBRACKET_TOKEN; break;
+        case '{': IncrementCursor(); result.Base.Kind = SK_LBRACE_TOKEN; break;
+        case '}': IncrementCursor(); result.Base.Kind = SK_RBRACE_TOKEN; break;
+        case ';': IncrementCursor(); result.Base.Kind = SK_SEMICOLON_TOKEN; break;
+        case ',': IncrementCursor(); result.Base.Kind = SK_COMMA_TOKEN; break;
+        case '~': IncrementCursor(); result.Base.Kind = SK_TILDE_TOKEN; break;
+        case '?': IncrementCursor(); result.Base.Kind = SK_QUESTION_TOKEN; break;
+        case ':': IncrementCursor(); result.Base.Kind = SK_COLON_TOKEN; break;
 
         case '.':
             IncrementCursor();
-            if (IsDecimal(GetChar())) {
-                result.Value.IntValue = 0;
-                ReadFractionalLiteral(&result);
-            }
-            else {
-                result.Base.Kind = SK_DOT_TOKEN;
-            }
+            if (IsDecimal(GetChar())) { result.Value.IntValue = 0; ReadFractionalLiteral(&result); }
+            else { result.Base.Kind = SK_DOT_TOKEN; }
             break;
 
         case '+':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_PLUS_EQUALS_TOKEN;
-            }
-            else if (GetChar() == '+') {
-                IncrementCursor();
-                result.Base.Kind = SK_PLUS_PLUS_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_PLUS_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_PLUS_EQUALS_TOKEN; }
+            else if (GetChar() == '+') { IncrementCursor(); result.Base.Kind = SK_PLUS_PLUS_TOKEN; }
+            else { result.Base.Kind = SK_PLUS_TOKEN; }
             break;
 
         case '-':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_MINUS_EQUALS_TOKEN;
-            }
-            else if (GetChar() == '-') {
-                IncrementCursor();
-                result.Base.Kind = SK_MINUS_MINUS_TOKEN;
-            }
-            else if (GetChar() == '>') {
-                IncrementCursor();
-                result.Base.Kind = SK_MINUS_GT_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_MINUS_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_MINUS_EQUALS_TOKEN; }
+            else if (GetChar() == '-') { IncrementCursor(); result.Base.Kind = SK_MINUS_MINUS_TOKEN; }
+            else if (GetChar() == '>') { IncrementCursor(); result.Base.Kind = SK_MINUS_GT_TOKEN; }
+            else { result.Base.Kind = SK_MINUS_TOKEN; }
             break;
 
         case '*':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_ASTERISK_EQUALS_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_ASTERISK_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_ASTERISK_EQUALS_TOKEN; }
+            else { result.Base.Kind = SK_ASTERISK_TOKEN; }
             break;
 
         case '/':
@@ -781,13 +689,8 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
 
         case '%':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_PERCENT_EQUALS_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_PERCENT_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_PERCENT_EQUALS_TOKEN; }
+            else { result.Base.Kind = SK_PERCENT_TOKEN; }
             break;
 
         case '<':
@@ -834,98 +737,54 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
 
         case '=':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_EQUALS_EQUALS_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_EQUALS_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_EQUALS_EQUALS_TOKEN; }
+            else { result.Base.Kind = SK_EQUALS_TOKEN; }
             break;
 
         case '!':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_EXCLAMATION_EQUALS_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_EXCLAMATION_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_EXCLAMATION_EQUALS_TOKEN; }
+            else { result.Base.Kind = SK_EXCLAMATION_TOKEN; }
             break;
 
         case '&':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_AMPERSAND_EQUALS_TOKEN;
-            }
-            else if (GetChar() == '&') {
-                IncrementCursor();
-                result.Base.Kind = SK_AMPERSAND_AMPERSAND_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_AMPERSAND_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_AMPERSAND_EQUALS_TOKEN; }
+            else if (GetChar() == '&') { IncrementCursor(); result.Base.Kind = SK_AMPERSAND_AMPERSAND_TOKEN; }
+            else { result.Base.Kind = SK_AMPERSAND_TOKEN; }
             break;
 
         case '^':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_CARET_EQUALS_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_CARET_TOKEN;
-            } 
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_CARET_EQUALS_TOKEN; }
+            else { result.Base.Kind = SK_CARET_TOKEN; } 
             break;
 
         case '|':
             IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result.Base.Kind = SK_PIPE_EQUALS_TOKEN;
-            }
-            else if (GetChar() == '|') {
-                IncrementCursor();
-                result.Base.Kind = SK_PIPE_PIPE_TOKEN;
-            }
-            else {
-                result.Base.Kind = SK_PIPE_TOKEN;
-            }
+            if (GetChar() == '=') { IncrementCursor(); result.Base.Kind = SK_PIPE_EQUALS_TOKEN; }
+            else if (GetChar() == '|') { IncrementCursor(); result.Base.Kind = SK_PIPE_PIPE_TOKEN; }
+            else { result.Base.Kind = SK_PIPE_TOKEN; }
             break;
 
         case '_': case '$':
-        case 'A': case 'B': case 'C': case 'D':
-        case 'E': case 'F': case 'G': case 'H':
-        case 'I': case 'J': case 'K': case 'L':
-        case 'M': case 'N': case 'O': case 'P':
-        case 'Q': case 'R': case 'S': case 'T':
-        case 'U': case 'V': case 'W': case 'X':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H':
+        case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P':
+        case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
         case 'Y': case 'Z': 
-        case 'a': case 'b': case 'c': case 'd':
-        case 'e': case 'f': case 'g': case 'h':
-        case 'i': case 'j': case 'k': case 'l':
-        case 'm': case 'n': case 'o': case 'p':
-        case 'q': case 'r': case 's': case 't':
-        case 'u': case 'v': case 'w': case 'x':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h':
+        case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p':
+        case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x':
         case 'y': case 'z': 
             ReadIdentifier(&result);
             break;
 
-        case '0': case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
-        case '8': case '9':
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             ReadNumericalLiteral(&result);
             break;
 
-        case '\'':
-            ReadCharLiteral(&result);
-            break;
-
-        case '"':
-            ReadStringLiteral(&result);
-            break;
+        case '\'': ReadCharLiteral(&result); break;
+        case '"': ReadStringLiteral(&result); break;
 
         default:
             result.Base.Kind = SK_STRAY_TOKEN;
