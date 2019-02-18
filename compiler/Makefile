@@ -1,6 +1,6 @@
 TARGET		:= compile
 
-CXXFLAGS	:= -g -Wall -Wextra
+CXXFLAGS	:= -g -std=gnu++14 -Wall -Wextra
 
 HHFILES	:= \
 	lexer.hh \
