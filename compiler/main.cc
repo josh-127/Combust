@@ -24,8 +24,6 @@ static int g_fileProcess{ PROCESS_COMPILE_ASSEMBLE_LINK };
 
 static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
-        PSYNTAX_TOKEN t;
-
         SourceFile sourceFile{ argv[optind] };
         if (!sourceFile.IsOpen) {
             Log(LL_FATAL, "cannot open %s", argv[optind]);
@@ -34,10 +32,11 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
 
         Lexer lexer{ &sourceFile };
 
+        SYNTAX_TOKEN t{ };
         do {
             t = lexer.ReadTokenDirect();
         }
-        while (t->Base.Kind != SK_EOF_TOKEN);
+        while (t.Base.Kind != SK_EOF_TOKEN);
     }
 }
 

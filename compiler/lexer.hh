@@ -11,7 +11,7 @@ public:
     Lexer(IN SourceFile* input);
     virtual ~Lexer();
 
-    PSYNTAX_TOKEN ReadTokenDirect();
+    SYNTAX_TOKEN ReadTokenDirect();
 
 private:
     char DecodeTrigraph(OUT int* charLength);

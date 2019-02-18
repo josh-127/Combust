@@ -34,7 +34,7 @@ Lexer::~Lexer() {
     delete l;
 }
 
-PSYNTAX_TOKEN Lexer::ReadTokenDirect() {
+SYNTAX_TOKEN Lexer::ReadTokenDirect() {
     for (;;) {
         l->CurrentToken = ReadTokenOnce();
 
@@ -47,7 +47,7 @@ PSYNTAX_TOKEN Lexer::ReadTokenDirect() {
             );
         }
         else if (l->CurrentToken.Base.Kind != SK_COMMENT_TOKEN) {
-            return &l->CurrentToken;
+            return l->CurrentToken;
         }
     }
 }
@@ -630,7 +630,7 @@ void Lexer::ReadStringLiteral(OUT  PSYNTAX_TOKEN t) {
 }
 
 SYNTAX_TOKEN Lexer::ReadTokenOnce() {
-    SYNTAX_TOKEN result;
+    SYNTAX_TOKEN result{ };
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();
