@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-SourceFile::SourceFile(IN const char* fileName) :
-    FileName{ nullptr },
+SourceFile::SourceFile(const std::string& fileName) :
+    FileName{ fileName },
     Contents{ nullptr },
     Lines{ nullptr },
     IsOpen{ false }
 {
-    FILE* file{ fopen(fileName, "rb") };
+    FILE* file{ fopen(fileName.c_str(), "rb") };
     if (!file) {
         return;
     }
@@ -40,14 +40,10 @@ SourceFile::SourceFile(IN const char* fileName) :
             Lines[++lineCount] = &Contents[i + 1];
     }
 
-    FileName = new char[strlen(fileName) + 1]{ };
-    strcpy(FileName, fileName);
-
     IsOpen = true;
 }
 
 SourceFile::~SourceFile() {
     delete[] Lines;
     delete[] Contents;
-    delete[] FileName;
 }
