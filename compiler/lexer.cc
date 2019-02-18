@@ -31,14 +31,11 @@ Lexer::Lexer(IN PSOURCE_FILE input) :
 }
 
 Lexer::~Lexer() {
-    DeleteSyntaxNode(reinterpret_cast<PSYNTAX_NODE>(&l->CurrentToken));
     delete l;
 }
 
 PSYNTAX_TOKEN Lexer::ReadTokenDirect() {
     for (;;) {
-        DeleteSyntaxNode(reinterpret_cast<PSYNTAX_NODE>(&l->CurrentToken));
-
         l->CurrentToken = ReadTokenOnce();
 
         if (l->CurrentToken.Base.Kind == SK_STRAY_TOKEN) {
@@ -283,9 +280,11 @@ void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
     else if (o("return"))   t->Base.Kind = SK_RETURN_KEYWORD;
     else {
         t->Base.Kind = SK_IDENTIFIER_TOKEN;
-        t->Value.IdentifierName = new char[length + 1]{ };
-        strncpy(t->Value.IdentifierName, start, length);
-        t->Value.IdentifierName[length] = 0;
+        char* temp{ new char[length + 1]{ } };
+        strncpy(temp, start, length);
+        temp[length] = 0;
+        t->Value.IdentifierName = temp;
+        delete[] temp;
     }
 #undef o
 }
@@ -604,14 +603,10 @@ void Lexer::ReadCharLiteral(OUT  PSYNTAX_TOKEN t) {
 
 /* Precondition: GetChar() == '"' */
 void Lexer::ReadStringLiteral(OUT  PSYNTAX_TOKEN t) {
-    int length{ 0 };
-    int capacity{ 12 };
-
     t->Base.Kind = SK_STRING_CONSTANT_TOKEN;
     IncrementCursor();
 
-    t->Value.StringValue = new char[capacity + 1]{ };
-    t->Value.StringValue[0] = 0;
+    t->Value.StringValue.clear();
 
     while (GetChar() != '"') {
         if (GetChar() == '\n') {
@@ -624,33 +619,18 @@ void Lexer::ReadStringLiteral(OUT  PSYNTAX_TOKEN t) {
                 "missing terminating \" character"
             );
 
-            if (t->Value.StringValue != NULL)
-                delete[] t->Value.StringValue;
-
-            t->Value.StringValue = NULL;
+            t->Value.StringValue = "";
             return;
         }
 
-        if (length >= capacity) {
-            int newCapacity{ capacity * 2 };
-            char* newString{ new char[newCapacity + 1]{ } };
-            memmove(newString, t->Value.StringValue, capacity + 1);
-            delete[] t->Value.StringValue;
-            t->Value.StringValue = newString;
-            capacity = newCapacity;
-        }
-
-        t->Value.StringValue[length] = ReadCharEscapeSequence();
-        ++length;
+        t->Value.StringValue += ReadCharEscapeSequence();
     }
 
     IncrementCursor();
-    t->Value.StringValue[length] = 0;
 }
 
 SYNTAX_TOKEN Lexer::ReadTokenOnce() {
     SYNTAX_TOKEN result;
-    memset(&result, 0, sizeof(result));
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();

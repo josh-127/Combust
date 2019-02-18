@@ -3,6 +3,7 @@
 #include "common.hh"
 #include "source.hh"
 #include <stdint.h>
+#include <string>
 
 #define ST_BEGINNING_OF_LINE 1
 
@@ -25,13 +26,13 @@ struct SYNTAX_NODE {
 
 using PSYNTAX_NODE = SYNTAX_NODE*;
 
-union SYNTAX_TOKEN_VALUE {
-    char   *IdentifierName;
-    long    IntValue;
-    float   FloatValue;
-    double  DoubleValue;
-    char   *StringValue;
-    char    OffendingChar;
+struct SYNTAX_TOKEN_VALUE {
+    std::string IdentifierName;
+    long        IntValue;
+    float       FloatValue;
+    double      DoubleValue;
+    std::string StringValue;
+    char        OffendingChar;
 };
 
 using PSYNTAX_TOKEN_VALUE = SYNTAX_TOKEN_VALUE*;
