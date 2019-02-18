@@ -4,6 +4,22 @@
 
 int g_ErrorsLogged{ 0 };
 
+#if defined(_WIN32)
+#define RED       ""
+#define GREEN     ""
+#define YELLOW    ""
+#define BLUE      ""
+#define MAGENTA   ""
+#define CYAN      ""
+#define WHITE     ""
+#define RED_B     ""
+#define GREEN_B   ""
+#define YELLOW_B  ""
+#define BLUE_B    ""
+#define MAGENTA_B ""
+#define CYAN_B    ""
+#define WHITE_B   ""
+#else
 #define RED       "\x1b[31m"
 #define GREEN     "\x1b[32m"
 #define YELLOW    "\x1b[33m"
@@ -18,6 +34,7 @@ int g_ErrorsLogged{ 0 };
 #define MAGENTA_B "\x1b[1m\x1b[35m"
 #define CYAN_B    "\x1b[1m\x1b[36m"
 #define WHITE_B   "\x1b[1m\x1b[0m"
+#endif
 
 static void LogMessage(const char *header, const char *format, va_list args) {
     fprintf(stderr, header, g_ProgramName);

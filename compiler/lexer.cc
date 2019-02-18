@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "lexer.hh"
 #include "logger.hh"
 #include <assert.h>
