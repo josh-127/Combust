@@ -14,7 +14,7 @@
 
 struct LEXER_IMPL {
     SourceFile*  Source{ nullptr };
-    char*        Cursor{ nullptr };
+    int          Cursor{ 0 };
     uint32_t     CurrentMode{ 0 };
     int          CurrentFlags{ 0 };
     SOURCE_LOC   CurrentLocation{ };
@@ -25,7 +25,6 @@ Lexer::Lexer(IN SourceFile* input) :
     l{ std::make_unique<LEXER_IMPL>() }
 {
     l->Source                 = input;
-    l->Cursor                 = l->Source->Contents;
     l->CurrentMode            = LM_DEFAULT;
     l->CurrentFlags           = ST_BEGINNING_OF_LINE;
     l->CurrentLocation.Source = l->Source;
@@ -78,12 +77,16 @@ constexpr bool IsHex(char c) noexcept {
            (c >= 'a' && c <= 'f');
 }
 
+char Lexer::Peek(int index) {
+    return l->Source->Contents[l->Cursor + index];
+}
+
 char Lexer::DecodeTrigraph(OUT int* charLength) noexcept {
-    if (l->Cursor[0] == '?' && l->Cursor[1] == '?') {
+    if (Peek(0) == '?' && Peek(1) == '?') {
         if (charLength)
             *charLength = 3;
 
-        switch (l->Cursor[2]) {
+        switch (Peek(2)) {
             case '=':  return '#';
             case '(':  return '[';
             case '/':  return '\\';
@@ -99,7 +102,7 @@ char Lexer::DecodeTrigraph(OUT int* charLength) noexcept {
     if (charLength)
         *charLength = 1;
 
-    return *l->Cursor;
+    return Peek();
 }
 
 char Lexer::DecodeNewLineEscape(
@@ -113,8 +116,8 @@ char Lexer::DecodeNewLineEscape(
         bool isOnlyWhitespace{ true };
         int lengthWithoutNewLine{ firstCharLength };
 
-        while (l->Cursor[lengthWithoutNewLine] != '\n') {
-            if (!IsWhitespace(l->Cursor[lengthWithoutNewLine])) {
+        while (Peek(lengthWithoutNewLine) != '\n') {
+            if (!IsWhitespace(Peek(lengthWithoutNewLine))) {
                 isOnlyWhitespace = false;
                 break;
             }
@@ -200,19 +203,15 @@ void Lexer::GetTokenRange(
     int column{ t->Base.LexemeRange.Location.Column };
     const char *base{ &l->Source->Lines[line][column] };
 
+    // TODO: Re-implement length calculation.
     range->Location = t->Base.LexemeRange.Location;
-    range->Length = static_cast<int>(l->Cursor - base);
+    range->Length = 1;
+    //range->Length = static_cast<int>(l->Cursor - base);
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
 void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
-    SourceFile* source{ t->Base.LexemeRange.Location.Source };
-
-    int line{ t->Base.LexemeRange.Location.Line };
-    int column{ t->Base.LexemeRange.Location.Column };
-    int length{ 0 };
-
-    const char *start{ &source->Lines[line][column] };
+    std::string name{ };
 
     for (;;) {
         char character{ GetChar() };
@@ -223,6 +222,7 @@ void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
             (character >= 'a' && character <= 'z') ||
             (character >= '0' && character <= '9'))
         {
+            name += character;
             IncrementCursor();
         }
         else {
@@ -230,9 +230,7 @@ void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
         }
     }
 
-    length = static_cast<int>(l->Cursor - start) / sizeof(char);
-
-#define o(kw) (length == (sizeof(kw) / sizeof(char) - 1) && !strncmp(start, kw, length))
+#define o(kw) (name == kw)
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
              if (o("if"))       t->Base.Kind = SK_IF_DIRECTIVE_KEYWORD;
         else if (o("ifdef"))    t->Base.Kind = SK_IFDEF_DIRECTIVE_KEYWORD;
@@ -280,11 +278,7 @@ void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
     else if (o("return"))   t->Base.Kind = SK_RETURN_KEYWORD;
     else {
         t->Base.Kind = SK_IDENTIFIER_TOKEN;
-        char* temp{ new char[length + 1]{ } };
-        strncpy(temp, start, length);
-        temp[length] = 0;
-        t->Value.IdentifierName = temp;
-        delete[] temp;
+        t->Value.IdentifierName = name;
     }
 #undef o
 }
@@ -294,12 +288,12 @@ void Lexer::ReadSuffix(
     OUT  int     *length
 ) {
     *length = 0;
-    while (IsLetter(l->Cursor[*length]))
+    while (IsLetter(Peek(*length)))
         ++*length;
 
     *suffix = new char[*length + 1]{ };
     for (int i{ 0 }; i < *length; ++i)
-        (*suffix)[i] = l->Cursor[i];
+        (*suffix)[i] = Peek(i);
     (*suffix)[*length] = 0;
     IncrementCursorBy(*length);
 }
@@ -460,10 +454,10 @@ void Lexer::ReadNumericalLiteral(OUT  PSYNTAX_TOKEN t) {
         }
         while (GetChar() == '0');
 
-        while (IsDecimal(l->Cursor[wholeLength]))
+        while (IsDecimal(Peek(wholeLength)))
             ++wholeLength;
 
-        if (l->Cursor[wholeLength] == '.') {
+        if (Peek(wholeLength) == '.') {
             ReadDecimalLiteral(t);
         }
         else if (GetChar() == 'X' || GetChar() == 'x') {
@@ -971,7 +965,9 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
         const int line{ result.Base.LexemeRange.Location.Line };
         const int column{ result.Base.LexemeRange.Location.Column };
         const char *base{ &l->Source->Lines[line][column] };
-        result.Base.LexemeRange.Length = static_cast<int>(l->Cursor - base);
+        // TODO: Re-implement length calculation.
+        //result.Base.LexemeRange.Length = static_cast<int>(l->Cursor - base);
+        result.Base.LexemeRange.Length = 1;
     }
     else {
         const int end{ l->CurrentLocation.Column };

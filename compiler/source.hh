@@ -2,13 +2,15 @@
 #define PTC_CL_SOURCE_H
 #include "common.hh"
 #include <string>
+#include <vector>
 
 struct SourceFile {
     SourceFile(const std::string& fileName);
     virtual ~SourceFile();
 
     const std::string& FileName;
-    char*  Contents;
+    std::vector<char> Contents;
+    char*  Data;
     char** Lines;
     bool   IsOpen;
 };

@@ -6,7 +6,7 @@
 
 SourceFile::SourceFile(const std::string& fileName) :
     FileName{ fileName },
-    Contents{ nullptr },
+    Data{ nullptr },
     Lines{ nullptr },
     IsOpen{ false }
 {
@@ -19,31 +19,35 @@ SourceFile::SourceFile(const std::string& fileName) :
 
     int length{ static_cast<int>(ftell(file)) };
     fseek(file, 0, SEEK_SET);
-    Contents = new char[length + 3]{ };
-    fread(Contents, length, 1, file);
-    Contents[length] = '\n';
-    Contents[length + 1] = '\n';
-    Contents[length + 2] = 0;
+    Data = new char[length + 3]{ };
+    fread(Data, length, 1, file);
+    Data[length] = '\n';
+    Data[length + 1] = '\n';
+    Data[length + 2] = 0;
     fclose(file);
 
     int lineCount{ 1 };
     for (int i{ 0 }; i < length; ++i) {
-        if (Contents[i] == '\n')
+        if (Data[i] == '\n')
             ++lineCount;
     }
 
     Lines = new char*[lineCount]{ };
     lineCount = 0;
-    Lines[0] = Contents;
+    Lines[0] = Data;
     for (int i{ 0 }; i < length; ++i) {
-        if (Contents[i] == '\n')
-            Lines[++lineCount] = &Contents[i + 1];
+        if (Data[i] == '\n')
+            Lines[++lineCount] = &Data[i + 1];
     }
 
+    for (int i{ 0 }; Data[i] != 0; ++i) {
+        Contents.push_back(Data[i]);
+    }
+    Contents.push_back(0);
     IsOpen = true;
 }
 
 SourceFile::~SourceFile() {
     delete[] Lines;
-    delete[] Contents;
+    delete[] Data;
 }

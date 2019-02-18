@@ -15,6 +15,7 @@ public:
     SYNTAX_TOKEN ReadTokenDirect();
 
 private:
+    char Peek(int index = 0);
     char DecodeTrigraph(OUT int* charLength) noexcept;
     char DecodeNewLineEscape(
         OUT int* charLength,
