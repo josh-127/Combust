@@ -45,8 +45,4 @@ struct SYNTAX_TOKEN {
 
 using PSYNTAX_TOKEN = SYNTAX_TOKEN*;
 
-void DeleteSyntaxNode(
-    THIS PSYNTAX_NODE obj
-);
-
 #endif
