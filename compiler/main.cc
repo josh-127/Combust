@@ -26,21 +26,18 @@ static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {
         PSYNTAX_TOKEN t;
 
-        SourceFile* sourceFile{ new SourceFile{ argv[optind] } };
-        if (!sourceFile->IsOpen) {
+        SourceFile sourceFile{ argv[optind] };
+        if (!sourceFile.IsOpen) {
             Log(LL_FATAL, "cannot open %s", argv[optind]);
             continue;
         }
 
-        Lexer* lexer{ new Lexer{ sourceFile } };
+        Lexer lexer{ &sourceFile };
 
         do {
-            t = lexer->ReadTokenDirect();
+            t = lexer.ReadTokenDirect();
         }
         while (t->Base.Kind != SK_EOF_TOKEN);
-
-        delete lexer;
-        delete sourceFile;
     }
 }
 
