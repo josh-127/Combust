@@ -110,11 +110,11 @@ char Lexer::DecodeNewLineEscape(
     OUT  int    *trailingWhitespaceLength
 ) {
     int firstCharLength;
-    char firstChar = DecodeTrigraph(&firstCharLength);
+    char firstChar{ DecodeTrigraph(&firstCharLength) };
 
     if (firstChar == '\\') {
-        bool isOnlyWhitespace = true;
-        int lengthWithoutNewLine = firstCharLength;
+        bool isOnlyWhitespace{ true };
+        int lengthWithoutNewLine{ firstCharLength };
 
         while (l->Cursor[lengthWithoutNewLine] != '\n') {
             if (!IsWhitespace(l->Cursor[lengthWithoutNewLine])) {
@@ -132,7 +132,7 @@ char Lexer::DecodeNewLineEscape(
                 *charLength = totalLength;
 
             if (trailingWhitespaceLength) {
-                int length = lengthWithoutNewLine - firstCharLength;
+                int length{ lengthWithoutNewLine - firstCharLength };
                 *trailingWhitespaceLength = length;
             }
 
@@ -159,9 +159,9 @@ char Lexer::GetChar() {
 void Lexer::IncrementCursor() {
     int charLength;
     int trailingWhitespaceLength;
-    char charValue = DecodeNewLineEscape(
+    char charValue{ DecodeNewLineEscape(
         &charLength, &trailingWhitespaceLength
-    );
+    ) };
 
     if (charValue == '\n') {
         ++l->CurrentLocation.Line;
@@ -199,9 +199,9 @@ void Lexer::GetTokenRange(
     IN   PSYNTAX_TOKEN t,
     OUT  PSOURCE_RANGE range
 ) {
-    int line = t->Base.LexemeRange.Location.Line;
-    int column = t->Base.LexemeRange.Location.Column;
-    const char *base = &l->Source->Lines[line][column];
+    int line{ t->Base.LexemeRange.Location.Line };
+    int column{ t->Base.LexemeRange.Location.Column };
+    const char *base{ &l->Source->Lines[line][column] };
 
     range->Location = t->Base.LexemeRange.Location;
     range->Length = (int) (l->Cursor - base);
@@ -209,16 +209,16 @@ void Lexer::GetTokenRange(
 
 /* Precondition: GetChar() is [_A-Za-z] */
 void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
-    PSOURCE_FILE source = t->Base.LexemeRange.Location.Source;
+    PSOURCE_FILE source{ t->Base.LexemeRange.Location.Source };
 
-    int line   = t->Base.LexemeRange.Location.Line,
-        column = t->Base.LexemeRange.Location.Column,
-        length;
+    int line{ t->Base.LexemeRange.Location.Line };
+    int column{ t->Base.LexemeRange.Location.Column };
+    int length;
 
-    const char *start = &source->Lines[line][column];
+    const char *start{ &source->Lines[line][column] };
 
     for (;;) {
-        char character = GetChar();
+        char character{ GetChar() };
 
         if ((character == '_') ||
             (character == '$') ||
@@ -326,7 +326,7 @@ int Lexer::SkipLongSuffix(IN_OUT char **cursor) {
 }
 
 void Lexer::SkipIntSuffixes(IN   PSYNTAX_TOKEN t) {
-    int suffixLength = 0;
+    int suffixLength{ 0 };
     char *suffix;
     char *suffixCursor;
 
@@ -354,10 +354,10 @@ void Lexer::SkipIntSuffixes(IN   PSYNTAX_TOKEN t) {
 }
 
 void Lexer::ReadFractionalLiteral(IN   PSYNTAX_TOKEN t) {
-    float floatFrac = 0.0F;
-    float floatExp = 0.1F;
-    float doubleFrac = 0.0;
-    float doubleExp = 0.1;
+    float floatFrac{ 0.0F };
+    float floatExp{ 0.1F };
+    float doubleFrac{ 0.0 };
+    float doubleExp{ 0.1 };
     char *suffix;
     int suffixLength;
 
@@ -456,7 +456,7 @@ void Lexer::ReadDecimalLiteral(OUT  PSYNTAX_TOKEN t) {
 
 void Lexer::ReadNumericalLiteral(OUT  PSYNTAX_TOKEN t) {
     if (GetChar() == '0') {
-        int wholeLength = 0;
+        int wholeLength{ 0 };
 
         do {
             IncrementCursor();
@@ -606,8 +606,8 @@ void Lexer::ReadCharLiteral(OUT  PSYNTAX_TOKEN t) {
 
 /* Precondition: GetChar() == '"' */
 void Lexer::ReadStringLiteral(OUT  PSYNTAX_TOKEN t) {
-    int length = 0;
-    int capacity = 12;
+    int length{ 0 };
+    int capacity{ 12 };
 
     t->Base.Kind = SK_STRING_CONSTANT_TOKEN;
     IncrementCursor();
@@ -990,14 +990,14 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
     }
 
     if (result.Base.Kind == SK_COMMENT_TOKEN) {
-        int line = result.Base.LexemeRange.Location.Line;
-        int column = result.Base.LexemeRange.Location.Column;
-        const char *base = &l->Source->Lines[line][column];
+        int line{ result.Base.LexemeRange.Location.Line };
+        int column{ result.Base.LexemeRange.Location.Column };
+        const char *base{ &l->Source->Lines[line][column] };
         result.Base.LexemeRange.Length = (int) (l->Cursor - base);
     }
     else {
-        int end = l->CurrentLocation.Column;
-        int start = result.Base.LexemeRange.Location.Column;
+        int end{ l->CurrentLocation.Column };
+        int start{ result.Base.LexemeRange.Location.Column };
         result.Base.LexemeRange.Length = end - start;
     }
 

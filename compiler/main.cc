@@ -20,7 +20,7 @@ static void InitGlobals(int argc, char **argv) {
 #define PROCESS_COMPILE               2
 #define PROCESS_PREPROCESS            3
 
-static int g_fileProcess = PROCESS_COMPILE_ASSEMBLE_LINK;
+static int g_fileProcess{ PROCESS_COMPILE_ASSEMBLE_LINK };
 
 static void PreprocessFiles(int optind, int argc, char **argv) {
     for (; optind < argc; ++optind) {

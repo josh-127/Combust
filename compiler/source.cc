@@ -8,18 +8,14 @@ int OpenSourceFile(
     OUT PSOURCE_FILE  sourceFile
 )
 {
-    FILE        *file;
-    int          length;
-    int          lineCount;
-    int          i;
-
-    file = fopen(fileName, "rb");
+    FILE* file{ fopen(fileName, "rb") };
     if (!file) {
         return -1;
     }
 
     fseek(file, 0, SEEK_END);
-    length = ftell(file);
+
+    int length{ static_cast<int>(ftell(file)) };
     fseek(file, 0, SEEK_SET);
     sourceFile->Contents = new char[length + 3]{ };
     fread(sourceFile->Contents, length, 1, file);
@@ -28,8 +24,8 @@ int OpenSourceFile(
     sourceFile->Contents[length + 2] = 0;
     fclose(file);
 
-    lineCount = 1;
-    for (i = 0; i < length; ++i) {
+    int lineCount{ 1 };
+    for (int i{ 0 }; i < length; ++i) {
         if (sourceFile->Contents[i] == '\n')
             ++lineCount;
     }
@@ -37,7 +33,7 @@ int OpenSourceFile(
     sourceFile->Lines = new char*[lineCount]{ };
     lineCount = 0;
     sourceFile->Lines[0] = sourceFile->Contents;
-    for (i = 0; i < length; ++i) {
+    for (int i{ 0 }; i < length; ++i) {
         if (sourceFile->Contents[i] == '\n')
             sourceFile->Lines[++lineCount] = &sourceFile->Contents[i + 1];
     }

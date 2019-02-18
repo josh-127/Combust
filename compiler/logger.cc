@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-int g_ErrorsLogged = 0;
+int g_ErrorsLogged{ 0 };
 
 #define RED       "\x1b[31m"
 #define GREEN     "\x1b[32m"
@@ -82,19 +82,18 @@ static void LogMessageAt(
     va_list     args
 )
 {
-    char *line = loc->Source->Lines[loc->Line];
-    int i;
+    char *line{ loc->Source->Lines[loc->Line] };
 
     fprintf(stderr, loc_msg,
             loc->Source->FileName, loc->Line + 1, loc->Column + 1);
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
 
-    for (i = 0; line[i] != '\n'; ++i)
+    for (int i{ 0 }; line[i] != '\n'; ++i)
         fprintf(stderr, "%c", line[i]);
     fprintf(stderr, "\n");
 
-    for (i = 0; i < loc->Column; ++i)
+    for (int i{ 0 }; i < loc->Column; ++i)
         fprintf(stderr, line[i] == '\t' ? "\t" : " ");
     fprintf(stderr, "^\n");
 }
@@ -161,8 +160,7 @@ static void LogMessageAtRange(
     va_list        args
 )
 {
-    char *line = range->Location.Source->Lines[range->Location.Line];
-    int i;
+    char *line{ range->Location.Source->Lines[range->Location.Line] };
 
     fprintf(
         stderr,
@@ -174,7 +172,7 @@ static void LogMessageAtRange(
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
 
-    for (i = 0; line[i] != '\n'; ++i) {
+    for (int i{ 0 }; line[i] != '\n'; ++i) {
         if (line[i] == '\t')
             fprintf(stderr, "    ");
         else
@@ -182,7 +180,7 @@ static void LogMessageAtRange(
     }
     fprintf(stderr, "\n");
 
-    for (i = 0; i < range->Location.Column; ++i)
+    for (int i{ 0 }; i < range->Location.Column; ++i)
         fprintf(stderr, line[i] == '\t' ? "    " : " ");
     fprintf(stderr, "^");
 
