@@ -185,7 +185,7 @@ static void LogMessageAtRange(
     fprintf(stderr, "^");
 
     for (
-        i = range->Location.Column;
+        int i{ range->Location.Column };
         i < range->Location.Column + range->Length - 1;
         ++i
     )

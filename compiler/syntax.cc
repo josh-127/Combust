@@ -14,7 +14,7 @@ void DeleteSyntaxNode(
 )
 {
     if (g_tokenMask[obj->Kind]) {
-        PSYNTAX_TOKEN token{ (PSYNTAX_TOKEN) obj };
+        PSYNTAX_TOKEN token{ reinterpret_cast<PSYNTAX_TOKEN>(obj) };
 
         if (token->Base.Kind == SK_IDENTIFIER_TOKEN)
             delete[] token->Value.IdentifierName;

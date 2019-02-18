@@ -31,13 +31,13 @@ Lexer::Lexer(IN PSOURCE_FILE input) :
 }
 
 Lexer::~Lexer() {
-    DeleteSyntaxNode((PSYNTAX_NODE) &l->CurrentToken);
+    DeleteSyntaxNode(reinterpret_cast<PSYNTAX_NODE>(&l->CurrentToken));
     delete l;
 }
 
 PSYNTAX_TOKEN Lexer::ReadTokenDirect() {
     for (;;) {
-        DeleteSyntaxNode((PSYNTAX_NODE) &l->CurrentToken);
+        DeleteSyntaxNode(reinterpret_cast<PSYNTAX_NODE>(&l->CurrentToken));
 
         l->CurrentToken = ReadTokenOnce();
 
@@ -204,7 +204,7 @@ void Lexer::GetTokenRange(
     const char *base{ &l->Source->Lines[line][column] };
 
     range->Location = t->Base.LexemeRange.Location;
-    range->Length = (int) (l->Cursor - base);
+    range->Length = static_cast<int>(l->Cursor - base);
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
@@ -233,7 +233,7 @@ void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
         }
     }
 
-    length = (int) (l->Cursor - start) / sizeof(char);
+    length = static_cast<int>(l->Cursor - start) / sizeof(char);
 
 #define o(kw) (length == (sizeof(kw) / sizeof(char) - 1) && !strncmp(start, kw, length))
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
@@ -294,14 +294,12 @@ void Lexer::ReadSuffix(
     OUT  char   **suffix,
     OUT  int     *length
 ) {
-    int i;
-
     *length = 0;
     while (IsLetter(l->Cursor[*length]))
         ++*length;
 
     *suffix = new char[*length + 1]{ };
-    for (i = 0; i < *length; ++i)
+    for (int i{ 0 }; i < *length; ++i)
         (*suffix)[i] = l->Cursor[i];
     (*suffix)[*length] = 0;
     IncrementCursorBy(*length);
@@ -993,7 +991,7 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
         int line{ result.Base.LexemeRange.Location.Line };
         int column{ result.Base.LexemeRange.Location.Column };
         const char *base{ &l->Source->Lines[line][column] };
-        result.Base.LexemeRange.Length = (int) (l->Cursor - base);
+        result.Base.LexemeRange.Length = static_cast<int>(l->Cursor - base);
     }
     else {
         int end{ l->CurrentLocation.Column };
