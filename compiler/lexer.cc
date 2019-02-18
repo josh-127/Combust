@@ -13,16 +13,16 @@
 #define LM_PP_ANGLED_STRING_CONSTANT 4
 
 struct LEXER_IMPL {
-    SourceFile*  Source;
-    char*        Cursor;
-    uint32_t     CurrentMode;
-    int          CurrentFlags;
-    SOURCE_LOC   CurrentLocation;
-    SYNTAX_TOKEN CurrentToken;
+    SourceFile*  Source{ nullptr };
+    char*        Cursor{ nullptr };
+    uint32_t     CurrentMode{ 0 };
+    int          CurrentFlags{ 0 };
+    SOURCE_LOC   CurrentLocation{ };
+    SYNTAX_TOKEN CurrentToken{ };
 };
 
 Lexer::Lexer(IN SourceFile* input) :
-    l{ new LEXER_IMPL{ } }
+    l{ std::make_unique<LEXER_IMPL>() }
 {
     l->Source                 = input;
     l->Cursor                 = l->Source->Contents;
@@ -32,7 +32,6 @@ Lexer::Lexer(IN SourceFile* input) :
 }
 
 Lexer::~Lexer() {
-    delete l;
 }
 
 SYNTAX_TOKEN Lexer::ReadTokenDirect() {
@@ -53,33 +52,33 @@ SYNTAX_TOKEN Lexer::ReadTokenDirect() {
     }
 }
 
-inline bool IsWhitespace(char c) {
+constexpr bool IsWhitespace(char c) noexcept {
     return c == ' ' ||
            c == '\n' ||
            c == '\r' ||
            c == '\t';
 }
 
-inline bool IsLetter(char c) {
+constexpr bool IsLetter(char c) noexcept {
     return (c >= 'A' && c <= 'Z') ||
            (c >= 'a' && c <= 'z');
 }
 
-inline bool IsDecimal(char c) {
+constexpr bool IsDecimal(char c) noexcept {
     return c >= '0' && c <= '9';
 }
 
-inline bool IsOctal(char c) {
+constexpr bool IsOctal(char c) noexcept {
     return c >= '0' && c <= '7';
 }
 
-inline bool IsHex(char c) {
+constexpr bool IsHex(char c) noexcept {
     return (c >= '0' && c <= '9') ||
            (c >= 'A' && c <= 'F') ||
            (c >= 'a' && c <= 'f');
 }
 
-char Lexer::DecodeTrigraph(OUT int* charLength) {
+char Lexer::DecodeTrigraph(OUT int* charLength) noexcept {
     if (l->Cursor[0] == '?' && l->Cursor[1] == '?') {
         if (charLength)
             *charLength = 3;
@@ -107,7 +106,7 @@ char Lexer::DecodeNewLineEscape(
     OUT  int    *charLength,
     OUT  int    *trailingWhitespaceLength
 ) {
-    int firstCharLength;
+    int firstCharLength{ 0 };
     char firstChar{ DecodeTrigraph(&firstCharLength) };
 
     if (firstChar == '\\') {
@@ -147,11 +146,11 @@ char Lexer::DecodeNewLineEscape(
 }
 
 char Lexer::GetCharEx(OUT  int    *charLength) {
-    return DecodeNewLineEscape(charLength, NULL);
+    return DecodeNewLineEscape(charLength, nullptr);
 }
 
 char Lexer::GetChar() {
-    return GetCharEx(NULL);
+    return GetCharEx(nullptr);
 }
 
 void Lexer::IncrementCursor() {
@@ -196,7 +195,7 @@ void Lexer::IncrementCursorBy(IN   int    amount) {
 void Lexer::GetTokenRange(
     IN   PSYNTAX_TOKEN t,
     OUT  PSOURCE_RANGE range
-) {
+) noexcept {
     int line{ t->Base.LexemeRange.Location.Line };
     int column{ t->Base.LexemeRange.Location.Column };
     const char *base{ &l->Source->Lines[line][column] };
@@ -211,7 +210,7 @@ void Lexer::ReadIdentifier(OUT  PSYNTAX_TOKEN t) {
 
     int line{ t->Base.LexemeRange.Location.Line };
     int column{ t->Base.LexemeRange.Location.Column };
-    int length;
+    int length{ 0 };
 
     const char *start{ &source->Lines[line][column] };
 
@@ -354,10 +353,10 @@ void Lexer::SkipIntSuffixes(IN   PSYNTAX_TOKEN t) {
 void Lexer::ReadFractionalLiteral(IN   PSYNTAX_TOKEN t) {
     float floatFrac{ 0.0F };
     float floatExp{ 0.1F };
-    float doubleFrac{ 0.0 };
-    float doubleExp{ 0.1 };
-    char *suffix;
-    int suffixLength;
+    double doubleFrac{ 0.0 };
+    double doubleExp{ 0.1 };
+    char* suffix{ nullptr };
+    int suffixLength{ 0 };
 
     for (; IsDecimal(GetChar()); IncrementCursor()) {
         floatFrac += floatExp * (GetChar() - '0');
@@ -421,7 +420,7 @@ void Lexer::ReadOctalLiteral(OUT  PSYNTAX_TOKEN t) {
             t->Value.IntValue = (t->Value.IntValue * 8) - (GetChar() - '0');
         }
         else {
-            SOURCE_RANGE range;
+            SOURCE_RANGE range{ };
             GetTokenRange(t, &range);
 
             LogAtRange(
@@ -481,11 +480,11 @@ void Lexer::ReadNumericalLiteral(OUT  PSYNTAX_TOKEN t) {
 }
 
 int Lexer::ReadCharEscapeSequence() {
-    int result;
+    int result{ 0 };
 
     if (GetChar() == '\\') {
-        SOURCE_RANGE errorRange;
-        int digitCount;
+        SOURCE_RANGE errorRange{ };
+        int digitCount{ 0 };
 
         errorRange.Location = l->CurrentLocation;
         errorRange.Length = 2;
@@ -556,7 +555,7 @@ int Lexer::ReadCharEscapeSequence() {
 
 /* Precondition: GetChar() == '\'' */
 void Lexer::ReadCharLiteral(OUT  PSYNTAX_TOKEN t) {
-    SOURCE_RANGE range;
+    SOURCE_RANGE range{ };
 
     IncrementCursor();
     t->Base.Kind = SK_INT_CONSTANT_TOKEN;
@@ -774,7 +773,7 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
                 result.Base.Kind = SK_COMMENT_TOKEN;
 
                 for (;;) {
-                    SOURCE_RANGE range;
+                    SOURCE_RANGE range{ };
 
                     if (GetChar() == '*') {
                         IncrementCursor();
@@ -969,14 +968,14 @@ SYNTAX_TOKEN Lexer::ReadTokenOnce() {
     }
 
     if (result.Base.Kind == SK_COMMENT_TOKEN) {
-        int line{ result.Base.LexemeRange.Location.Line };
-        int column{ result.Base.LexemeRange.Location.Column };
+        const int line{ result.Base.LexemeRange.Location.Line };
+        const int column{ result.Base.LexemeRange.Location.Column };
         const char *base{ &l->Source->Lines[line][column] };
         result.Base.LexemeRange.Length = static_cast<int>(l->Cursor - base);
     }
     else {
-        int end{ l->CurrentLocation.Column };
-        int start{ result.Base.LexemeRange.Location.Column };
+        const int end{ l->CurrentLocation.Column };
+        const int start{ result.Base.LexemeRange.Location.Column };
         result.Base.LexemeRange.Length = end - start;
     }
 

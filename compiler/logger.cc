@@ -99,7 +99,7 @@ static void LogMessageAt(
     va_list     args
 )
 {
-    char *line{ loc->Source->Lines[loc->Line] };
+    const char *line{ loc->Source->Lines[loc->Line] };
 
     fprintf(stderr, loc_msg,
             loc->Source->FileName, loc->Line + 1, loc->Column + 1);
@@ -176,8 +176,9 @@ static void LogMessageAtRange(
     const char    *format,
     va_list        args
 )
+    noexcept
 {
-    char *line{ range->Location.Source->Lines[range->Location.Line] };
+    const char *line{ range->Location.Source->Lines[range->Location.Line] };
 
     fprintf(
         stderr,

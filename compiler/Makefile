@@ -13,8 +13,7 @@ CCFILES	:= \
 	main.cc \
 	lexer.cc \
 	logger.cc \
-	source.cc \
-	syntax.cc
+	source.cc
 
 .PHONY: all clean
 

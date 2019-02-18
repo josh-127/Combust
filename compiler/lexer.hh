@@ -3,6 +3,7 @@
 #include "common.hh"
 #include "source.hh"
 #include "syntax.hh"
+#include <memory>
 
 struct LEXER_IMPL;
 
@@ -14,7 +15,7 @@ public:
     SYNTAX_TOKEN ReadTokenDirect();
 
 private:
-    char DecodeTrigraph(OUT int* charLength);
+    char DecodeTrigraph(OUT int* charLength) noexcept;
     char DecodeNewLineEscape(
         OUT int* charLength,
         OUT int* trailingWhitespaceLength
@@ -26,7 +27,7 @@ private:
     void GetTokenRange(
         IN  PSYNTAX_TOKEN t,
         OUT PSOURCE_RANGE range
-    );
+    ) noexcept;
     void ReadIdentifier(OUT PSYNTAX_TOKEN t);
     void ReadSuffix(
         OUT char** suffix,
@@ -46,7 +47,7 @@ private:
     SYNTAX_TOKEN ReadTokenOnce();
 
 private:
-    LEXER_IMPL* l;
+    std::unique_ptr<LEXER_IMPL> l;
 };
 
 #endif
