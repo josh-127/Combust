@@ -81,36 +81,26 @@ char Lexer::Peek(int index) {
     return l->Source->Contents[l->Cursor + index];
 }
 
-char Lexer::DecodeTrigraph(OUT int* charLength) noexcept {
+std::tuple<char, int> Lexer::DecodeTrigraph() {
     if (Peek(0) == '?' && Peek(1) == '?') {
-        if (charLength)
-            *charLength = 3;
-
         switch (Peek(2)) {
-            case '=':  return '#';
-            case '(':  return '[';
-            case '/':  return '\\';
-            case ')':  return ']';
-            case '\'': return '^';
-            case '<':  return '{';
-            case '!':  return '|';
-            case '>':  return '}';
-            case '-':  return '~';
+        case '=':  return std::make_tuple('#', 3);
+        case '(':  return std::make_tuple('[', 3);
+        case '/':  return std::make_tuple('\\', 3);
+        case ')':  return std::make_tuple(']', 3);
+        case '\'': return std::make_tuple('^', 3);
+        case '<':  return std::make_tuple('{', 3);
+        case '!':  return std::make_tuple('|', 3);
+        case '>':  return std::make_tuple('}', 3);
+        case '-':  return std::make_tuple('~', 3);
         }
     }
 
-    if (charLength)
-        *charLength = 1;
-
-    return Peek();
+    return std::make_tuple(Peek(), 1);
 }
 
-char Lexer::DecodeNewLineEscape(
-    OUT  int    *charLength,
-    OUT  int    *trailingWhitespaceLength
-) {
-    int firstCharLength{ 0 };
-    char firstChar{ DecodeTrigraph(&firstCharLength) };
+std::tuple<char, int, int> Lexer::DecodeNewLineEscape() {
+    auto [firstChar, firstCharLength] = DecodeTrigraph();
 
     if (firstChar == '\\') {
         bool isOnlyWhitespace{ true };
@@ -126,42 +116,26 @@ char Lexer::DecodeNewLineEscape(
         }
 
         if (isOnlyWhitespace) {
-            int totalLength = lengthWithoutNewLine + 1;
-
-            if (charLength)
-                *charLength = totalLength;
-
-            if (trailingWhitespaceLength) {
-                int length{ lengthWithoutNewLine - firstCharLength };
-                *trailingWhitespaceLength = length;
-            }
-
-            return ' ';
+            int totalLength{ lengthWithoutNewLine + 1 };
+            int trailingWhitespaceLength{ lengthWithoutNewLine - firstCharLength };
+            return std::make_tuple(' ', totalLength, trailingWhitespaceLength);
         }
     }
 
-    if (charLength)
-        *charLength = firstCharLength;
-    if (trailingWhitespaceLength)
-        *trailingWhitespaceLength = -1;
-
-    return firstChar;
+    return std::make_tuple(firstChar, firstCharLength, -1);
 }
 
-char Lexer::GetCharEx(OUT  int    *charLength) {
-    return DecodeNewLineEscape(charLength, nullptr);
+std::tuple<char, int> Lexer::GetCharEx() {
+    std::tuple<char, int, int> values{ DecodeNewLineEscape() };
+    return std::make_tuple(std::get<0>(values), std::get<1>(values));
 }
 
 char Lexer::GetChar() {
-    return GetCharEx(nullptr);
+    return std::get<0>(GetCharEx());
 }
 
 void Lexer::IncrementCursor() {
-    int charLength;
-    int trailingWhitespaceLength;
-    char charValue{ DecodeNewLineEscape(
-        &charLength, &trailingWhitespaceLength
-    ) };
+    auto [charValue, charLength, trailingWhitespaceLength] = DecodeNewLineEscape();
 
     if (charValue == '\n') {
         ++l->CurrentLocation.Line;

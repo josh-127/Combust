@@ -4,6 +4,7 @@
 #include "source.hh"
 #include "syntax.hh"
 #include <memory>
+#include <tuple>
 
 struct LEXER_IMPL;
 
@@ -16,12 +17,9 @@ public:
 
 private:
     char Peek(int index = 0);
-    char DecodeTrigraph(OUT int* charLength) noexcept;
-    char DecodeNewLineEscape(
-        OUT int* charLength,
-        OUT int* trailingWhitespaceLength
-    );
-    char GetCharEx(OUT int* charLength);
+    std::tuple<char, int> DecodeTrigraph();
+    std::tuple<char, int, int> DecodeNewLineEscape();
+    std::tuple<char, int> GetCharEx();
     char GetChar();
     void IncrementCursor();
     void IncrementCursorBy(IN int amount);
