@@ -12,6 +12,7 @@ struct LEXER_IMPL;
 class Lexer {
 public:
     Lexer(IN SourceFile* input);
+    Lexer(const Lexer& obj) = delete;
     virtual ~Lexer();
 
     SyntaxToken ReadTokenDirect();
