@@ -37,8 +37,7 @@ struct SYNTAX_TOKEN_VALUE {
 
 using PSYNTAX_TOKEN_VALUE = SYNTAX_TOKEN_VALUE*;
 
-struct SYNTAX_TOKEN {
-    SYNTAX_NODE        Base;
+struct SYNTAX_TOKEN : public SYNTAX_NODE {
     SYNTAX_TOKEN_VALUE Value;
     uint32_t           Flags;
 };
