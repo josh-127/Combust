@@ -19,7 +19,7 @@ struct LEXER_IMPL {
     uint32_t     CurrentMode{ 0 };
     int          CurrentFlags{ 0 };
     SOURCE_LOC   CurrentLocation{ };
-    SYNTAX_TOKEN CurrentToken{ };
+    SyntaxToken  CurrentToken{ };
 };
 
 Lexer::Lexer(IN SourceFile* input) :
@@ -33,7 +33,7 @@ Lexer::Lexer(IN SourceFile* input) :
 
 Lexer::~Lexer() {}
 
-SYNTAX_TOKEN Lexer::ReadTokenDirect() {
+SyntaxToken Lexer::ReadTokenDirect() {
     for (;;) {
         l->CurrentToken = ReadTokenOnce();
 
@@ -154,7 +154,7 @@ void Lexer::IncrementCursorBy(IN   int    amount) {
 }
 
 void Lexer::GetTokenRange(
-    const SYNTAX_TOKEN& t,
+    const SyntaxToken& t,
     OUT   PSOURCE_RANGE range
 ) noexcept {
     int line{ t.LexemeRange.Location.Line };
@@ -168,7 +168,7 @@ void Lexer::GetTokenRange(
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
-void Lexer::ReadIdentifier(SYNTAX_TOKEN& t) {
+void Lexer::ReadIdentifier(SyntaxToken& t) {
     std::string name{ };
 
     for (;;) {
@@ -250,7 +250,7 @@ std::string Lexer::ReadSuffix() {
     return suffix;
 }
 
-void Lexer::SkipIntSuffixes(const SYNTAX_TOKEN& t) {
+void Lexer::SkipIntSuffixes(const SyntaxToken& t) {
     std::string suffix{ ReadSuffix() };
     std::string ciSuffix{ suffix };
     std::transform(ciSuffix.begin(), ciSuffix.end(), ciSuffix.begin(), std::toupper);
@@ -273,7 +273,7 @@ void Lexer::SkipIntSuffixes(const SYNTAX_TOKEN& t) {
     }
 }
 
-void Lexer::ReadFractionalLiteral(SYNTAX_TOKEN& t) {
+void Lexer::ReadFractionalLiteral(SyntaxToken& t) {
     float floatFrac{ 0.0F };
     float floatExp{ 0.1F };
     double doubleFrac{ 0.0 };
@@ -309,7 +309,7 @@ void Lexer::ReadFractionalLiteral(SYNTAX_TOKEN& t) {
     }
 }
 
-void Lexer::ReadHexLiteral(SYNTAX_TOKEN& t) {
+void Lexer::ReadHexLiteral(SyntaxToken& t) {
     t.Kind = SK_INT_CONSTANT_TOKEN;
     t.Value.IntValue = 0;
 
@@ -329,7 +329,7 @@ void Lexer::ReadHexLiteral(SYNTAX_TOKEN& t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadOctalLiteral(SYNTAX_TOKEN& t) {
+void Lexer::ReadOctalLiteral(SyntaxToken& t) {
     t.Kind = SK_INT_CONSTANT_TOKEN;
     t.Value.IntValue = 0;
 
@@ -353,7 +353,7 @@ void Lexer::ReadOctalLiteral(SYNTAX_TOKEN& t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadDecimalLiteral(SYNTAX_TOKEN& t) {
+void Lexer::ReadDecimalLiteral(SyntaxToken& t) {
     t.Kind = SK_INT_CONSTANT_TOKEN;
     t.Value.IntValue = 0;
 
@@ -369,7 +369,7 @@ void Lexer::ReadDecimalLiteral(SYNTAX_TOKEN& t) {
     }
 }
 
-void Lexer::ReadNumericalLiteral(SYNTAX_TOKEN& t) {
+void Lexer::ReadNumericalLiteral(SyntaxToken& t) {
     if (GetChar() == '0') {
         int wholeLength{ 0 };
 
@@ -472,7 +472,7 @@ int Lexer::ReadCharEscapeSequence() {
 }
 
 /* Precondition: GetChar() == '\'' */
-void Lexer::ReadCharLiteral(SYNTAX_TOKEN& t) {
+void Lexer::ReadCharLiteral(SyntaxToken& t) {
     SOURCE_RANGE range{ };
 
     IncrementCursor();
@@ -520,7 +520,7 @@ void Lexer::ReadCharLiteral(SYNTAX_TOKEN& t) {
 }
 
 /* Precondition: GetChar() == '"' */
-void Lexer::ReadStringLiteral(SYNTAX_TOKEN& t) {
+void Lexer::ReadStringLiteral(SyntaxToken& t) {
     t.Kind = SK_STRING_CONSTANT_TOKEN;
     IncrementCursor();
 
@@ -547,8 +547,8 @@ void Lexer::ReadStringLiteral(SYNTAX_TOKEN& t) {
     IncrementCursor();
 }
 
-SYNTAX_TOKEN Lexer::ReadTokenOnce() {
-    SYNTAX_TOKEN result{ };
+SyntaxToken Lexer::ReadTokenOnce() {
+    SyntaxToken result{ };
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();

@@ -17,7 +17,7 @@ static void PreprocessFile(const char* filePath) {
 
     Lexer lexer{ &sourceFile };
 
-    SYNTAX_TOKEN t{ };
+    SyntaxToken t{ };
     do {
         t = lexer.ReadTokenDirect();
     }

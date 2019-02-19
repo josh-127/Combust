@@ -19,12 +19,10 @@ enum SYNTAX_KIND {
     SYNTAX_KIND_CARDINAL
 };
 
-struct SYNTAX_NODE {
+struct SyntaxNode {
     SYNTAX_KIND   Kind;
     SOURCE_RANGE  LexemeRange;
 };
-
-using PSYNTAX_NODE = SYNTAX_NODE*;
 
 struct SYNTAX_TOKEN_VALUE {
     std::string IdentifierName;
@@ -35,13 +33,9 @@ struct SYNTAX_TOKEN_VALUE {
     char        OffendingChar;
 };
 
-using PSYNTAX_TOKEN_VALUE = SYNTAX_TOKEN_VALUE*;
-
-struct SYNTAX_TOKEN : public SYNTAX_NODE {
+struct SyntaxToken : public SyntaxNode {
     SYNTAX_TOKEN_VALUE Value;
     uint32_t           Flags;
 };
-
-using PSYNTAX_TOKEN = SYNTAX_TOKEN*;
 
 #endif

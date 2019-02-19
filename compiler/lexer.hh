@@ -14,7 +14,7 @@ public:
     Lexer(IN SourceFile* input);
     virtual ~Lexer();
 
-    SYNTAX_TOKEN ReadTokenDirect();
+    SyntaxToken ReadTokenDirect();
 
 private:
     char Peek(int index = 0);
@@ -25,21 +25,21 @@ private:
     void IncrementCursor();
     void IncrementCursorBy(IN int amount);
     void GetTokenRange(
-        const SYNTAX_TOKEN& t,
+        const SyntaxToken& t,
         OUT   PSOURCE_RANGE range
     ) noexcept;
-    void ReadIdentifier(SYNTAX_TOKEN& t);
+    void ReadIdentifier(SyntaxToken& t);
     std::string ReadSuffix();
-    void SkipIntSuffixes(const SYNTAX_TOKEN& t);
-    void ReadFractionalLiteral(SYNTAX_TOKEN& t);
-    void ReadHexLiteral(SYNTAX_TOKEN& t);
-    void ReadOctalLiteral(SYNTAX_TOKEN& t);
-    void ReadDecimalLiteral(SYNTAX_TOKEN& t);
-    void ReadNumericalLiteral(SYNTAX_TOKEN& t);
+    void SkipIntSuffixes(const SyntaxToken& t);
+    void ReadFractionalLiteral(SyntaxToken& t);
+    void ReadHexLiteral(SyntaxToken& t);
+    void ReadOctalLiteral(SyntaxToken& t);
+    void ReadDecimalLiteral(SyntaxToken& t);
+    void ReadNumericalLiteral(SyntaxToken& t);
     int ReadCharEscapeSequence();
-    void ReadCharLiteral(SYNTAX_TOKEN& t);
-    void ReadStringLiteral(SYNTAX_TOKEN& t);
-    SYNTAX_TOKEN ReadTokenOnce();
+    void ReadCharLiteral(SyntaxToken& t);
+    void ReadStringLiteral(SyntaxToken& t);
+    SyntaxToken ReadTokenOnce();
 
 private:
     std::unique_ptr<LEXER_IMPL> l;
