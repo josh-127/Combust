@@ -21,7 +21,7 @@ static void PreprocessFile(const char* filePath) {
     do {
         t = lexer.ReadTokenDirect();
     }
-    while (t.Kind != SK_EOF_TOKEN);
+    while (t.GetKind() != SK_EOF_TOKEN);
 }
 
 int main(int argc, char** argv) {
