@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 #define LM_DEFAULT                   0
 #define LM_PP_DIRECTIVE              1
@@ -240,53 +241,26 @@ void Lexer::ReadIdentifier(SYNTAX_TOKEN& t) {
 #undef o
 }
 
-void Lexer::ReadSuffix(
-    OUT  char   **suffix,
-    OUT  int     *length
-) {
-    *length = 0;
-    while (IsLetter(Peek(*length)))
-        ++*length;
-
-    *suffix = new char[*length + 1]{ };
-    for (int i{ 0 }; i < *length; ++i)
-        (*suffix)[i] = Peek(i);
-    (*suffix)[*length] = 0;
-    IncrementCursorBy(*length);
-}
-
-int Lexer::SkipUnsignedSuffix(IN_OUT char **cursor) {
-    if (**cursor == 'U' || **cursor == 'u') {
-        ++*cursor;
-        return 1;
+std::string Lexer::ReadSuffix() {
+    std::string suffix{ };
+    for (char c{ GetChar() }; IsLetter(c); c = GetChar()) {
+        suffix += c;
+        IncrementCursor();
     }
-    return 0;
-}
-
-int Lexer::SkipLongSuffix(IN_OUT char **cursor) {
-    if (**cursor == 'L' || **cursor == 'l') {
-        ++*cursor;
-        if (**cursor == 'L' || **cursor == 'l')
-            ++*cursor;
-        return 1;
-    }
-    return 0;
+    return suffix;
 }
 
 void Lexer::SkipIntSuffixes(const SYNTAX_TOKEN& t) {
-    int suffixLength{ 0 };
-    char *suffix;
-    char *suffixCursor;
+    std::string suffix{ ReadSuffix() };
+    std::string ciSuffix{ suffix };
+    std::transform(ciSuffix.begin(), ciSuffix.end(), ciSuffix.begin(), std::toupper);
 
-    ReadSuffix(&suffix, &suffixLength);
-    suffixCursor = suffix;
-
-    if (SkipUnsignedSuffix(&suffixCursor))
-        SkipLongSuffix(&suffixCursor);
-    else if (SkipLongSuffix(&suffixCursor))
-        SkipUnsignedSuffix(&suffixCursor);
-
-    if (IsLetter(*suffixCursor)) {
+    if (ciSuffix.length() != 0 &&
+        ciSuffix != "UL" &&
+        ciSuffix != "LU" &&
+        ciSuffix != "ULL" &&
+        ciSuffix != "LLU")
+    {
         SOURCE_RANGE range;
         GetTokenRange(t, &range);
 
@@ -294,11 +268,9 @@ void Lexer::SkipIntSuffixes(const SYNTAX_TOKEN& t) {
             &range,
             LL_ERROR,
             "invalid suffix \"%s\" on integer constant",
-            suffix
+            suffix.c_str()
         );
     }
-
-    delete[] suffix;
 }
 
 void Lexer::ReadFractionalLiteral(SYNTAX_TOKEN& t) {
@@ -306,8 +278,6 @@ void Lexer::ReadFractionalLiteral(SYNTAX_TOKEN& t) {
     float floatExp{ 0.1F };
     double doubleFrac{ 0.0 };
     double doubleExp{ 0.1 };
-    char* suffix{ nullptr };
-    int suffixLength{ 0 };
 
     for (; IsDecimal(GetChar()); IncrementCursor()) {
         floatFrac += floatExp * (GetChar() - '0');
@@ -316,18 +286,17 @@ void Lexer::ReadFractionalLiteral(SYNTAX_TOKEN& t) {
         doubleExp *= 0.1;
     }
 
-    ReadSuffix(&suffix, &suffixLength);
+    std::string suffix{ ReadSuffix() };
 
-    if (*suffix == 'f' || *suffix == 'F') {
+    if (suffix == "f" || suffix == "F") {
         t.Base.Kind = SK_FLOAT_CONSTANT_TOKEN;
         t.Value.FloatValue = t.Value.IntValue + floatFrac;
     }
-    else {
+    else if (suffix.length() == 0) {
         t.Base.Kind = SK_DOUBLE_CONSTANT_TOKEN;
         t.Value.DoubleValue = t.Value.IntValue + doubleFrac;
     }
-
-    if (suffixLength > 1) {
+    else {
         SOURCE_RANGE range;
         GetTokenRange(t, &range);
 
@@ -335,11 +304,9 @@ void Lexer::ReadFractionalLiteral(SYNTAX_TOKEN& t) {
             &range,
             LL_ERROR,
             "invalid suffix \"%s\" on floating constant",
-            suffix
+            suffix.c_str()
         );
     }
-
-    delete[] suffix;
 }
 
 void Lexer::ReadHexLiteral(SYNTAX_TOKEN& t) {

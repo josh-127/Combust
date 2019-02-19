@@ -4,6 +4,7 @@
 #include "source.hh"
 #include "syntax.hh"
 #include <memory>
+#include <string>
 #include <tuple>
 
 struct LEXER_IMPL;
@@ -28,12 +29,7 @@ private:
         OUT   PSOURCE_RANGE range
     ) noexcept;
     void ReadIdentifier(SYNTAX_TOKEN& t);
-    void ReadSuffix(
-        OUT char** suffix,
-        OUT int*   length
-    );
-    int SkipUnsignedSuffix(IN_OUT char** cursor);
-    int SkipLongSuffix(IN_OUT char** cursor);
+    std::string ReadSuffix();
     void SkipIntSuffixes(const SYNTAX_TOKEN& t);
     void ReadFractionalLiteral(SYNTAX_TOKEN& t);
     void ReadHexLiteral(SYNTAX_TOKEN& t);
