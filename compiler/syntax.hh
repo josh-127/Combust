@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string>
 
-#define ST_BEGINNING_OF_LINE 1
+constexpr int ST_BEGINNING_OF_LINE{ 1 };
 
 enum SYNTAX_KIND {
     SK_UNINITIALIZED,
@@ -33,9 +33,6 @@ public:
 private:
     SYNTAX_KIND kind{ SK_UNINITIALIZED };
     SOURCE_RANGE lexemeRange{ };
-};
-
-struct SYNTAX_TOKEN_VALUE {
 };
 
 class SyntaxToken : public SyntaxNode {
