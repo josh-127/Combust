@@ -35,17 +35,21 @@ Lexer::~Lexer() {}
 
 Rc<SyntaxToken> Lexer::ReadTokenDirect() {
     for (;;) {
-        l->CurrentToken = ReadTokenOnce();
+        auto [token, asStrayToken, isCommentToken, isEofToken] = ReadTokenOnce();
+        l->CurrentToken = token;
 
-        if (l->CurrentToken->GetKind() == SK_STRAY_TOKEN) {
+        if (asStrayToken) {
             LogAtRange(
                 &l->CurrentToken->GetLexemeRange(),
                 LL_ERROR,
                 "stray '%c' in program",
-                l->CurrentToken->GetOffendingChar()
+                asStrayToken->GetOffendingChar()
             );
         }
-        else if (l->CurrentToken->GetKind() != SK_COMMENT_TOKEN) {
+        else if (isEofToken) {
+            return Rc<SyntaxToken>{ };
+        }
+        else if (isCommentToken) {
             return l->CurrentToken;
         }
     }
@@ -162,13 +166,15 @@ void Lexer::GetTokenRange(
     const char *base{ &l->Source->Lines[line][column] };
 
     // TODO: Re-implement length calculation.
-    range->Location = t->GetLexemeRange().Location;
+    range->Location.Source = l->Source;
+    range->Location.Line = line;
+    range->Location.Column = column;
     range->Length = 1;
-    //range->Length = static_cast<int>(l->Cursor - base);
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
-void Lexer::ReadIdentifier(Rc<SyntaxToken> t) {
+std::tuple<Rc<SyntaxToken>, std::string> Lexer::ReadIdentifier() {
+    Rc<SyntaxToken> result{ };
     std::string name{ };
 
     for (;;) {
@@ -190,55 +196,58 @@ void Lexer::ReadIdentifier(Rc<SyntaxToken> t) {
 
 #define o(kw) (name == kw)
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
-             if (o("if"))       t->SetKind(SK_IF_DIRECTIVE_KEYWORD);
-        else if (o("ifdef"))    t->SetKind(SK_IFDEF_DIRECTIVE_KEYWORD);
-        else if (o("ifndef"))   t->SetKind(SK_IFNDEF_DIRECTIVE_KEYWORD);
-        else if (o("elif"))     t->SetKind(SK_ELIF_DIRECTIVE_KEYWORD);
-        else if (o("endif"))    t->SetKind(SK_ENDIF_DIRECTIVE_KEYWORD);
-        else if (o("include"))  t->SetKind(SK_INCLUDE_DIRECTIVE_KEYWORD);
-        else if (o("define"))   t->SetKind(SK_DEFINE_DIRECTIVE_KEYWORD);
-        else if (o("undef"))    t->SetKind(SK_UNDEF_DIRECTIVE_KEYWORD);
-        else if (o("line"))     t->SetKind(SK_LINE_DIRECTIVE_KEYWORD);
-        else if (o("error"))    t->SetKind(SK_ERROR_DIRECTIVE_KEYWORD);
-        else if (o("warning"))  t->SetKind(SK_WARNING_DIRECTIVE_KEYWORD);
+             if (o("if"))       result = NewObj<IfDirectiveKw>();
+        else if (o("ifdef"))    result = NewObj<IfDefDirectiveKw>();
+        else if (o("ifndef"))   result = NewObj<IfNDefDirectiveKw>();
+        else if (o("elif"))     result = NewObj<ElifDirectiveKw>();
+        else if (o("endif"))    result = NewObj<EndIfDirectiveKw>();
+        else if (o("include"))  result = NewObj<IncludeDirectiveKw>();
+        else if (o("define"))   result = NewObj<DefineDirectiveKw>();
+        else if (o("undef"))    result = NewObj<UnDefDirectiveKw>();
+        else if (o("line"))     result = NewObj<LineDirectiveKw>();
+        else if (o("error"))    result = NewObj<ErrorDirectiveKw>();
+        else if (o("warning"))  result = NewObj<WarningDirectiveKw>();
     }
-    else if (o("const"))    t->SetKind(SK_CONST_KEYWORD);
-    else if (o("extern"))   t->SetKind(SK_EXTERN_KEYWORD);
-    else if (o("static"))   t->SetKind(SK_STATIC_KEYWORD);
-    else if (o("auto"))     t->SetKind(SK_AUTO_KEYWORD);
-    else if (o("volatile")) t->SetKind(SK_VOLATILE_KEYWORD);
-    else if (o("unsigned")) t->SetKind(SK_UNSIGNED_KEYWORD);
-    else if (o("signed"))   t->SetKind(SK_SIGNED_KEYWORD);
-    else if (o("void"))     t->SetKind(SK_VOID_KEYWORD);
-    else if (o("char"))     t->SetKind(SK_CHAR_KEYWORD);
-    else if (o("short"))    t->SetKind(SK_SHORT_KEYWORD);
-    else if (o("int"))      t->SetKind(SK_INT_KEYWORD);
-    else if (o("long"))     t->SetKind(SK_LONG_KEYWORD);
-    else if (o("float"))    t->SetKind(SK_FLOAT_KEYWORD);
-    else if (o("double"))   t->SetKind(SK_DOUBLE_KEYWORD);
-    else if (o("enum"))     t->SetKind(SK_ENUM_KEYWORD);
-    else if (o("struct"))   t->SetKind(SK_STRUCT_KEYWORD);
-    else if (o("union"))    t->SetKind(SK_UNION_KEYWORD);
-    else if (o("typedef"))  t->SetKind(SK_TYPEDEF_KEYWORD);
-    else if (o("sizeof"))   t->SetKind(SK_SIZEOF_KEYWORD);
-    else if (o("register")) t->SetKind(SK_REGISTER_KEYWORD);
-    else if (o("goto"))     t->SetKind(SK_GOTO_KEYWORD);
-    else if (o("if"))       t->SetKind(SK_IF_KEYWORD);
-    else if (o("else"))     t->SetKind(SK_ELSE_KEYWORD);
-    else if (o("switch"))   t->SetKind(SK_SWITCH_KEYWORD);
-    else if (o("case"))     t->SetKind(SK_CASE_KEYWORD);
-    else if (o("default"))  t->SetKind(SK_DEFAULT_KEYWORD);
-    else if (o("do"))       t->SetKind(SK_DO_KEYWORD);
-    else if (o("while"))    t->SetKind(SK_WHILE_KEYWORD);
-    else if (o("for"))      t->SetKind(SK_FOR_KEYWORD);
-    else if (o("break"))    t->SetKind(SK_BREAK_KEYWORD);
-    else if (o("continue")) t->SetKind(SK_CONTINUE_KEYWORD);
-    else if (o("return"))   t->SetKind(SK_RETURN_KEYWORD);
+    else if (o("const"))    result = NewObj<ConstKeyword>();
+    else if (o("extern"))   result = NewObj<ExternKeyword>();
+    else if (o("static"))   result = NewObj<StaticKeyword>();
+    else if (o("auto"))     result = NewObj<AutoKeyword>();
+    else if (o("volatile")) result = NewObj<VolatileKeyword>();
+    else if (o("unsigned")) result = NewObj<UnsignedKeyword>();
+    else if (o("signed"))   result = NewObj<SignedKeyword>();
+    else if (o("void"))     result = NewObj<VoidKeyword>();
+    else if (o("char"))     result = NewObj<CharKeyword>();
+    else if (o("short"))    result = NewObj<ShortKeyword>();
+    else if (o("int"))      result = NewObj<IntKeyword>();
+    else if (o("long"))     result = NewObj<LongKeyword>();
+    else if (o("float"))    result = NewObj<FloatKeyword>();
+    else if (o("double"))   result = NewObj<DoubleKeyword>();
+    else if (o("enum"))     result = NewObj<EnumKeyword>();
+    else if (o("struct"))   result = NewObj<StructKeyword>();
+    else if (o("union"))    result = NewObj<UnionKeyword>();
+    else if (o("typedef"))  result = NewObj<TypeDefKeyword>();
+    else if (o("sizeof"))   result = NewObj<SizeOfKeyword>();
+    else if (o("register")) result = NewObj<RegisterKeyword>();
+    else if (o("goto"))     result = NewObj<GotoKeyword>();
+    else if (o("if"))       result = NewObj<IfKeyword>();
+    else if (o("else"))     result = NewObj<ElseKeyword>();
+    else if (o("switch"))   result = NewObj<SwitchKeyword>();
+    else if (o("case"))     result = NewObj<CaseKeyword>();
+    else if (o("default"))  result = NewObj<DefaultKeyword>();
+    else if (o("do"))       result = NewObj<DoKeyword>();
+    else if (o("while"))    result = NewObj<WhileKeyword>();
+    else if (o("for"))      result = NewObj<ForKeyword>();
+    else if (o("break"))    result = NewObj<BreakKeyword>();
+    else if (o("continue")) result = NewObj<ContinueKeyword>();
+    else if (o("return"))   result = NewObj<ReturnKeyword>();
     else {
-        t->SetKind(SK_IDENTIFIER_TOKEN);
-        t->SetName(name);
+        Rc<IdentifierToken> identifier{ NewObj<IdentifierToken>() };
+        identifier->SetName(name);
+        result = identifier;
     }
 #undef o
+
+    return std::make_tuple(result, name);
 }
 
 std::string Lexer::ReadSuffix() {
@@ -273,7 +282,7 @@ void Lexer::SkipIntSuffixes(const Rc<SyntaxToken> t) {
     }
 }
 
-void Lexer::ReadFractionalLiteral(Rc<SyntaxToken> t) {
+Rc<SyntaxToken> Lexer::ReadFractionalLiteral(const Rc<IntConstantToken> t) {
     float floatFrac{ 0.0F };
     float floatExp{ 0.1F };
     double doubleFrac{ 0.0 };
@@ -289,12 +298,14 @@ void Lexer::ReadFractionalLiteral(Rc<SyntaxToken> t) {
     std::string suffix{ ReadSuffix() };
 
     if (suffix == "f" || suffix == "F") {
-        t->SetKind(SK_FLOAT_CONSTANT_TOKEN);
-        t->SetFloatValue(t->GetIntValue() + floatFrac);
+        Rc<FloatConstantToken> constant{ NewObj<FloatConstantToken>() };
+        constant->SetValue(t->GetValue() + floatFrac);
+        return constant;
     }
     else if (suffix.length() == 0) {
-        t->SetKind(SK_DOUBLE_CONSTANT_TOKEN);
-        t->SetDoubleValue(t->GetIntValue() + doubleFrac);
+        Rc<DoubleConstantToken> constant{ NewObj<DoubleConstantToken>() };
+        constant->SetValue(t->GetValue() + doubleFrac);
+        return constant;
     }
     else {
         SOURCE_RANGE range;
@@ -306,40 +317,43 @@ void Lexer::ReadFractionalLiteral(Rc<SyntaxToken> t) {
             "invalid suffix \"%s\" on floating constant",
             suffix.c_str()
         );
+
+        return NewObj<FloatConstantToken>();
     }
 }
 
-void Lexer::ReadHexLiteral(Rc<SyntaxToken> t) {
-    t->SetKind(SK_INT_CONSTANT_TOKEN);
-    t->SetIntValue(0);
+Rc<IntConstantToken> Lexer::ReadHexLiteral() {
+    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
+    result->SetValue(0);
 
     while (IsHex(GetChar())) {
-        t->SetIntValue(t->GetIntValue() * 16);
+        result->SetValue(result->GetValue() * 16);
 
         if (GetChar() <= '9')
-            t->SetIntValue(t->GetIntValue() + GetChar() - '0');
+            result->SetValue(result->GetValue() + GetChar() - '0');
         else if (GetChar() <= 'F')
-            t->SetIntValue(t->GetIntValue() + GetChar() - 'A' + 10);
+            result->SetValue(result->GetValue() + GetChar() - 'A' + 10);
         else
-            t->SetIntValue(t->GetIntValue() + GetChar() - 'a' + 10);
+            result->SetValue(result->GetValue() + GetChar() - 'a' + 10);
 
         IncrementCursor();
     }
 
-    SkipIntSuffixes(t);
+    SkipIntSuffixes(result);
+    return result;
 }
 
-void Lexer::ReadOctalLiteral(Rc<SyntaxToken> t) {
-    t->SetKind(SK_INT_CONSTANT_TOKEN);
-    t->SetIntValue(0);
+Rc<IntConstantToken> Lexer::ReadOctalLiteral() {
+    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
+    result->SetValue(0);
 
     for (; IsDecimal(GetChar()); IncrementCursor()) {
         if (IsOctal(GetChar())) {
-            t->SetIntValue((t->GetIntValue() * 8) - (GetChar() - '0'));
+            result->SetValue((result->GetValue() * 8) - (GetChar() - '0'));
         }
         else {
             SOURCE_RANGE range{ };
-            GetTokenRange(t, &range);
+            GetTokenRange(result, &range);
 
             LogAtRange(
                 &range,
@@ -350,26 +364,28 @@ void Lexer::ReadOctalLiteral(Rc<SyntaxToken> t) {
         }
     }
 
-    SkipIntSuffixes(t);
+    SkipIntSuffixes(result);
+    return result;
 }
 
-void Lexer::ReadDecimalLiteral(Rc<SyntaxToken> t) {
-    t->SetKind(SK_INT_CONSTANT_TOKEN);
-    t->SetIntValue(0);
+Rc<SyntaxToken> Lexer::ReadDecimalLiteral() {
+    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
+    result->SetValue(0);
 
     for (; IsDecimal(GetChar()); IncrementCursor())
-        t->SetIntValue((t->GetIntValue() * 10) + (GetChar() - '0'));
+        result->SetValue((result->GetValue() * 10) + (GetChar() - '0'));
 
     if (GetChar() == '.') {
         IncrementCursor();
-        ReadFractionalLiteral(t);
+        return ReadFractionalLiteral(result);
     }
     else {
-        SkipIntSuffixes(t);
+        SkipIntSuffixes(result);
+        return result;
     }
 }
 
-void Lexer::ReadNumericalLiteral(Rc<SyntaxToken> t) {
+Rc<SyntaxToken> Lexer::ReadNumericalLiteral() {
     if (GetChar() == '0') {
         int wholeLength{ 0 };
 
@@ -382,18 +398,18 @@ void Lexer::ReadNumericalLiteral(Rc<SyntaxToken> t) {
             ++wholeLength;
 
         if (Peek(wholeLength) == '.') {
-            ReadDecimalLiteral(t);
+            return ReadDecimalLiteral();
         }
         else if (GetChar() == 'X' || GetChar() == 'x') {
             IncrementCursor();
-            ReadHexLiteral(t);
+            return ReadHexLiteral();
         }
         else {
-            ReadOctalLiteral(t);
+            return ReadOctalLiteral();
         }
     }
     else {
-        ReadDecimalLiteral(t);
+        return ReadDecimalLiteral();
     }
 }
 
@@ -472,14 +488,14 @@ int Lexer::ReadCharEscapeSequence() {
 }
 
 /* Precondition: GetChar() == '\'' */
-void Lexer::ReadCharLiteral(Rc<SyntaxToken> t) {
+Rc<SyntaxToken> Lexer::ReadCharLiteral() {
+    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
     SOURCE_RANGE range{ };
 
     IncrementCursor();
-    t->SetKind(SK_INT_CONSTANT_TOKEN);
 
     if (GetChar() == '\n') {
-        GetTokenRange(t, &range);
+        GetTokenRange(result, &range);
         LogAtRange(
             &range,
             LL_ERROR,
@@ -487,7 +503,7 @@ void Lexer::ReadCharLiteral(Rc<SyntaxToken> t) {
         );
     }
     else {
-        t->SetIntValue(ReadCharEscapeSequence());
+        result->SetValue(ReadCharEscapeSequence());
 
         if (GetChar() == '\'') {
             IncrementCursor();
@@ -495,13 +511,13 @@ void Lexer::ReadCharLiteral(Rc<SyntaxToken> t) {
         else {
             while (GetChar() != '\'') {
                 if (GetChar() == '\n') {
-                    GetTokenRange(t, &range);
+                    GetTokenRange(result, &range);
                     LogAtRange(
                         &range,
                         LL_ERROR,
                         "missing terminating ' character"
                     );
-                    return;
+                    return result;
                 }
 
                 IncrementCursor();
@@ -509,7 +525,7 @@ void Lexer::ReadCharLiteral(Rc<SyntaxToken> t) {
 
             IncrementCursor();
 
-            GetTokenRange(t, &range);
+            GetTokenRange(result, &range);
             LogAtRange(
                 &range,
                 LL_WARNING,
@@ -517,19 +533,21 @@ void Lexer::ReadCharLiteral(Rc<SyntaxToken> t) {
             );
         }
     }
+
+    return result;
 }
 
 /* Precondition: GetChar() == '"' */
-void Lexer::ReadStringLiteral(Rc<SyntaxToken> t) {
-    t->SetKind(SK_STRING_CONSTANT_TOKEN);
+Rc<SyntaxToken> Lexer::ReadStringLiteral() {
     IncrementCursor();
 
-    t->SetStringValue("");
+    Rc<StringConstantToken> result{ NewObj<StringConstantToken>() };
+    result->SetValue("");
 
     while (GetChar() != '"') {
         if (GetChar() == '\n') {
-            SOURCE_RANGE range;
-            GetTokenRange(t, &range);
+            SOURCE_RANGE range{ };
+            GetTokenRange(result, &range);
 
             LogAtRange(
                 &range,
@@ -537,20 +555,26 @@ void Lexer::ReadStringLiteral(Rc<SyntaxToken> t) {
                 "missing terminating \" character"
             );
 
-            t->SetStringValue("");
-            return;
+            result->SetValue("");
+            return result;
         }
 
-        std::string newValue{ t->GetStringValue() };
+        std::string newValue{ result->GetValue() };
         newValue += ReadCharEscapeSequence();
-        t->SetStringValue(newValue);
+        result->SetValue(newValue);
     }
 
     IncrementCursor();
+    return result;
 }
 
-Rc<SyntaxToken> Lexer::ReadTokenOnce() {
-    Rc<SyntaxToken> result{ NewObj<SyntaxToken>() };
+std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
+    Rc<SyntaxToken> result{ };
+    Rc<StrayToken> asStrayToken{ };
+    bool isHashSymbol{ false };
+    bool isIncludeDirectiveKw{ false };
+    bool isCommentToken{ false };
+    bool isEofToken{ false };
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();
@@ -558,66 +582,72 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     if (l->CurrentFlags & ST_BEGINNING_OF_LINE)
         l->CurrentMode = LM_DEFAULT;
 
-    result->SetFlags(l->CurrentFlags);
-    SOURCE_RANGE temp{ result->GetLexemeRange() };
-    temp.Location = l->CurrentLocation;
-    result->SetLexemeRange(temp);
+    int flags{ l->CurrentFlags };
+    SOURCE_RANGE lexemeRange{ };
+    lexemeRange.Location = l->CurrentLocation;
+    lexemeRange.Length = 1;
 
-    if ((result->GetFlags() & ST_BEGINNING_OF_LINE) && GetChar() == '#') {
+    if ((flags & ST_BEGINNING_OF_LINE) && GetChar() == '#') {
         IncrementCursor();
-        result->SetKind(SK_HASH_TOKEN);
+        result = NewObj<HashSymbol>();
+        isHashSymbol = true;
     }
     else {
         switch (GetChar()) {
-        case 0: result->SetKind(SK_EOF_TOKEN); break;
-        case '(': IncrementCursor(); result->SetKind(SK_LPAREN_TOKEN); break;
-        case ')': IncrementCursor(); result->SetKind(SK_RPAREN_TOKEN); break;
-        case '[': IncrementCursor(); result->SetKind(SK_LBRACKET_TOKEN); break;
-        case ']': IncrementCursor(); result->SetKind(SK_RBRACKET_TOKEN); break;
-        case '{': IncrementCursor(); result->SetKind(SK_LBRACE_TOKEN); break;
-        case '}': IncrementCursor(); result->SetKind(SK_RBRACE_TOKEN); break;
-        case ';': IncrementCursor(); result->SetKind(SK_SEMICOLON_TOKEN); break;
-        case ',': IncrementCursor(); result->SetKind(SK_COMMA_TOKEN); break;
-        case '~': IncrementCursor(); result->SetKind(SK_TILDE_TOKEN); break;
-        case '?': IncrementCursor(); result->SetKind(SK_QUESTION_TOKEN); break;
-        case ':': IncrementCursor(); result->SetKind(SK_COLON_TOKEN); break;
+        case 0: result = NewObj<EofToken>(); isEofToken = true; break;
+        case '(': IncrementCursor(); result = NewObj<LParenSymbol>(); break;
+        case ')': IncrementCursor(); result = NewObj<RParenSymbol>(); break;
+        case '[': IncrementCursor(); result = NewObj<LBracketSymbol>(); break;
+        case ']': IncrementCursor(); result = NewObj<RBracketSymbol>(); break;
+        case '{': IncrementCursor(); result = NewObj<LBraceSymbol>(); break;
+        case '}': IncrementCursor(); result = NewObj<RBraceSymbol>(); break;
+        case ';': IncrementCursor(); result = NewObj<SemicolonSymbol>(); break;
+        case ',': IncrementCursor(); result = NewObj<CommaSymbol>(); break;
+        case '~': IncrementCursor(); result = NewObj<TildeSymbol>(); break;
+        case '?': IncrementCursor(); result = NewObj<QuestionSymbol>(); break;
+        case ':': IncrementCursor(); result = NewObj<ColonSymbol>(); break;
 
         case '.':
             IncrementCursor();
-            if (IsDecimal(GetChar())) { result->SetIntValue(0); ReadFractionalLiteral(result); }
-            else { result->SetKind(SK_DOT_TOKEN); }
+            if (IsDecimal(GetChar())) {
+                Rc<IntConstantToken> zero{ NewObj<IntConstantToken>() };
+                zero->SetValue(0);
+                result = ReadFractionalLiteral(zero);
+            }
+            else { result = NewObj<DotSymbol>(); }
             break;
 
         case '+':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_PLUS_EQUALS_TOKEN); }
-            else if (GetChar() == '+') { IncrementCursor(); result->SetKind(SK_PLUS_PLUS_TOKEN); }
-            else { result->SetKind(SK_PLUS_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<PlusEqualsSymbol>(); }
+            else if (GetChar() == '+') { IncrementCursor(); result = NewObj<PlusPlusSymbol>(); }
+            else { result = NewObj<PlusSymbol>(); }
             break;
 
         case '-':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_MINUS_EQUALS_TOKEN); }
-            else if (GetChar() == '-') { IncrementCursor(); result->SetKind(SK_MINUS_MINUS_TOKEN); }
-            else if (GetChar() == '>') { IncrementCursor(); result->SetKind(SK_MINUS_GT_TOKEN); }
-            else { result->SetKind(SK_MINUS_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<MinusEqualsSymbol>(); }
+            else if (GetChar() == '-') { IncrementCursor(); result = NewObj<MinusMinusSymbol>(); }
+            else if (GetChar() == '>') { IncrementCursor(); result = NewObj<MinusGtSymbol>(); }
+            else { result = NewObj<MinusSymbol>(); }
             break;
 
         case '*':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_ASTERISK_EQUALS_TOKEN); }
-            else { result->SetKind(SK_ASTERISK_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<AsteriskEqualsSymbol>(); }
+            else { result = NewObj<AsteriskSymbol>(); }
             break;
 
         case '/':
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result->SetKind(SK_SLASH_EQUALS_TOKEN);
+                result = NewObj<SlashEqualsSymbol>();
             }
             else if (GetChar() == '*') {
                 IncrementCursor();
-                result->SetKind(SK_COMMENT_TOKEN);
+                result = NewObj<CommentToken>();
+                isCommentToken = true;
 
                 for (;;) {
                     SOURCE_RANGE range{ };
@@ -654,34 +684,34 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
                 }
             }
             else {
-                result->SetKind(SK_SLASH_TOKEN);
+                result = NewObj<SlashSymbol>();
             }
             break;
 
         case '%':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_PERCENT_EQUALS_TOKEN); }
-            else { result->SetKind(SK_PERCENT_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<PercentEqualsSymbol>(); }
+            else { result = NewObj<PercentSymbol>(); }
             break;
 
         case '<':
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result->SetKind(SK_LT_EQUALS_TOKEN);
+                result = NewObj<LtEqualsSymbol>();
             }
             else if (GetChar() == '<') {
                 IncrementCursor();
                 if (GetChar() == '=') {
                     IncrementCursor();
-                    result->SetKind(SK_LT_LT_EQUALS_TOKEN);
+                    result = NewObj<LtLtEqualsSymbol>();
                 }
                 else {
-                    result->SetKind(SK_LT_LT_TOKEN);
+                    result = NewObj<LtLtSymbol>();
                 }
             }
             else {
-                result->SetKind(SK_LT_TOKEN);
+                result = NewObj<LtSymbol>();
             }
             break;
 
@@ -689,53 +719,53 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result->SetKind(SK_GT_EQUALS_TOKEN);
+                result = NewObj<GtEqualsSymbol>();
             }
             else if (GetChar() == '>') {
                 IncrementCursor();
                 if (GetChar() == '=') {
                     IncrementCursor();
-                    result->SetKind(SK_GT_GT_EQUALS_TOKEN);
+                    result = NewObj<GtGtEqualsSymbol>();
                 }
                 else {
-                    result->SetKind(SK_GT_GT_TOKEN);
+                    result = NewObj<GtGtSymbol>();
                 }
             }
             else {
-                result->SetKind(SK_GT_TOKEN);
+                result = NewObj<GtSymbol>();
             }
             break;
 
         case '=':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_EQUALS_EQUALS_TOKEN); }
-            else { result->SetKind(SK_EQUALS_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<EqualsEqualsSymbol>(); }
+            else { result = NewObj<EqualsSymbol>(); }
             break;
 
         case '!':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_EXCLAMATION_EQUALS_TOKEN); }
-            else { result->SetKind(SK_EXCLAMATION_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<ExclamationEqualsSymbol>(); }
+            else { result = NewObj<ExclamationSymbol>(); }
             break;
 
         case '&':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_AMPERSAND_EQUALS_TOKEN); }
-            else if (GetChar() == '&') { IncrementCursor(); result->SetKind(SK_AMPERSAND_AMPERSAND_TOKEN); }
-            else { result->SetKind(SK_AMPERSAND_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<AmpersandEqualsSymbol>(); }
+            else if (GetChar() == '&') { IncrementCursor(); result = NewObj<AmpersandAmpersandSymbol>(); }
+            else { result = NewObj<AmpersandSymbol>(); }
             break;
 
         case '^':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_CARET_EQUALS_TOKEN); }
-            else { result->SetKind(SK_CARET_TOKEN); } 
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<CaretEqualsSymbol>(); }
+            else { result = NewObj<CaretSymbol>(); } 
             break;
 
         case '|':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_PIPE_EQUALS_TOKEN); }
-            else if (GetChar() == '|') { IncrementCursor(); result->SetKind(SK_PIPE_PIPE_TOKEN); }
-            else { result->SetKind(SK_PIPE_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result = NewObj<PipeEqualsSymbol>(); }
+            else if (GetChar() == '|') { IncrementCursor(); result = NewObj<PipePipeSymbol>(); }
+            else { result = NewObj<PipeSymbol>(); }
             break;
 
         case '_': case '$':
@@ -746,56 +776,61 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h':
         case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p':
         case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x':
-        case 'y': case 'z': 
-            ReadIdentifier(result);
+        case 'y': case 'z': {
+            std::tuple<Rc<SyntaxToken>, std::string> tuple{ ReadIdentifier() };
+            result = std::get<0>(tuple);
+            if (std::get<1>(tuple) == "include")
+                isIncludeDirectiveKw = true;
             break;
+        }
 
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            ReadNumericalLiteral(result);
+            result = ReadNumericalLiteral();
             break;
 
-        case '\'': ReadCharLiteral(result); break;
-        case '"': ReadStringLiteral(result); break;
+        case '\'': result = ReadCharLiteral(); break;
+        case '"': result = ReadStringLiteral(); break;
 
         default:
-            result->SetKind(SK_STRAY_TOKEN);
-            result->SetOffendingChar(GetChar());
+            asStrayToken = NewObj<StrayToken>();
+            asStrayToken->SetOffendingChar(GetChar());
+            result = asStrayToken;
             IncrementCursor();
             break;
         }
     }
 
-    if (result->GetKind() == SK_COMMENT_TOKEN) {
+    if (isCommentToken) {
         const int line{ result->GetLexemeRange().Location.Line };
         const int column{ result->GetLexemeRange().Location.Column };
         const char *base{ &l->Source->Lines[line][column] };
         // TODO: Re-implement length calculation.
         //result.LexemeRange.Length = static_cast<int>(l->Cursor - base);
-        SOURCE_RANGE range{ result->GetLexemeRange() };
-        range.Length = 1;
+        SOURCE_RANGE range{ lexemeRange };
         result->SetLexemeRange(range);
     }
     else {
         const int end{ l->CurrentLocation.Column };
-        const int start{ result->GetLexemeRange().Location.Column };
-        SOURCE_RANGE range{ result->GetLexemeRange() };
+        const int start{ lexemeRange.Location.Column };
+        SOURCE_RANGE range{ lexemeRange };
         range.Length = end - start;
         result->SetLexemeRange(range);
     }
 
-    if (l->CurrentMode == LM_DEFAULT && result->GetKind() == SK_HASH_TOKEN) {
+    if (l->CurrentMode == LM_DEFAULT && isHashSymbol) {
         l->CurrentMode |= LM_PP_DIRECTIVE;
         l->CurrentMode |= LM_PP_DIRECTIVE_KW;
     }
     else if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
         l->CurrentMode &= ~LM_PP_DIRECTIVE_KW;
 
-        if (result->GetKind() == SK_INCLUDE_DIRECTIVE_KEYWORD)
+        if (isIncludeDirectiveKw)
             l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
     }
     else if (l->CurrentMode & LM_PP_ANGLED_STRING_CONSTANT) {
         l->CurrentMode &= ~LM_PP_ANGLED_STRING_CONSTANT;
     }
 
-    return result;
+    result->SetFlags(l->CurrentFlags);
+    return std::make_tuple(result, asStrayToken, isCommentToken, isEofToken);
 }

@@ -7,69 +7,154 @@
 
 constexpr int ST_BEGINNING_OF_LINE{ 1 };
 
-enum SYNTAX_KIND {
-    SK_UNINITIALIZED,
 
-#define Token(name) SK_##name,
-#define Node(name) SK_##name,
+class SyntaxNode;
+class SyntaxToken;
+#define Tk(className) class className
 #include "syntax-kinds.def"
-#undef Token
-#undef Node
+#undef Tk
+class StrayToken;
+class CommentToken;
+class IdentifierToken;
+class IntConstantToken;
+class FloatConstantToken;
+class DoubleConstantToken;
+class StringConstantToken;
+class AngledStringConstantToken;
 
-    SYNTAX_KIND_CARDINAL
+
+class SyntaxTokenVisitor : public Object {
+public:
+#define Tk(className) virtual void Visit(className& obj) = 0
+#include "syntax-kinds.def"
+#undef Tk
+    virtual void Visit(StrayToken& obj) = 0;
+    virtual void Visit(CommentToken& obj) = 0;
+    virtual void Visit(IdentifierToken& obj) = 0;
+    virtual void Visit(IntConstantToken& obj) = 0;
+    virtual void Visit(FloatConstantToken& obj) = 0;
+    virtual void Visit(DoubleConstantToken& obj) = 0;
+    virtual void Visit(StringConstantToken& obj) = 0;
+    virtual void Visit(AngledStringConstantToken& obj) = 0;
 };
 
-class SyntaxNode {
+
+class SyntaxNode : public Object {
 public:
-    SyntaxNode() {}
-    SyntaxNode(const SyntaxNode& obj) :
-        kind{ obj.kind },
-        lexemeRange{ obj.lexemeRange } {}
-    virtual ~SyntaxNode() {}
-    SYNTAX_KIND GetKind() const { return kind; }
-    void SetKind(const SYNTAX_KIND to) { kind = to; }
     SOURCE_RANGE GetLexemeRange() const { return lexemeRange; }
     void SetLexemeRange(const SOURCE_RANGE& to) { lexemeRange = to; }
+
+    virtual void Accept(SyntaxTokenVisitor& visitor) = 0;
+protected:
+    explicit SyntaxNode() {}
+    virtual ~SyntaxNode() {}
 private:
-    SYNTAX_KIND kind{ SK_UNINITIALIZED };
     SOURCE_RANGE lexemeRange{ };
 };
 
 class SyntaxToken : public SyntaxNode {
 public:
-    SyntaxToken() {}
-    SyntaxToken(const SyntaxToken& obj) :
-        SyntaxNode{ obj },
-        identifierName{ obj.identifierName },
-        intValue{ obj.intValue },
-        floatValue{ obj.floatValue },
-        doubleValue{ obj.doubleValue },
-        stringValue{ obj.stringValue },
-        offendingChar{ obj.offendingChar },
-        flags{ obj.flags } {}
-    virtual ~SyntaxToken() {}
-    std::string GetName() const { return identifierName; }
-    void SetName(const std::string& to) { identifierName = to; }
-    long GetIntValue() const { return intValue; }
-    void SetIntValue(const long to) { intValue = to; }
-    float GetFloatValue() const { return floatValue; }
-    void SetFloatValue(const float to) { floatValue = to; }
-    double GetDoubleValue() const { return doubleValue; }
-    void SetDoubleValue(const double to) { doubleValue = to; }
-    std::string GetStringValue() const { return stringValue; }
-    void SetStringValue(const std::string& to) { stringValue = to; }
-    char GetOffendingChar() const { return offendingChar; }
-    void SetOffendingChar(const char to) { offendingChar = to; }
     uint32_t GetFlags() const { return flags; }
     void SetFlags(const uint32_t to) { flags = to; }
+protected:
+    explicit SyntaxToken() {}
+    virtual ~SyntaxToken() {}
 private:
-    std::string identifierName{ };
-    long        intValue{ 0L };
-    float       floatValue{ 0.0F };
-    double      doubleValue{ 0.0 };
-    std::string stringValue{ };
-    char        offendingChar{ 0 };
     uint32_t    flags{ 0 };
+};
+
+#define Tk(className) \
+    class className : public SyntaxToken {                 \
+    public:                                                \
+        explicit className();                              \
+        virtual ~className();                              \
+        void Accept(SyntaxTokenVisitor& visitor) override; \
+    }
+#include "syntax-kinds.def"
+#undef Tk
+
+class StrayToken : public SyntaxToken {
+public:
+    explicit StrayToken() {}
+    virtual ~StrayToken() {}
+    char GetOffendingChar() const { return offendingChar; }
+    void SetOffendingChar(const char to) { offendingChar = to; }
+    void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+private:
+    char offendingChar{ 0 };
+};
+
+class CommentToken : public SyntaxToken {
+public:
+    explicit CommentToken() {}
+    virtual ~CommentToken() {}
+    virtual void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+};
+
+class IdentifierToken : public SyntaxToken {
+public:
+    explicit IdentifierToken() {}
+    virtual ~IdentifierToken() {}
+    const std::string& GetName() const { return name; }
+    void SetName(const std::string& to) { name = to; }
+    void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+private:
+    std::string name{ };
+};
+
+class IntConstantToken : public SyntaxToken {
+public:
+    explicit IntConstantToken() {}
+    virtual ~IntConstantToken() {}
+    long GetValue() const { return value; }
+    void SetValue(const long to) { value = to; }
+    void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+private:
+    long value{ 0L };
+};
+
+class FloatConstantToken : public SyntaxToken {
+public:
+    explicit FloatConstantToken() {}
+    virtual ~FloatConstantToken() {}
+    float GetValue() const { return value; }
+    void SetValue(const float to) { value = to; }
+    void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+private:
+    float value{ 0.0F };
+};
+
+class DoubleConstantToken : public SyntaxToken {
+public:
+    explicit DoubleConstantToken() {}
+    virtual ~DoubleConstantToken() {}
+    double GetValue() const { return value; }
+    void SetValue(const double to) { value = to; }
+    void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+private:
+    double value{ 0.0 };
+};
+
+class StringConstantToken : public SyntaxToken {
+public:
+    explicit StringConstantToken() {}
+    virtual ~StringConstantToken() {}
+    const std::string& GetValue() const { return value; }
+    void SetValue(const std::string& to) { value = to; }
+    void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+private:
+    std::string value{ };
+};
+
+class AngledStringConstantToken : public SyntaxToken {
+public:
+    explicit AngledStringConstantToken() {}
+    virtual ~AngledStringConstantToken() {}
+    const std::string& GetValue() const { return value; }
+    void SetValue(const std::string& to) { value = to; }
+    void Accept(SyntaxTokenVisitor& visitor) override { visitor.Visit(*this); }
+private:
+    std::string value{ };
 };
 
 #endif

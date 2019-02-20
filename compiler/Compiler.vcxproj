@@ -170,6 +170,7 @@
     <ClCompile Include="logger.cc" />
     <ClCompile Include="main.cc" />
     <ClCompile Include="source.cc" />
+    <ClCompile Include="syntax.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />

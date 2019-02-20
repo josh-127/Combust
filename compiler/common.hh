@@ -15,4 +15,12 @@ template<typename Ty, typename... Types>
     return std::make_shared<Ty>(args...);
 }
 
+class Object {
+public:
+    explicit Object() {}
+private:
+    Object(const Object&) = delete;
+    Object& operator=(const Object&) = delete;
+};
+
 #endif

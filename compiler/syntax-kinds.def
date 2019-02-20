@@ -1,50 +1,42 @@
 
-Token(HASH_TOKEN)
-Token(IF_DIRECTIVE_KEYWORD)
-Token(IFDEF_DIRECTIVE_KEYWORD)
-Token(IFNDEF_DIRECTIVE_KEYWORD)
-Token(ELIF_DIRECTIVE_KEYWORD)
-Token(ENDIF_DIRECTIVE_KEYWORD)
-Token(INCLUDE_DIRECTIVE_KEYWORD)
-Token(DEFINE_DIRECTIVE_KEYWORD)
-Token(UNDEF_DIRECTIVE_KEYWORD)
-Token(LINE_DIRECTIVE_KEYWORD)
-Token(ERROR_DIRECTIVE_KEYWORD)
-Token(WARNING_DIRECTIVE_KEYWORD)
+Tk(EofToken);
 
-Token(STRAY_TOKEN)
-Token(EOF_TOKEN)
-Token(COMMENT_TOKEN)
-Token(IDENTIFIER_TOKEN)
-Token(INT_CONSTANT_TOKEN)
-Token(FLOAT_CONSTANT_TOKEN)
-Token(DOUBLE_CONSTANT_TOKEN)
-Token(STRING_CONSTANT_TOKEN)
-Token(ANGLED_STRING_CONSTANT_TOKEN)
+Tk(HashSymbol);
+Tk(IfDirectiveKw);
+Tk(IfDefDirectiveKw);
+Tk(IfNDefDirectiveKw);
+Tk(ElifDirectiveKw);
+Tk(EndIfDirectiveKw);
+Tk(IncludeDirectiveKw);
+Tk(DefineDirectiveKw);
+Tk(UnDefDirectiveKw);
+Tk(LineDirectiveKw);
+Tk(ErrorDirectiveKw);
+Tk(WarningDirectiveKw);
 
-Token(LPAREN_TOKEN)      Token(RPAREN_TOKEN)
-Token(LBRACKET_TOKEN)    Token(RBRACKET_TOKEN)
-Token(LBRACE_TOKEN)      Token(RBRACE_TOKEN)
-Token(SEMICOLON_TOKEN)   Token(DOT_TOKEN)                Token(COMMA_TOKEN)
-Token(TILDE_TOKEN)       Token(QUESTION_TOKEN)           Token(COLON_TOKEN)
-Token(PLUS_TOKEN)        Token(PLUS_EQUALS_TOKEN)        Token(PLUS_PLUS_TOKEN)
-Token(MINUS_TOKEN)       Token(MINUS_EQUALS_TOKEN)       Token(MINUS_MINUS_TOKEN) Token(MINUS_GT_TOKEN)
-Token(ASTERISK_TOKEN)    Token(ASTERISK_EQUALS_TOKEN)
-Token(SLASH_TOKEN)       Token(SLASH_EQUALS_TOKEN)
-Token(PERCENT_TOKEN)     Token(PERCENT_EQUALS_TOKEN)
-Token(LT_TOKEN)          Token(LT_EQUALS_TOKEN)          Token(LT_LT_TOKEN)       Token(LT_LT_EQUALS_TOKEN)
-Token(GT_TOKEN)          Token(GT_EQUALS_TOKEN)          Token(GT_GT_TOKEN)       Token(GT_GT_EQUALS_TOKEN)
-Token(EQUALS_TOKEN)      Token(EQUALS_EQUALS_TOKEN)
-Token(EXCLAMATION_TOKEN) Token(EXCLAMATION_EQUALS_TOKEN)
-Token(AMPERSAND_TOKEN)   Token(AMPERSAND_EQUALS_TOKEN)   Token(AMPERSAND_AMPERSAND_TOKEN)
-Token(CARET_TOKEN)       Token(CARET_EQUALS_TOKEN)
-Token(PIPE_TOKEN)        Token(PIPE_EQUALS_TOKEN)        Token(PIPE_PIPE_TOKEN)
+Tk(LParenSymbol);      Tk(RParenSymbol);
+Tk(LBracketSymbol);    Tk(RBracketSymbol);
+Tk(LBraceSymbol);      Tk(RBraceSymbol);
+Tk(SemicolonSymbol);   Tk(DotSymbol);               Tk(CommaSymbol);
+Tk(TildeSymbol);       Tk(QuestionSymbol);          Tk(ColonSymbol);
+Tk(PlusSymbol);        Tk(PlusEqualsSymbol);        Tk(PlusPlusSymbol);
+Tk(MinusSymbol);       Tk(MinusEqualsSymbol);       Tk(MinusMinusSymbol); Tk(MinusGtSymbol);
+Tk(AsteriskSymbol);    Tk(AsteriskEqualsSymbol);
+Tk(SlashSymbol);       Tk(SlashEqualsSymbol);
+Tk(PercentSymbol);     Tk(PercentEqualsSymbol);
+Tk(LtSymbol);          Tk(LtEqualsSymbol);          Tk(LtLtSymbol);       Tk(LtLtEqualsSymbol);
+Tk(GtSymbol);          Tk(GtEqualsSymbol);          Tk(GtGtSymbol);       Tk(GtGtEqualsSymbol);
+Tk(EqualsSymbol);      Tk(EqualsEqualsSymbol);
+Tk(ExclamationSymbol); Tk(ExclamationEqualsSymbol);
+Tk(AmpersandSymbol);   Tk(AmpersandEqualsSymbol);   Tk(AmpersandAmpersandSymbol);
+Tk(CaretSymbol);       Tk(CaretEqualsSymbol);
+Tk(PipeSymbol);        Tk(PipeEqualsSymbol);        Tk(PipePipeSymbol);
 
-Token(CONST_KEYWORD)    Token(EXTERN_KEYWORD)   Token(STATIC_KEYWORD)   Token(AUTO_KEYWORD)
-Token(VOLATILE_KEYWORD) Token(UNSIGNED_KEYWORD) Token(SIGNED_KEYWORD)   Token(VOID_KEYWORD)
-Token(CHAR_KEYWORD)     Token(SHORT_KEYWORD)    Token(INT_KEYWORD)      Token(LONG_KEYWORD)
-Token(FLOAT_KEYWORD)    Token(DOUBLE_KEYWORD)   Token(ENUM_KEYWORD)     Token(STRUCT_KEYWORD)
-Token(UNION_KEYWORD)    Token(TYPEDEF_KEYWORD)  Token(SIZEOF_KEYWORD)   Token(REGISTER_KEYWORD)
-Token(GOTO_KEYWORD)     Token(IF_KEYWORD)       Token(ELSE_KEYWORD)     Token(SWITCH_KEYWORD)
-Token(CASE_KEYWORD)     Token(DEFAULT_KEYWORD)  Token(DO_KEYWORD)       Token(WHILE_KEYWORD)
-Token(FOR_KEYWORD)      Token(BREAK_KEYWORD)    Token(CONTINUE_KEYWORD) Token(RETURN_KEYWORD)
+Tk(ConstKeyword);    Tk(ExternKeyword);   Tk(StaticKeyword);   Tk(AutoKeyword);
+Tk(VolatileKeyword); Tk(UnsignedKeyword); Tk(SignedKeyword);   Tk(VoidKeyword);
+Tk(CharKeyword);     Tk(ShortKeyword);    Tk(IntKeyword);      Tk(LongKeyword);
+Tk(FloatKeyword);    Tk(DoubleKeyword);   Tk(EnumKeyword);     Tk(StructKeyword);
+Tk(UnionKeyword);    Tk(TypeDefKeyword);  Tk(SizeOfKeyword);   Tk(RegisterKeyword);
+Tk(GotoKeyword);     Tk(IfKeyword);       Tk(ElseKeyword);     Tk(SwitchKeyword);
+Tk(CaseKeyword);     Tk(DefaultKeyword);  Tk(DoKeyword);       Tk(WhileKeyword);
+Tk(ForKeyword);      Tk(BreakKeyword);    Tk(ContinueKeyword); Tk(ReturnKeyword);

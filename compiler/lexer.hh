@@ -29,18 +29,18 @@ private:
         const Rc<SyntaxToken> t,
         OUT   PSOURCE_RANGE range
     ) noexcept;
-    void ReadIdentifier(Rc<SyntaxToken> t);
+    std::tuple<Rc<SyntaxToken>, std::string> ReadIdentifier();
     std::string ReadSuffix();
     void SkipIntSuffixes(const Rc<SyntaxToken> t);
-    void ReadFractionalLiteral(Rc<SyntaxToken> t);
-    void ReadHexLiteral(Rc<SyntaxToken> t);
-    void ReadOctalLiteral(Rc<SyntaxToken> t);
-    void ReadDecimalLiteral(Rc<SyntaxToken> t);
-    void ReadNumericalLiteral(Rc<SyntaxToken> t);
+    Rc<SyntaxToken> ReadFractionalLiteral(const Rc<IntConstantToken> t);
+    Rc<IntConstantToken> ReadHexLiteral();
+    Rc<IntConstantToken> ReadOctalLiteral();
+    Rc<SyntaxToken> ReadDecimalLiteral();
+    Rc<SyntaxToken> ReadNumericalLiteral();
     int ReadCharEscapeSequence();
-    void ReadCharLiteral(Rc<SyntaxToken> t);
-    void ReadStringLiteral(Rc<SyntaxToken> t);
-    Rc<SyntaxToken> ReadTokenOnce();
+    Rc<SyntaxToken> ReadCharLiteral();
+    Rc<SyntaxToken> ReadStringLiteral();
+    std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> ReadTokenOnce();
 
 private:
     std::unique_ptr<LEXER_IMPL> l;
