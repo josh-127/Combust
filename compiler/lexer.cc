@@ -14,12 +14,12 @@
 #define LM_PP_ANGLED_STRING_CONSTANT 4
 
 struct LEXER_IMPL {
-    SourceFile*  Source{ nullptr };
-    int          Cursor{ 0 };
-    uint32_t     CurrentMode{ 0 };
-    int          CurrentFlags{ 0 };
-    SOURCE_LOC   CurrentLocation{ };
-    SyntaxToken  CurrentToken{ };
+    SourceFile*                  Source{ nullptr };
+    int                          Cursor{ 0 };
+    uint32_t                     CurrentMode{ 0 };
+    int                          CurrentFlags{ 0 };
+    SOURCE_LOC                   CurrentLocation{ };
+    std::shared_ptr<SyntaxToken> CurrentToken{ };
 };
 
 Lexer::Lexer(IN SourceFile* input) :
@@ -33,19 +33,19 @@ Lexer::Lexer(IN SourceFile* input) :
 
 Lexer::~Lexer() {}
 
-SyntaxToken Lexer::ReadTokenDirect() {
+std::shared_ptr<SyntaxToken> Lexer::ReadTokenDirect() {
     for (;;) {
         l->CurrentToken = ReadTokenOnce();
 
-        if (l->CurrentToken.GetKind() == SK_STRAY_TOKEN) {
+        if (l->CurrentToken->GetKind() == SK_STRAY_TOKEN) {
             LogAtRange(
-                &l->CurrentToken.GetLexemeRange(),
+                &l->CurrentToken->GetLexemeRange(),
                 LL_ERROR,
                 "stray '%c' in program",
-                l->CurrentToken.GetOffendingChar()
+                l->CurrentToken->GetOffendingChar()
             );
         }
-        else if (l->CurrentToken.GetKind() != SK_COMMENT_TOKEN) {
+        else if (l->CurrentToken->GetKind() != SK_COMMENT_TOKEN) {
             return l->CurrentToken;
         }
     }
@@ -154,21 +154,21 @@ void Lexer::IncrementCursorBy(IN   int    amount) {
 }
 
 void Lexer::GetTokenRange(
-    const SyntaxToken& t,
+    const std::shared_ptr<SyntaxToken> t,
     OUT   PSOURCE_RANGE range
 ) noexcept {
-    int line{ t.GetLexemeRange().Location.Line };
-    int column{ t.GetLexemeRange().Location.Column };
+    int line{ t->GetLexemeRange().Location.Line };
+    int column{ t->GetLexemeRange().Location.Column };
     const char *base{ &l->Source->Lines[line][column] };
 
     // TODO: Re-implement length calculation.
-    range->Location = t.GetLexemeRange().Location;
+    range->Location = t->GetLexemeRange().Location;
     range->Length = 1;
     //range->Length = static_cast<int>(l->Cursor - base);
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
-void Lexer::ReadIdentifier(SyntaxToken& t) {
+void Lexer::ReadIdentifier(std::shared_ptr<SyntaxToken> t) {
     std::string name{ };
 
     for (;;) {
@@ -190,53 +190,53 @@ void Lexer::ReadIdentifier(SyntaxToken& t) {
 
 #define o(kw) (name == kw)
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
-             if (o("if"))       t.SetKind(SK_IF_DIRECTIVE_KEYWORD);
-        else if (o("ifdef"))    t.SetKind(SK_IFDEF_DIRECTIVE_KEYWORD);
-        else if (o("ifndef"))   t.SetKind(SK_IFNDEF_DIRECTIVE_KEYWORD);
-        else if (o("elif"))     t.SetKind(SK_ELIF_DIRECTIVE_KEYWORD);
-        else if (o("endif"))    t.SetKind(SK_ENDIF_DIRECTIVE_KEYWORD);
-        else if (o("include"))  t.SetKind(SK_INCLUDE_DIRECTIVE_KEYWORD);
-        else if (o("define"))   t.SetKind(SK_DEFINE_DIRECTIVE_KEYWORD);
-        else if (o("undef"))    t.SetKind(SK_UNDEF_DIRECTIVE_KEYWORD);
-        else if (o("line"))     t.SetKind(SK_LINE_DIRECTIVE_KEYWORD);
-        else if (o("error"))    t.SetKind(SK_ERROR_DIRECTIVE_KEYWORD);
-        else if (o("warning"))  t.SetKind(SK_WARNING_DIRECTIVE_KEYWORD);
+             if (o("if"))       t->SetKind(SK_IF_DIRECTIVE_KEYWORD);
+        else if (o("ifdef"))    t->SetKind(SK_IFDEF_DIRECTIVE_KEYWORD);
+        else if (o("ifndef"))   t->SetKind(SK_IFNDEF_DIRECTIVE_KEYWORD);
+        else if (o("elif"))     t->SetKind(SK_ELIF_DIRECTIVE_KEYWORD);
+        else if (o("endif"))    t->SetKind(SK_ENDIF_DIRECTIVE_KEYWORD);
+        else if (o("include"))  t->SetKind(SK_INCLUDE_DIRECTIVE_KEYWORD);
+        else if (o("define"))   t->SetKind(SK_DEFINE_DIRECTIVE_KEYWORD);
+        else if (o("undef"))    t->SetKind(SK_UNDEF_DIRECTIVE_KEYWORD);
+        else if (o("line"))     t->SetKind(SK_LINE_DIRECTIVE_KEYWORD);
+        else if (o("error"))    t->SetKind(SK_ERROR_DIRECTIVE_KEYWORD);
+        else if (o("warning"))  t->SetKind(SK_WARNING_DIRECTIVE_KEYWORD);
     }
-    else if (o("const"))    t.SetKind(SK_CONST_KEYWORD);
-    else if (o("extern"))   t.SetKind(SK_EXTERN_KEYWORD);
-    else if (o("static"))   t.SetKind(SK_STATIC_KEYWORD);
-    else if (o("auto"))     t.SetKind(SK_AUTO_KEYWORD);
-    else if (o("volatile")) t.SetKind(SK_VOLATILE_KEYWORD);
-    else if (o("unsigned")) t.SetKind(SK_UNSIGNED_KEYWORD);
-    else if (o("signed"))   t.SetKind(SK_SIGNED_KEYWORD);
-    else if (o("void"))     t.SetKind(SK_VOID_KEYWORD);
-    else if (o("char"))     t.SetKind(SK_CHAR_KEYWORD);
-    else if (o("short"))    t.SetKind(SK_SHORT_KEYWORD);
-    else if (o("int"))      t.SetKind(SK_INT_KEYWORD);
-    else if (o("long"))     t.SetKind(SK_LONG_KEYWORD);
-    else if (o("float"))    t.SetKind(SK_FLOAT_KEYWORD);
-    else if (o("double"))   t.SetKind(SK_DOUBLE_KEYWORD);
-    else if (o("enum"))     t.SetKind(SK_ENUM_KEYWORD);
-    else if (o("struct"))   t.SetKind(SK_STRUCT_KEYWORD);
-    else if (o("union"))    t.SetKind(SK_UNION_KEYWORD);
-    else if (o("typedef"))  t.SetKind(SK_TYPEDEF_KEYWORD);
-    else if (o("sizeof"))   t.SetKind(SK_SIZEOF_KEYWORD);
-    else if (o("register")) t.SetKind(SK_REGISTER_KEYWORD);
-    else if (o("goto"))     t.SetKind(SK_GOTO_KEYWORD);
-    else if (o("if"))       t.SetKind(SK_IF_KEYWORD);
-    else if (o("else"))     t.SetKind(SK_ELSE_KEYWORD);
-    else if (o("switch"))   t.SetKind(SK_SWITCH_KEYWORD);
-    else if (o("case"))     t.SetKind(SK_CASE_KEYWORD);
-    else if (o("default"))  t.SetKind(SK_DEFAULT_KEYWORD);
-    else if (o("do"))       t.SetKind(SK_DO_KEYWORD);
-    else if (o("while"))    t.SetKind(SK_WHILE_KEYWORD);
-    else if (o("for"))      t.SetKind(SK_FOR_KEYWORD);
-    else if (o("break"))    t.SetKind(SK_BREAK_KEYWORD);
-    else if (o("continue")) t.SetKind(SK_CONTINUE_KEYWORD);
-    else if (o("return"))   t.SetKind(SK_RETURN_KEYWORD);
+    else if (o("const"))    t->SetKind(SK_CONST_KEYWORD);
+    else if (o("extern"))   t->SetKind(SK_EXTERN_KEYWORD);
+    else if (o("static"))   t->SetKind(SK_STATIC_KEYWORD);
+    else if (o("auto"))     t->SetKind(SK_AUTO_KEYWORD);
+    else if (o("volatile")) t->SetKind(SK_VOLATILE_KEYWORD);
+    else if (o("unsigned")) t->SetKind(SK_UNSIGNED_KEYWORD);
+    else if (o("signed"))   t->SetKind(SK_SIGNED_KEYWORD);
+    else if (o("void"))     t->SetKind(SK_VOID_KEYWORD);
+    else if (o("char"))     t->SetKind(SK_CHAR_KEYWORD);
+    else if (o("short"))    t->SetKind(SK_SHORT_KEYWORD);
+    else if (o("int"))      t->SetKind(SK_INT_KEYWORD);
+    else if (o("long"))     t->SetKind(SK_LONG_KEYWORD);
+    else if (o("float"))    t->SetKind(SK_FLOAT_KEYWORD);
+    else if (o("double"))   t->SetKind(SK_DOUBLE_KEYWORD);
+    else if (o("enum"))     t->SetKind(SK_ENUM_KEYWORD);
+    else if (o("struct"))   t->SetKind(SK_STRUCT_KEYWORD);
+    else if (o("union"))    t->SetKind(SK_UNION_KEYWORD);
+    else if (o("typedef"))  t->SetKind(SK_TYPEDEF_KEYWORD);
+    else if (o("sizeof"))   t->SetKind(SK_SIZEOF_KEYWORD);
+    else if (o("register")) t->SetKind(SK_REGISTER_KEYWORD);
+    else if (o("goto"))     t->SetKind(SK_GOTO_KEYWORD);
+    else if (o("if"))       t->SetKind(SK_IF_KEYWORD);
+    else if (o("else"))     t->SetKind(SK_ELSE_KEYWORD);
+    else if (o("switch"))   t->SetKind(SK_SWITCH_KEYWORD);
+    else if (o("case"))     t->SetKind(SK_CASE_KEYWORD);
+    else if (o("default"))  t->SetKind(SK_DEFAULT_KEYWORD);
+    else if (o("do"))       t->SetKind(SK_DO_KEYWORD);
+    else if (o("while"))    t->SetKind(SK_WHILE_KEYWORD);
+    else if (o("for"))      t->SetKind(SK_FOR_KEYWORD);
+    else if (o("break"))    t->SetKind(SK_BREAK_KEYWORD);
+    else if (o("continue")) t->SetKind(SK_CONTINUE_KEYWORD);
+    else if (o("return"))   t->SetKind(SK_RETURN_KEYWORD);
     else {
-        t.SetKind(SK_IDENTIFIER_TOKEN);
-        t.SetName(name);
+        t->SetKind(SK_IDENTIFIER_TOKEN);
+        t->SetName(name);
     }
 #undef o
 }
@@ -250,7 +250,7 @@ std::string Lexer::ReadSuffix() {
     return suffix;
 }
 
-void Lexer::SkipIntSuffixes(const SyntaxToken& t) {
+void Lexer::SkipIntSuffixes(const std::shared_ptr<SyntaxToken> t) {
     std::string suffix{ ReadSuffix() };
     std::string ciSuffix{ suffix };
     std::transform(ciSuffix.begin(), ciSuffix.end(), ciSuffix.begin(), std::toupper);
@@ -273,7 +273,7 @@ void Lexer::SkipIntSuffixes(const SyntaxToken& t) {
     }
 }
 
-void Lexer::ReadFractionalLiteral(SyntaxToken& t) {
+void Lexer::ReadFractionalLiteral(std::shared_ptr<SyntaxToken> t) {
     float floatFrac{ 0.0F };
     float floatExp{ 0.1F };
     double doubleFrac{ 0.0 };
@@ -289,12 +289,12 @@ void Lexer::ReadFractionalLiteral(SyntaxToken& t) {
     std::string suffix{ ReadSuffix() };
 
     if (suffix == "f" || suffix == "F") {
-        t.SetKind(SK_FLOAT_CONSTANT_TOKEN);
-        t.SetFloatValue(t.GetIntValue() + floatFrac);
+        t->SetKind(SK_FLOAT_CONSTANT_TOKEN);
+        t->SetFloatValue(t->GetIntValue() + floatFrac);
     }
     else if (suffix.length() == 0) {
-        t.SetKind(SK_DOUBLE_CONSTANT_TOKEN);
-        t.SetDoubleValue(t.GetIntValue() + doubleFrac);
+        t->SetKind(SK_DOUBLE_CONSTANT_TOKEN);
+        t->SetDoubleValue(t->GetIntValue() + doubleFrac);
     }
     else {
         SOURCE_RANGE range;
@@ -309,19 +309,19 @@ void Lexer::ReadFractionalLiteral(SyntaxToken& t) {
     }
 }
 
-void Lexer::ReadHexLiteral(SyntaxToken& t) {
-    t.SetKind(SK_INT_CONSTANT_TOKEN);
-    t.SetIntValue(0);
+void Lexer::ReadHexLiteral(std::shared_ptr<SyntaxToken> t) {
+    t->SetKind(SK_INT_CONSTANT_TOKEN);
+    t->SetIntValue(0);
 
     while (IsHex(GetChar())) {
-        t.SetIntValue(t.GetIntValue() * 16);
+        t->SetIntValue(t->GetIntValue() * 16);
 
         if (GetChar() <= '9')
-            t.SetIntValue(t.GetIntValue() + GetChar() - '0');
+            t->SetIntValue(t->GetIntValue() + GetChar() - '0');
         else if (GetChar() <= 'F')
-            t.SetIntValue(t.GetIntValue() + GetChar() - 'A' + 10);
+            t->SetIntValue(t->GetIntValue() + GetChar() - 'A' + 10);
         else
-            t.SetIntValue(t.GetIntValue() + GetChar() - 'a' + 10);
+            t->SetIntValue(t->GetIntValue() + GetChar() - 'a' + 10);
 
         IncrementCursor();
     }
@@ -329,13 +329,13 @@ void Lexer::ReadHexLiteral(SyntaxToken& t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadOctalLiteral(SyntaxToken& t) {
-    t.SetKind(SK_INT_CONSTANT_TOKEN);
-    t.SetIntValue(0);
+void Lexer::ReadOctalLiteral(std::shared_ptr<SyntaxToken> t) {
+    t->SetKind(SK_INT_CONSTANT_TOKEN);
+    t->SetIntValue(0);
 
     for (; IsDecimal(GetChar()); IncrementCursor()) {
         if (IsOctal(GetChar())) {
-            t.SetIntValue((t.GetIntValue() * 8) - (GetChar() - '0'));
+            t->SetIntValue((t->GetIntValue() * 8) - (GetChar() - '0'));
         }
         else {
             SOURCE_RANGE range{ };
@@ -353,12 +353,12 @@ void Lexer::ReadOctalLiteral(SyntaxToken& t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadDecimalLiteral(SyntaxToken& t) {
-    t.SetKind(SK_INT_CONSTANT_TOKEN);
-    t.SetIntValue(0);
+void Lexer::ReadDecimalLiteral(std::shared_ptr<SyntaxToken> t) {
+    t->SetKind(SK_INT_CONSTANT_TOKEN);
+    t->SetIntValue(0);
 
     for (; IsDecimal(GetChar()); IncrementCursor())
-        t.SetIntValue((t.GetIntValue() * 10) + (GetChar() - '0'));
+        t->SetIntValue((t->GetIntValue() * 10) + (GetChar() - '0'));
 
     if (GetChar() == '.') {
         IncrementCursor();
@@ -369,7 +369,7 @@ void Lexer::ReadDecimalLiteral(SyntaxToken& t) {
     }
 }
 
-void Lexer::ReadNumericalLiteral(SyntaxToken& t) {
+void Lexer::ReadNumericalLiteral(std::shared_ptr<SyntaxToken> t) {
     if (GetChar() == '0') {
         int wholeLength{ 0 };
 
@@ -472,11 +472,11 @@ int Lexer::ReadCharEscapeSequence() {
 }
 
 /* Precondition: GetChar() == '\'' */
-void Lexer::ReadCharLiteral(SyntaxToken& t) {
+void Lexer::ReadCharLiteral(std::shared_ptr<SyntaxToken> t) {
     SOURCE_RANGE range{ };
 
     IncrementCursor();
-    t.SetKind(SK_INT_CONSTANT_TOKEN);
+    t->SetKind(SK_INT_CONSTANT_TOKEN);
 
     if (GetChar() == '\n') {
         GetTokenRange(t, &range);
@@ -487,7 +487,7 @@ void Lexer::ReadCharLiteral(SyntaxToken& t) {
         );
     }
     else {
-        t.SetIntValue(ReadCharEscapeSequence());
+        t->SetIntValue(ReadCharEscapeSequence());
 
         if (GetChar() == '\'') {
             IncrementCursor();
@@ -520,11 +520,11 @@ void Lexer::ReadCharLiteral(SyntaxToken& t) {
 }
 
 /* Precondition: GetChar() == '"' */
-void Lexer::ReadStringLiteral(SyntaxToken& t) {
-    t.SetKind(SK_STRING_CONSTANT_TOKEN);
+void Lexer::ReadStringLiteral(std::shared_ptr<SyntaxToken> t) {
+    t->SetKind(SK_STRING_CONSTANT_TOKEN);
     IncrementCursor();
 
-    t.SetStringValue("");
+    t->SetStringValue("");
 
     while (GetChar() != '"') {
         if (GetChar() == '\n') {
@@ -537,20 +537,20 @@ void Lexer::ReadStringLiteral(SyntaxToken& t) {
                 "missing terminating \" character"
             );
 
-            t.SetStringValue("");
+            t->SetStringValue("");
             return;
         }
 
-        std::string newValue{ t.GetStringValue() };
+        std::string newValue{ t->GetStringValue() };
         newValue += ReadCharEscapeSequence();
-        t.SetStringValue(newValue);
+        t->SetStringValue(newValue);
     }
 
     IncrementCursor();
 }
 
-SyntaxToken Lexer::ReadTokenOnce() {
-    SyntaxToken result{ };
+std::shared_ptr<SyntaxToken> Lexer::ReadTokenOnce() {
+    std::shared_ptr<SyntaxToken> result{ std::make_shared<SyntaxToken>() };
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();
@@ -558,66 +558,66 @@ SyntaxToken Lexer::ReadTokenOnce() {
     if (l->CurrentFlags & ST_BEGINNING_OF_LINE)
         l->CurrentMode = LM_DEFAULT;
 
-    result.SetFlags(l->CurrentFlags);
-    SOURCE_RANGE temp{ result.GetLexemeRange() };
+    result->SetFlags(l->CurrentFlags);
+    SOURCE_RANGE temp{ result->GetLexemeRange() };
     temp.Location = l->CurrentLocation;
-    result.SetLexemeRange(temp);
+    result->SetLexemeRange(temp);
 
-    if ((result.GetFlags() & ST_BEGINNING_OF_LINE) && GetChar() == '#') {
+    if ((result->GetFlags() & ST_BEGINNING_OF_LINE) && GetChar() == '#') {
         IncrementCursor();
-        result.SetKind(SK_HASH_TOKEN);
+        result->SetKind(SK_HASH_TOKEN);
     }
     else {
         switch (GetChar()) {
-        case 0: result.SetKind(SK_EOF_TOKEN); break;
-        case '(': IncrementCursor(); result.SetKind(SK_LPAREN_TOKEN); break;
-        case ')': IncrementCursor(); result.SetKind(SK_RPAREN_TOKEN); break;
-        case '[': IncrementCursor(); result.SetKind(SK_LBRACKET_TOKEN); break;
-        case ']': IncrementCursor(); result.SetKind(SK_RBRACKET_TOKEN); break;
-        case '{': IncrementCursor(); result.SetKind(SK_LBRACE_TOKEN); break;
-        case '}': IncrementCursor(); result.SetKind(SK_RBRACE_TOKEN); break;
-        case ';': IncrementCursor(); result.SetKind(SK_SEMICOLON_TOKEN); break;
-        case ',': IncrementCursor(); result.SetKind(SK_COMMA_TOKEN); break;
-        case '~': IncrementCursor(); result.SetKind(SK_TILDE_TOKEN); break;
-        case '?': IncrementCursor(); result.SetKind(SK_QUESTION_TOKEN); break;
-        case ':': IncrementCursor(); result.SetKind(SK_COLON_TOKEN); break;
+        case 0: result->SetKind(SK_EOF_TOKEN); break;
+        case '(': IncrementCursor(); result->SetKind(SK_LPAREN_TOKEN); break;
+        case ')': IncrementCursor(); result->SetKind(SK_RPAREN_TOKEN); break;
+        case '[': IncrementCursor(); result->SetKind(SK_LBRACKET_TOKEN); break;
+        case ']': IncrementCursor(); result->SetKind(SK_RBRACKET_TOKEN); break;
+        case '{': IncrementCursor(); result->SetKind(SK_LBRACE_TOKEN); break;
+        case '}': IncrementCursor(); result->SetKind(SK_RBRACE_TOKEN); break;
+        case ';': IncrementCursor(); result->SetKind(SK_SEMICOLON_TOKEN); break;
+        case ',': IncrementCursor(); result->SetKind(SK_COMMA_TOKEN); break;
+        case '~': IncrementCursor(); result->SetKind(SK_TILDE_TOKEN); break;
+        case '?': IncrementCursor(); result->SetKind(SK_QUESTION_TOKEN); break;
+        case ':': IncrementCursor(); result->SetKind(SK_COLON_TOKEN); break;
 
         case '.':
             IncrementCursor();
-            if (IsDecimal(GetChar())) { result.SetIntValue(0); ReadFractionalLiteral(result); }
-            else { result.SetKind(SK_DOT_TOKEN); }
+            if (IsDecimal(GetChar())) { result->SetIntValue(0); ReadFractionalLiteral(result); }
+            else { result->SetKind(SK_DOT_TOKEN); }
             break;
 
         case '+':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_PLUS_EQUALS_TOKEN); }
-            else if (GetChar() == '+') { IncrementCursor(); result.SetKind(SK_PLUS_PLUS_TOKEN); }
-            else { result.SetKind(SK_PLUS_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_PLUS_EQUALS_TOKEN); }
+            else if (GetChar() == '+') { IncrementCursor(); result->SetKind(SK_PLUS_PLUS_TOKEN); }
+            else { result->SetKind(SK_PLUS_TOKEN); }
             break;
 
         case '-':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_MINUS_EQUALS_TOKEN); }
-            else if (GetChar() == '-') { IncrementCursor(); result.SetKind(SK_MINUS_MINUS_TOKEN); }
-            else if (GetChar() == '>') { IncrementCursor(); result.SetKind(SK_MINUS_GT_TOKEN); }
-            else { result.SetKind(SK_MINUS_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_MINUS_EQUALS_TOKEN); }
+            else if (GetChar() == '-') { IncrementCursor(); result->SetKind(SK_MINUS_MINUS_TOKEN); }
+            else if (GetChar() == '>') { IncrementCursor(); result->SetKind(SK_MINUS_GT_TOKEN); }
+            else { result->SetKind(SK_MINUS_TOKEN); }
             break;
 
         case '*':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_ASTERISK_EQUALS_TOKEN); }
-            else { result.SetKind(SK_ASTERISK_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_ASTERISK_EQUALS_TOKEN); }
+            else { result->SetKind(SK_ASTERISK_TOKEN); }
             break;
 
         case '/':
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result.SetKind(SK_SLASH_EQUALS_TOKEN);
+                result->SetKind(SK_SLASH_EQUALS_TOKEN);
             }
             else if (GetChar() == '*') {
                 IncrementCursor();
-                result.SetKind(SK_COMMENT_TOKEN);
+                result->SetKind(SK_COMMENT_TOKEN);
 
                 for (;;) {
                     SOURCE_RANGE range{ };
@@ -654,34 +654,34 @@ SyntaxToken Lexer::ReadTokenOnce() {
                 }
             }
             else {
-                result.SetKind(SK_SLASH_TOKEN);
+                result->SetKind(SK_SLASH_TOKEN);
             }
             break;
 
         case '%':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_PERCENT_EQUALS_TOKEN); }
-            else { result.SetKind(SK_PERCENT_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_PERCENT_EQUALS_TOKEN); }
+            else { result->SetKind(SK_PERCENT_TOKEN); }
             break;
 
         case '<':
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result.SetKind(SK_LT_EQUALS_TOKEN);
+                result->SetKind(SK_LT_EQUALS_TOKEN);
             }
             else if (GetChar() == '<') {
                 IncrementCursor();
                 if (GetChar() == '=') {
                     IncrementCursor();
-                    result.SetKind(SK_LT_LT_EQUALS_TOKEN);
+                    result->SetKind(SK_LT_LT_EQUALS_TOKEN);
                 }
                 else {
-                    result.SetKind(SK_LT_LT_TOKEN);
+                    result->SetKind(SK_LT_LT_TOKEN);
                 }
             }
             else {
-                result.SetKind(SK_LT_TOKEN);
+                result->SetKind(SK_LT_TOKEN);
             }
             break;
 
@@ -689,53 +689,53 @@ SyntaxToken Lexer::ReadTokenOnce() {
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result.SetKind(SK_GT_EQUALS_TOKEN);
+                result->SetKind(SK_GT_EQUALS_TOKEN);
             }
             else if (GetChar() == '>') {
                 IncrementCursor();
                 if (GetChar() == '=') {
                     IncrementCursor();
-                    result.SetKind(SK_GT_GT_EQUALS_TOKEN);
+                    result->SetKind(SK_GT_GT_EQUALS_TOKEN);
                 }
                 else {
-                    result.SetKind(SK_GT_GT_TOKEN);
+                    result->SetKind(SK_GT_GT_TOKEN);
                 }
             }
             else {
-                result.SetKind(SK_GT_TOKEN);
+                result->SetKind(SK_GT_TOKEN);
             }
             break;
 
         case '=':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_EQUALS_EQUALS_TOKEN); }
-            else { result.SetKind(SK_EQUALS_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_EQUALS_EQUALS_TOKEN); }
+            else { result->SetKind(SK_EQUALS_TOKEN); }
             break;
 
         case '!':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_EXCLAMATION_EQUALS_TOKEN); }
-            else { result.SetKind(SK_EXCLAMATION_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_EXCLAMATION_EQUALS_TOKEN); }
+            else { result->SetKind(SK_EXCLAMATION_TOKEN); }
             break;
 
         case '&':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_AMPERSAND_EQUALS_TOKEN); }
-            else if (GetChar() == '&') { IncrementCursor(); result.SetKind(SK_AMPERSAND_AMPERSAND_TOKEN); }
-            else { result.SetKind(SK_AMPERSAND_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_AMPERSAND_EQUALS_TOKEN); }
+            else if (GetChar() == '&') { IncrementCursor(); result->SetKind(SK_AMPERSAND_AMPERSAND_TOKEN); }
+            else { result->SetKind(SK_AMPERSAND_TOKEN); }
             break;
 
         case '^':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_CARET_EQUALS_TOKEN); }
-            else { result.SetKind(SK_CARET_TOKEN); } 
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_CARET_EQUALS_TOKEN); }
+            else { result->SetKind(SK_CARET_TOKEN); } 
             break;
 
         case '|':
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result.SetKind(SK_PIPE_EQUALS_TOKEN); }
-            else if (GetChar() == '|') { IncrementCursor(); result.SetKind(SK_PIPE_PIPE_TOKEN); }
-            else { result.SetKind(SK_PIPE_TOKEN); }
+            if (GetChar() == '=') { IncrementCursor(); result->SetKind(SK_PIPE_EQUALS_TOKEN); }
+            else if (GetChar() == '|') { IncrementCursor(); result->SetKind(SK_PIPE_PIPE_TOKEN); }
+            else { result->SetKind(SK_PIPE_TOKEN); }
             break;
 
         case '_': case '$':
@@ -758,39 +758,39 @@ SyntaxToken Lexer::ReadTokenOnce() {
         case '"': ReadStringLiteral(result); break;
 
         default:
-            result.SetKind(SK_STRAY_TOKEN);
-            result.SetOffendingChar(GetChar());
+            result->SetKind(SK_STRAY_TOKEN);
+            result->SetOffendingChar(GetChar());
             IncrementCursor();
             break;
         }
     }
 
-    if (result.GetKind() == SK_COMMENT_TOKEN) {
-        const int line{ result.GetLexemeRange().Location.Line };
-        const int column{ result.GetLexemeRange().Location.Column };
+    if (result->GetKind() == SK_COMMENT_TOKEN) {
+        const int line{ result->GetLexemeRange().Location.Line };
+        const int column{ result->GetLexemeRange().Location.Column };
         const char *base{ &l->Source->Lines[line][column] };
         // TODO: Re-implement length calculation.
         //result.LexemeRange.Length = static_cast<int>(l->Cursor - base);
-        SOURCE_RANGE range{ result.GetLexemeRange() };
+        SOURCE_RANGE range{ result->GetLexemeRange() };
         range.Length = 1;
-        result.SetLexemeRange(range);
+        result->SetLexemeRange(range);
     }
     else {
         const int end{ l->CurrentLocation.Column };
-        const int start{ result.GetLexemeRange().Location.Column };
-        SOURCE_RANGE range{ result.GetLexemeRange() };
+        const int start{ result->GetLexemeRange().Location.Column };
+        SOURCE_RANGE range{ result->GetLexemeRange() };
         range.Length = end - start;
-        result.SetLexemeRange(range);
+        result->SetLexemeRange(range);
     }
 
-    if (l->CurrentMode == LM_DEFAULT && result.GetKind() == SK_HASH_TOKEN) {
+    if (l->CurrentMode == LM_DEFAULT && result->GetKind() == SK_HASH_TOKEN) {
         l->CurrentMode |= LM_PP_DIRECTIVE;
         l->CurrentMode |= LM_PP_DIRECTIVE_KW;
     }
     else if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
         l->CurrentMode &= ~LM_PP_DIRECTIVE_KW;
 
-        if (result.GetKind() == SK_INCLUDE_DIRECTIVE_KEYWORD)
+        if (result->GetKind() == SK_INCLUDE_DIRECTIVE_KEYWORD)
             l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
     }
     else if (l->CurrentMode & LM_PP_ANGLED_STRING_CONSTANT) {

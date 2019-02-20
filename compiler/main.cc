@@ -17,11 +17,11 @@ static void PreprocessFile(const char* filePath) {
 
     Lexer lexer{ &sourceFile };
 
-    SyntaxToken t{ };
+    std::shared_ptr<SyntaxToken> t{ };
     do {
         t = lexer.ReadTokenDirect();
     }
-    while (t.GetKind() != SK_EOF_TOKEN);
+    while (t->GetKind() != SK_EOF_TOKEN);
 }
 
 int main(int argc, char** argv) {
