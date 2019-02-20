@@ -14,12 +14,12 @@
 #define LM_PP_ANGLED_STRING_CONSTANT 4
 
 struct LEXER_IMPL {
-    SourceFile*                  Source{ nullptr };
-    int                          Cursor{ 0 };
-    uint32_t                     CurrentMode{ 0 };
-    int                          CurrentFlags{ 0 };
-    SOURCE_LOC                   CurrentLocation{ };
-    std::shared_ptr<SyntaxToken> CurrentToken{ };
+    SourceFile*     Source{ nullptr };
+    int             Cursor{ 0 };
+    uint32_t        CurrentMode{ 0 };
+    int             CurrentFlags{ 0 };
+    SOURCE_LOC      CurrentLocation{ };
+    Rc<SyntaxToken> CurrentToken{ };
 };
 
 Lexer::Lexer(IN SourceFile* input) :
@@ -33,7 +33,7 @@ Lexer::Lexer(IN SourceFile* input) :
 
 Lexer::~Lexer() {}
 
-std::shared_ptr<SyntaxToken> Lexer::ReadTokenDirect() {
+Rc<SyntaxToken> Lexer::ReadTokenDirect() {
     for (;;) {
         l->CurrentToken = ReadTokenOnce();
 
@@ -154,7 +154,7 @@ void Lexer::IncrementCursorBy(IN   int    amount) {
 }
 
 void Lexer::GetTokenRange(
-    const std::shared_ptr<SyntaxToken> t,
+    const Rc<SyntaxToken> t,
     OUT   PSOURCE_RANGE range
 ) noexcept {
     int line{ t->GetLexemeRange().Location.Line };
@@ -168,7 +168,7 @@ void Lexer::GetTokenRange(
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
-void Lexer::ReadIdentifier(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadIdentifier(Rc<SyntaxToken> t) {
     std::string name{ };
 
     for (;;) {
@@ -250,7 +250,7 @@ std::string Lexer::ReadSuffix() {
     return suffix;
 }
 
-void Lexer::SkipIntSuffixes(const std::shared_ptr<SyntaxToken> t) {
+void Lexer::SkipIntSuffixes(const Rc<SyntaxToken> t) {
     std::string suffix{ ReadSuffix() };
     std::string ciSuffix{ suffix };
     std::transform(ciSuffix.begin(), ciSuffix.end(), ciSuffix.begin(), std::toupper);
@@ -273,7 +273,7 @@ void Lexer::SkipIntSuffixes(const std::shared_ptr<SyntaxToken> t) {
     }
 }
 
-void Lexer::ReadFractionalLiteral(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadFractionalLiteral(Rc<SyntaxToken> t) {
     float floatFrac{ 0.0F };
     float floatExp{ 0.1F };
     double doubleFrac{ 0.0 };
@@ -309,7 +309,7 @@ void Lexer::ReadFractionalLiteral(std::shared_ptr<SyntaxToken> t) {
     }
 }
 
-void Lexer::ReadHexLiteral(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadHexLiteral(Rc<SyntaxToken> t) {
     t->SetKind(SK_INT_CONSTANT_TOKEN);
     t->SetIntValue(0);
 
@@ -329,7 +329,7 @@ void Lexer::ReadHexLiteral(std::shared_ptr<SyntaxToken> t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadOctalLiteral(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadOctalLiteral(Rc<SyntaxToken> t) {
     t->SetKind(SK_INT_CONSTANT_TOKEN);
     t->SetIntValue(0);
 
@@ -353,7 +353,7 @@ void Lexer::ReadOctalLiteral(std::shared_ptr<SyntaxToken> t) {
     SkipIntSuffixes(t);
 }
 
-void Lexer::ReadDecimalLiteral(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadDecimalLiteral(Rc<SyntaxToken> t) {
     t->SetKind(SK_INT_CONSTANT_TOKEN);
     t->SetIntValue(0);
 
@@ -369,7 +369,7 @@ void Lexer::ReadDecimalLiteral(std::shared_ptr<SyntaxToken> t) {
     }
 }
 
-void Lexer::ReadNumericalLiteral(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadNumericalLiteral(Rc<SyntaxToken> t) {
     if (GetChar() == '0') {
         int wholeLength{ 0 };
 
@@ -472,7 +472,7 @@ int Lexer::ReadCharEscapeSequence() {
 }
 
 /* Precondition: GetChar() == '\'' */
-void Lexer::ReadCharLiteral(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadCharLiteral(Rc<SyntaxToken> t) {
     SOURCE_RANGE range{ };
 
     IncrementCursor();
@@ -520,7 +520,7 @@ void Lexer::ReadCharLiteral(std::shared_ptr<SyntaxToken> t) {
 }
 
 /* Precondition: GetChar() == '"' */
-void Lexer::ReadStringLiteral(std::shared_ptr<SyntaxToken> t) {
+void Lexer::ReadStringLiteral(Rc<SyntaxToken> t) {
     t->SetKind(SK_STRING_CONSTANT_TOKEN);
     IncrementCursor();
 
@@ -549,8 +549,8 @@ void Lexer::ReadStringLiteral(std::shared_ptr<SyntaxToken> t) {
     IncrementCursor();
 }
 
-std::shared_ptr<SyntaxToken> Lexer::ReadTokenOnce() {
-    std::shared_ptr<SyntaxToken> result{ std::make_shared<SyntaxToken>() };
+Rc<SyntaxToken> Lexer::ReadTokenOnce() {
+    Rc<SyntaxToken> result{ NewObj<SyntaxToken>() };
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();

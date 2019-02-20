@@ -15,7 +15,7 @@ public:
     Lexer(const Lexer& obj) = delete;
     virtual ~Lexer();
 
-    std::shared_ptr<SyntaxToken> ReadTokenDirect();
+    Rc<SyntaxToken> ReadTokenDirect();
 
 private:
     char Peek(int index = 0);
@@ -26,21 +26,21 @@ private:
     void IncrementCursor();
     void IncrementCursorBy(IN int amount);
     void GetTokenRange(
-        const std::shared_ptr<SyntaxToken> t,
+        const Rc<SyntaxToken> t,
         OUT   PSOURCE_RANGE range
     ) noexcept;
-    void ReadIdentifier(std::shared_ptr<SyntaxToken> t);
+    void ReadIdentifier(Rc<SyntaxToken> t);
     std::string ReadSuffix();
-    void SkipIntSuffixes(const std::shared_ptr<SyntaxToken> t);
-    void ReadFractionalLiteral(std::shared_ptr<SyntaxToken> t);
-    void ReadHexLiteral(std::shared_ptr<SyntaxToken> t);
-    void ReadOctalLiteral(std::shared_ptr<SyntaxToken> t);
-    void ReadDecimalLiteral(std::shared_ptr<SyntaxToken> t);
-    void ReadNumericalLiteral(std::shared_ptr<SyntaxToken> t);
+    void SkipIntSuffixes(const Rc<SyntaxToken> t);
+    void ReadFractionalLiteral(Rc<SyntaxToken> t);
+    void ReadHexLiteral(Rc<SyntaxToken> t);
+    void ReadOctalLiteral(Rc<SyntaxToken> t);
+    void ReadDecimalLiteral(Rc<SyntaxToken> t);
+    void ReadNumericalLiteral(Rc<SyntaxToken> t);
     int ReadCharEscapeSequence();
-    void ReadCharLiteral(std::shared_ptr<SyntaxToken> t);
-    void ReadStringLiteral(std::shared_ptr<SyntaxToken> t);
-    std::shared_ptr<SyntaxToken> ReadTokenOnce();
+    void ReadCharLiteral(Rc<SyntaxToken> t);
+    void ReadStringLiteral(Rc<SyntaxToken> t);
+    Rc<SyntaxToken> ReadTokenOnce();
 
 private:
     std::unique_ptr<LEXER_IMPL> l;
