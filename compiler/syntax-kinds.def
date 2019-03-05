@@ -13,6 +13,7 @@ Tk(UnDefDirectiveKw);
 Tk(LineDirectiveKw);
 Tk(ErrorDirectiveKw);
 Tk(WarningDirectiveKw);
+Tk(InvalidDirective);
 
 Tk(LParenSymbol);      Tk(RParenSymbol);
 Tk(LBracketSymbol);    Tk(RBracketSymbol);

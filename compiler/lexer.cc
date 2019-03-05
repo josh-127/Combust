@@ -210,6 +210,10 @@ std::tuple<Rc<SyntaxToken>, std::string> Lexer::ReadIdentifier() {
         else if (o("line"))     result = NewObj<LineDirectiveKw>();
         else if (o("error"))    result = NewObj<ErrorDirectiveKw>();
         else if (o("warning"))  result = NewObj<WarningDirectiveKw>();
+        else {
+            result = NewObj<InvalidDirective>();
+            name = "<invalid>";
+        }
     }
     else if (o("const"))    result = NewObj<ConstKeyword>();
     else if (o("extern"))   result = NewObj<ExternKeyword>();
@@ -576,6 +580,7 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
     Rc<StrayToken> asStrayToken{ };
     bool isHashSymbol{ false };
     bool isIncludeDirectiveKw{ false };
+    bool isInvalidDirective{ false };
     bool isCommentToken{ false };
     bool isEofToken{ false };
 
@@ -784,6 +789,8 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
             result = std::get<0>(tuple);
             if (std::get<1>(tuple) == "include")
                 isIncludeDirectiveKw = true;
+            else if (std::get<1>(tuple) == "<invalid>")
+                isInvalidDirective = true;
             break;
         }
 
@@ -819,7 +826,6 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
         range.Length = end - start;
         result->SetLexemeRange(range);
     }
-
     if (l->CurrentMode == LM_DEFAULT && isHashSymbol) {
         l->CurrentMode |= LM_PP_DIRECTIVE;
         l->CurrentMode |= LM_PP_DIRECTIVE_KW;
@@ -829,6 +835,12 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
 
         if (isIncludeDirectiveKw)
             l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
+        else if (isInvalidDirective) {
+            SOURCE_RANGE range;
+            GetTokenRange(result, &range);
+            LogAtRange(&range, LL_ERROR, "invalid directive.");
+        }
+            
     }
     else if (l->CurrentMode & LM_PP_ANGLED_STRING_CONSTANT) {
         l->CurrentMode &= ~LM_PP_ANGLED_STRING_CONSTANT;
