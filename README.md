@@ -3,34 +3,35 @@ Portable Toolchain (PTC)
 
 Toolchain for native application development. Currently includes a C compiler.
 
-Building
---------
+Building on Ubuntu 16.04 LTS and above
+--------------------------------------
 
-### Installing Requirements
-| Dependency       | Version  |
-|------------------|----------|
-| CentOS           | 7.6.1810 |
-| GNU Make         | 3.82     |
-| GNU GCC          | 4.8.5    |
+### Requirements
+| Dependency       | Version            | Comments                                                                             |
+|------------------|--------------------|--------------------------------------------------------------------------------------|
+| Canonical Ubuntu | 16.04 LTS or later |                                                                                      |
+| GNU Make         | 4.1                |                                                                                      |
+| GNU GCC/G++      | 8.1.0              | For 16.04 LTS users, you must install GCC 8.x from a Personal Package Archive (PPA). |
 ```
-yum install make
-yum install gcc
+apt-get install make
+apt-get install gcc
+apt-get install g++
 ```
 
 ### Optional Packages
 | Package          | Version |
 |------------------|---------|
-| GNU GDB          | 7.6.1   |
-| Valgrind         | 3.13.0  |
+| GNU GDB          | 7.11.1  |
+| Valgrind         | 3.11.0  |
 | VIM              | 7.4     |
 ```
-yum install gdb
-yum install valgrind
-yum install vim-minimal
+apt-get install gdb
+apt-get install valgrind
+apt-get install vim
 ```
 
-### Building 7cc
+### Building compiler
 ```
-cd 7cc
+cd compiler
 make
 ```
