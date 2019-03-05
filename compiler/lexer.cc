@@ -1,11 +1,13 @@
+#if defined(_WIN32)
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "lexer.hh"
 #include "logger.hh"
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <algorithm>
 
 #define LM_DEFAULT                   0
@@ -39,8 +41,9 @@ Rc<SyntaxToken> Lexer::ReadTokenDirect() {
         l->CurrentToken = token;
 
         if (asStrayToken) {
+            SOURCE_RANGE range{ l->CurrentToken->GetLexemeRange() };
             LogAtRange(
-                &l->CurrentToken->GetLexemeRange(),
+                &range,
                 LL_ERROR,
                 "stray '%c' in program",
                 asStrayToken->GetOffendingChar()
@@ -262,7 +265,7 @@ std::string Lexer::ReadSuffix() {
 void Lexer::SkipIntSuffixes(const Rc<SyntaxToken> t) {
     std::string suffix{ ReadSuffix() };
     std::string ciSuffix{ suffix };
-    std::transform(ciSuffix.begin(), ciSuffix.end(), ciSuffix.begin(), std::toupper);
+    std::transform(ciSuffix.begin(), ciSuffix.end(), ciSuffix.begin(), toupper);
 
     if (ciSuffix.length() != 0 &&
         ciSuffix != "UL" &&

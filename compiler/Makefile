@@ -1,6 +1,6 @@
 TARGET		:= compile
 
-CXXFLAGS	:= -g -std=gnu++14 -Wall -Wextra
+CXXFLAGS	:= -g -std=gnu++1z -Wall -Wextra
 
 HHFILES	:= \
 	lexer.hh \
@@ -13,7 +13,8 @@ CCFILES	:= \
 	main.cc \
 	lexer.cc \
 	logger.cc \
-	source.cc
+	source.cc \
+	syntax.cc
 
 .PHONY: all clean
 
@@ -22,5 +23,8 @@ all: $(TARGET)
 clean:
 	rm -f $(TARGET)
 
-$(TARGET): $(CCFILES) $(HHFILES)
-	g++ $(CXXFLAGS) -o$@ $(CCFILES)
+$(TARGET): $(CCFILES) $(HHFILES) .makefile-config
+	`cat .makefile-config` $(CXXFLAGS) -o$@ $(CCFILES)
+
+.makefile-config:
+	./configure
