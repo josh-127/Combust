@@ -4,6 +4,7 @@
 #include "source.hh"
 #include <stdint.h>
 #include <string>
+#include <type_traits>
 
 constexpr int ST_BEGINNING_OF_LINE{ 1 };
 
@@ -156,5 +157,45 @@ public:
 private:
     std::string value{ };
 };
+
+
+template<typename T>
+class IsTokenVisitor : public SyntaxNodeVisitor {
+public:
+    explicit IsTokenVisitor() {}
+    virtual ~IsTokenVisitor() {}
+    bool GetResult() const { return result; }
+
+#define O(className)                                     \
+    Rc<Object> Visit(className& obj) override {          \
+        (void) obj;                                      \
+        if constexpr (std::is_same<T, className>::value) \
+            result = true;                               \
+        return Rc<Object>{ };                            \
+    }
+
+#define Tk(className) O(className)
+#include "syntax-kinds.def"
+#undef Tk
+
+    O(StrayToken)
+    O(CommentToken)
+    O(IdentifierToken)
+    O(IntConstantToken)
+    O(FloatConstantToken)
+    O(DoubleConstantToken)
+    O(StringConstantToken)
+    O(AngledStringConstantToken)
+
+private:
+    bool result{ false };
+};
+
+template<typename T>
+[[nodiscard]] inline bool IsToken(Rc<SyntaxToken> token) {
+    IsTokenVisitor<T> visitorFunction{ };
+    token->Accept(visitorFunction);
+    return visitorFunction.GetResult();
+}
 
 #endif
