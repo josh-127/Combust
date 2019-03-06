@@ -1,3 +1,4 @@
 
 compile
+test-compiler
 .makefile-config
