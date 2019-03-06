@@ -40,7 +40,7 @@ private:
     int ReadCharEscapeSequence();
     Rc<SyntaxToken> ReadCharLiteral();
     Rc<SyntaxToken> ReadStringLiteral();
-    std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> ReadTokenOnce();
+    Rc<SyntaxToken> ReadTokenOnce();
 
 private:
     std::unique_ptr<LEXER_IMPL> l;

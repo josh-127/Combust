@@ -37,22 +37,24 @@ Lexer::~Lexer() {}
 
 Rc<SyntaxToken> Lexer::ReadTokenDirect() {
     for (;;) {
-        auto [token, asStrayToken, isCommentToken, isEofToken] = ReadTokenOnce();
+        Rc<SyntaxToken> token{ ReadTokenOnce() };
         l->CurrentToken = token;
 
-        if (asStrayToken) {
-            SOURCE_RANGE range{ l->CurrentToken->GetLexemeRange() };
+        if (IsToken<StrayToken>(token)) {
+            Rc<StrayToken> strayToken{ std::static_pointer_cast<StrayToken>(token) };
+
+            SOURCE_RANGE range{ token->GetLexemeRange() };
             LogAtRange(
                 &range,
                 LL_ERROR,
                 "stray '%c' in program",
-                asStrayToken->GetOffendingChar()
+                strayToken->GetOffendingChar()
             );
         }
-        else if (isEofToken) {
+        else if (IsToken<EofToken>(token)) {
             return Rc<SyntaxToken>{ };
         }
-        else if (isCommentToken) {
+        else if (IsToken<CommentToken>(token)) {
             return l->CurrentToken;
         }
     }
@@ -600,14 +602,11 @@ Rc<SyntaxToken> Lexer::ReadStringLiteral() {
     return result;
 }
 
-std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
+Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     Rc<SyntaxToken> result{ };
-    Rc<StrayToken> asStrayToken{ };
     bool isHashSymbol{ false };
     bool isIncludeDirectiveKw{ false };
     bool isInvalidDirective{ false };
-    bool isCommentToken{ false };
-    bool isEofToken{ false };
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();
@@ -627,7 +626,7 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
     }
     else {
         switch (GetChar()) {
-        case 0: result = NewObj<EofToken>(); isEofToken = true; break;
+        case 0:                      result = NewObj<EofToken>(); break;
         case '(': IncrementCursor(); result = NewObj<LParenSymbol>(); break;
         case ')': IncrementCursor(); result = NewObj<RParenSymbol>(); break;
         case '[': IncrementCursor(); result = NewObj<LBracketSymbol>(); break;
@@ -680,7 +679,6 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
             else if (GetChar() == '*') {
                 IncrementCursor();
                 result = NewObj<CommentToken>();
-                isCommentToken = true;
 
                 for (;;) {
                     SOURCE_RANGE range{ };
@@ -827,10 +825,11 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
         case '"': result = ReadStringLiteral(); break;
 
         default:
-            asStrayToken = NewObj<StrayToken>();
-            asStrayToken->SetOffendingChar(GetChar());
-            result = asStrayToken;
+            Rc<StrayToken> strayToken{ NewObj<StrayToken>() };
+            strayToken->SetOffendingChar(GetChar());
             IncrementCursor();
+
+            result = strayToken;
             break;
         }
     }
@@ -858,5 +857,5 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
     }
 
     result->SetFlags(l->CurrentFlags);
-    return std::make_tuple(result, asStrayToken, isCommentToken, isEofToken);
+    return result;
 }
