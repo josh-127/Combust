@@ -29,7 +29,7 @@ private:
         const Rc<SyntaxToken> t,
         OUT   PSOURCE_RANGE range
     ) noexcept;
-    std::tuple<Rc<SyntaxToken>, std::string> ReadIdentifier();
+    Rc<SyntaxToken> ReadIdentifier();
     std::string ReadSuffix();
     void SkipIntSuffixes(const Rc<SyntaxToken> t);
     Rc<SyntaxToken> ReadFractionalLiteral(const Rc<IntConstantToken> t);

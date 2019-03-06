@@ -203,7 +203,7 @@ void Lexer::GetTokenRange(
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
-std::tuple<Rc<SyntaxToken>, std::string> Lexer::ReadIdentifier() {
+Rc<SyntaxToken> Lexer::ReadIdentifier() {
     Rc<SyntaxToken> result{ };
     std::string name{ };
 
@@ -281,7 +281,7 @@ std::tuple<Rc<SyntaxToken>, std::string> Lexer::ReadIdentifier() {
     }
 #undef o
 
-    return std::make_tuple(result, name);
+    return result;
 }
 
 std::string Lexer::ReadSuffix() {
@@ -604,9 +604,6 @@ Rc<SyntaxToken> Lexer::ReadStringLiteral() {
 
 Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     Rc<SyntaxToken> result{ };
-    bool isHashSymbol{ false };
-    bool isIncludeDirectiveKw{ false };
-    bool isInvalidDirective{ false };
 
     while (IsWhitespace(GetChar()))
         IncrementCursor();
@@ -622,7 +619,6 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     if ((flags & ST_BEGINNING_OF_LINE) && GetChar() == '#') {
         IncrementCursor();
         result = NewObj<HashSymbol>();
-        isHashSymbol = true;
     }
     else {
         switch (GetChar()) {
@@ -807,15 +803,9 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h':
         case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p':
         case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x':
-        case 'y': case 'z': {
-            std::tuple<Rc<SyntaxToken>, std::string> tuple{ ReadIdentifier() };
-            result = std::get<0>(tuple);
-            if (std::get<1>(tuple) == "include")
-                isIncludeDirectiveKw = true;
-            else if (std::get<1>(tuple) == "<invalid>")
-                isInvalidDirective = true;
+        case 'y': case 'z':
+            result = ReadIdentifier();
             break;
-        }
 
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             result = ReadNumericalLiteral();
@@ -836,16 +826,16 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
 
     result->SetLexemeRange(lexemeRange);
 
-    if (l->CurrentMode == LM_DEFAULT && isHashSymbol) {
+    if (l->CurrentMode == LM_DEFAULT && IsToken<HashSymbol>(result)) {
         l->CurrentMode |= LM_PP_DIRECTIVE;
         l->CurrentMode |= LM_PP_DIRECTIVE_KW;
     }
     else if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
         l->CurrentMode &= ~LM_PP_DIRECTIVE_KW;
 
-        if (isIncludeDirectiveKw)
+        if (IsToken<IncludeDirectiveKw>(result))
             l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
-        else if (isInvalidDirective) {
+        else if (IsToken<InvalidDirective>(result)) {
             SOURCE_RANGE range;
             GetTokenRange(result, &range);
             LogAtRange(&range, LL_ERROR, "invalid directive.");
