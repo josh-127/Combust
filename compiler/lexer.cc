@@ -74,6 +74,13 @@ char Lexer::Peek(int index) {
     return l->Source->Contents[l->Cursor + index];
 }
 
+/**
+ * Decodes a trigraph sequence (see ANSI C Draft: 2.2.1.1).
+ * If the current sequence is not a trigraph, this function returns a
+ * normal character.
+ * \return first value as the decoded character;
+ *         second value as the encoded sequence's length
+ */
 std::tuple<char, int> Lexer::DecodeTrigraph() {
     if (Peek(0) == '?' && Peek(1) == '?') {
         switch (Peek(2)) {
@@ -91,6 +98,13 @@ std::tuple<char, int> Lexer::DecodeTrigraph() {
     return std::make_tuple(Peek(), 1);
 }
 
+/**
+ * Performs the same routines as DecodeTrigraph, and then decodes
+ * new-line escapes ("\") into a single space character.
+ * \return first value as the decoded character;
+ *         second value as the encoded sequence's length;
+ *         third value as the amount of whitespace after "\"
+ */
 std::tuple<char, int, int> Lexer::DecodeNewLineEscape() {
     auto [firstChar, firstCharLength] = DecodeTrigraph();
 
@@ -116,11 +130,20 @@ std::tuple<char, int, int> Lexer::DecodeNewLineEscape() {
     return std::make_tuple(firstChar, firstCharLength, -1);
 }
 
+/**
+ * Decodes the current character sequence.
+ * \return first value as the decoded character;
+ *         second value as the encoded sequence length
+ */
 std::tuple<char, int> Lexer::GetCharEx() {
     std::tuple<char, int, int> values{ DecodeNewLineEscape() };
     return std::make_tuple(std::get<0>(values), std::get<1>(values));
 }
 
+/**
+ * Decodes the current character sequence.
+ * \return the decoded character
+ */
 char Lexer::GetChar() {
     return std::get<0>(GetCharEx());
 }
@@ -128,17 +151,20 @@ char Lexer::GetChar() {
 void Lexer::IncrementCursor() {
     auto [charValue, charLength, trailingWhitespaceLength] = DecodeNewLineEscape();
 
+    // New-Line
     if (charValue == '\n') {
         ++l->CurrentLocation.Line;
         l->CurrentLocation.Column = 0;
         l->CurrentFlags |= ST_BEGINNING_OF_LINE;
     }
+    // Normal Character
     else if (trailingWhitespaceLength < 0) {
         l->CurrentLocation.Column += charLength;
 
         if (!IsWhitespace(charValue))
             l->CurrentFlags &= ~ST_BEGINNING_OF_LINE;
     }
+    // New-Line Escape Sequence
     else {
         if (trailingWhitespaceLength > 0) {
             LogAt(
