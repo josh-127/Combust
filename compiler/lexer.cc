@@ -166,7 +166,6 @@ void Lexer::GetTokenRange(
 ) noexcept {
     int line{ t->GetLexemeRange().Location.Line };
     int column{ t->GetLexemeRange().Location.Column };
-    const char *base{ &l->Source->Lines[line][column] };
 
     // TODO: Re-implement length calculation.
     range->Location.Source = l->Source;
@@ -810,22 +809,8 @@ std::tuple<Rc<SyntaxToken>, Rc<StrayToken>, bool, bool> Lexer::ReadTokenOnce() {
         }
     }
 
-    if (isCommentToken) {
-        const int line{ result->GetLexemeRange().Location.Line };
-        const int column{ result->GetLexemeRange().Location.Column };
-        const char *base{ &l->Source->Lines[line][column] };
-        // TODO: Re-implement length calculation.
-        //result.LexemeRange.Length = static_cast<int>(l->Cursor - base);
-        SOURCE_RANGE range{ lexemeRange };
-        result->SetLexemeRange(range);
-    }
-    else {
-        const int end{ l->CurrentLocation.Column };
-        const int start{ lexemeRange.Location.Column };
-        SOURCE_RANGE range{ lexemeRange };
-        range.Length = end - start;
-        result->SetLexemeRange(range);
-    }
+    result->SetLexemeRange(lexemeRange);
+
     if (l->CurrentMode == LM_DEFAULT && isHashSymbol) {
         l->CurrentMode |= LM_PP_DIRECTIVE;
         l->CurrentMode |= LM_PP_DIRECTIVE_KW;

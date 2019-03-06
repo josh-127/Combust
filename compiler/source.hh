@@ -10,8 +10,7 @@ struct SourceFile {
 
     const std::string& FileName;
     std::vector<char> Contents;
-    char*  Data;
-    char** Lines;
+    std::vector<int> Lines;
     bool   IsOpen;
 };
 

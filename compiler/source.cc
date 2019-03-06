@@ -6,8 +6,6 @@
 
 SourceFile::SourceFile(const std::string& fileName) :
     FileName{ fileName },
-    Data{ nullptr },
-    Lines{ nullptr },
     IsOpen{ false }
 {
     FILE* file{ fopen(fileName.c_str(), "rb") };
@@ -18,36 +16,31 @@ SourceFile::SourceFile(const std::string& fileName) :
     fseek(file, 0, SEEK_END);
 
     int length{ static_cast<int>(ftell(file)) };
+
     fseek(file, 0, SEEK_SET);
-    Data = new char[length + 3]{ };
-    fread(Data, length, 1, file);
-    Data[length] = '\n';
-    Data[length + 1] = '\n';
-    Data[length + 2] = 0;
+
+    char* data{ new char[length + 1]{ } };
+    fread(data, length, 1, file);
+
     fclose(file);
 
-    int lineCount{ 1 };
-    for (int i{ 0 }; i < length; ++i) {
-        if (Data[i] == '\n')
-            ++lineCount;
+    for (size_t i{ 0 }; data[i] != 0; ++i) {
+        Contents.push_back(data[i]);
     }
-
-    Lines = new char*[lineCount]{ };
-    lineCount = 0;
-    Lines[0] = Data;
-    for (int i{ 0 }; i < length; ++i) {
-        if (Data[i] == '\n')
-            Lines[++lineCount] = &Data[i + 1];
-    }
-
-    for (int i{ 0 }; Data[i] != 0; ++i) {
-        Contents.push_back(Data[i]);
-    }
+    Contents.push_back('\n');
+    Contents.push_back('\n');
     Contents.push_back(0);
+
+    for (size_t i{ 0 }; i < Contents.size(); ++i) {
+        char c{ Contents[i] };
+        if (c == '\n') {
+            Lines.push_back(i);
+        }
+    }
+
     IsOpen = true;
+
+    delete[] data;
 }
 
-SourceFile::~SourceFile() {
-    delete[] Lines;
-    delete[] Data;
-}
+SourceFile::~SourceFile() {}
