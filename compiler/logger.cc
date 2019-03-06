@@ -102,7 +102,7 @@ static void LogMessageAt(
     const char *line{ loc->Source->Lines[loc->Line] };
 
     fprintf(stderr, loc_msg,
-            loc->Source->FileName, loc->Line + 1, loc->Column + 1);
+            loc->Source->FileName.c_str(), loc->Line + 1, loc->Column + 1);
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
 
@@ -183,7 +183,7 @@ static void LogMessageAtRange(
     fprintf(
         stderr,
         loc_msg,
-        range->Location.Source->FileName,
+        range->Location.Source->FileName.c_str(),
         range->Location.Line + 1,
         range->Location.Column + 1
     );
