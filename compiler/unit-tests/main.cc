@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-char* g_ProgramName = "";
+char* g_ProgramName = const_cast<char*>("");
 
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
