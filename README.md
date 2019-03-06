@@ -35,3 +35,9 @@ apt-get install vim
 cd compiler
 make
 ```
+
+### Testing compiler
+```
+cd compiler
+make check
+```
