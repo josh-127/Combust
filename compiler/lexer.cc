@@ -293,29 +293,6 @@ std::string Lexer::ReadSuffix() {
     return suffix;
 }
 
-void Lexer::SkipIntSuffixes(const Rc<SyntaxToken> t) {
-    std::string suffix{ ReadSuffix() };
-    std::string ciSuffix{ suffix };
-    std::transform(ciSuffix.begin(), ciSuffix.end(), ciSuffix.begin(), toupper);
-
-    if (ciSuffix.length() != 0 &&
-        ciSuffix != "UL" &&
-        ciSuffix != "LU" &&
-        ciSuffix != "ULL" &&
-        ciSuffix != "LLU")
-    {
-        SOURCE_RANGE range;
-        GetTokenRange(t, &range);
-
-        LogAtRange(
-            &range,
-            LL_ERROR,
-            "invalid suffix \"%s\" on integer constant",
-            suffix.c_str()
-        );
-    }
-}
-
 Rc<SyntaxToken> Lexer::ReadFractionalLiteral(const Rc<IntConstantToken> t) {
     float floatFrac{ 0.0F };
     float floatExp{ 0.1F };
@@ -334,25 +311,14 @@ Rc<SyntaxToken> Lexer::ReadFractionalLiteral(const Rc<IntConstantToken> t) {
     if (suffix == "f" || suffix == "F") {
         Rc<FloatConstantToken> constant{ NewObj<FloatConstantToken>() };
         constant->SetValue(t->GetValue() + floatFrac);
-        return constant;
-    }
-    else if (suffix.length() == 0) {
-        Rc<DoubleConstantToken> constant{ NewObj<DoubleConstantToken>() };
-        constant->SetValue(t->GetValue() + doubleFrac);
+        constant->SetSuffix(suffix);
         return constant;
     }
     else {
-        SOURCE_RANGE range;
-        GetTokenRange(t, &range);
-
-        LogAtRange(
-            &range,
-            LL_ERROR,
-            "invalid suffix \"%s\" on floating constant",
-            suffix.c_str()
-        );
-
-        return NewObj<FloatConstantToken>();
+        Rc<DoubleConstantToken> constant{ NewObj<DoubleConstantToken>() };
+        constant->SetValue(t->GetValue() + doubleFrac);
+        constant->SetSuffix(suffix);
+        return constant;
     }
 }
 
@@ -373,7 +339,8 @@ Rc<IntConstantToken> Lexer::ReadHexLiteral() {
         IncrementCursor();
     }
 
-    SkipIntSuffixes(result);
+    std::string suffix{ ReadSuffix() };
+    result->SetSuffix(suffix);
     return result;
 }
 
@@ -398,7 +365,8 @@ Rc<IntConstantToken> Lexer::ReadOctalLiteral() {
         }
     }
 
-    SkipIntSuffixes(result);
+    std::string suffix{ ReadSuffix() };
+    result->SetSuffix(suffix);
     return result;
 }
 
@@ -414,7 +382,8 @@ Rc<SyntaxToken> Lexer::ReadDecimalLiteral() {
         return ReadFractionalLiteral(result);
     }
     else {
-        SkipIntSuffixes(result);
+        std::string suffix{ ReadSuffix() };
+        result->SetSuffix(suffix);
         return result;
     }
 }

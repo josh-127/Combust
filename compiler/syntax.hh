@@ -109,9 +109,12 @@ public:
     virtual ~IntConstantToken() {}
     long GetValue() const { return value; }
     void SetValue(const long to) { value = to; }
+    const std::string& GetSuffix() const { return suffix; }
+    void SetSuffix(const std::string& to) { suffix = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
 private:
     long value{ 0L };
+    std::string suffix{ };
 };
 
 class FloatConstantToken : public SyntaxToken {
@@ -120,9 +123,12 @@ public:
     virtual ~FloatConstantToken() {}
     float GetValue() const { return value; }
     void SetValue(const float to) { value = to; }
+    const std::string& GetSuffix() const { return suffix; }
+    void SetSuffix(const std::string& to) { suffix = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
 private:
     float value{ 0.0F };
+    std::string suffix{ };
 };
 
 class DoubleConstantToken : public SyntaxToken {
@@ -131,9 +137,12 @@ public:
     virtual ~DoubleConstantToken() {}
     double GetValue() const { return value; }
     void SetValue(const double to) { value = to; }
+    const std::string& GetSuffix() const { return suffix; }
+    void SetSuffix(const std::string& to) { suffix = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
 private:
     double value{ 0.0 };
+    std::string suffix{ };
 };
 
 class StringConstantToken : public SyntaxToken {
