@@ -35,6 +35,19 @@ std::string SourceFile::GetLine(int line) const {
     return lineContents;
 }
 
+Rc<SourceFile> CreateSourceFile(
+    const std::string& name,
+    const std::string& contents
+) {
+    std::vector<char> contentsVec{ };
+    contentsVec.reserve(contents.size());
+
+    for (char c : contents)
+        contentsVec.push_back(c);
+
+    return NewObj<SourceFile>(name, contentsVec);
+}
+
 Rc<SourceFile> OpenSourceFile(const std::string& path) {
     FILE* file{ fopen(path.c_str(), "rb") };
     if (file == nullptr) {

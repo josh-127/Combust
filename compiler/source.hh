@@ -18,6 +18,10 @@ private:
     std::vector<int> lines;
 };
 
+Rc<SourceFile> CreateSourceFile(
+    const std::string& name,
+    const std::string& contents
+);
 Rc<SourceFile> OpenSourceFile(const std::string& path);
 
 struct SourceLoc {
