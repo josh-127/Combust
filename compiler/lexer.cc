@@ -40,23 +40,7 @@ Rc<SyntaxToken> Lexer::ReadTokenDirect() {
         Rc<SyntaxToken> token{ ReadTokenOnce() };
         l->CurrentToken = token;
 
-        if (IsToken<StrayToken>(token)) {
-            Rc<StrayToken> strayToken{ std::static_pointer_cast<StrayToken>(token) };
-
-            SourceRange range{ token->GetLexemeRange() };
-            LogAtRange(
-                &range,
-                LL_ERROR,
-                "stray '%c' in program",
-                strayToken->GetOffendingChar()
-            );
-        }
-        else if (IsToken<CommentToken>(token)) {
-            return l->CurrentToken;
-        }
-        else {
-            return token;
-        }
+        return token;
     }
 }
 
