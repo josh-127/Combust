@@ -19,7 +19,7 @@ public:
 private:
     char Peek(int index = 0);
     std::tuple<char, int> DecodeTrigraph();
-    std::tuple<char, int, int> DecodeNewLineEscape();
+    std::tuple<char, int, bool> DecodeNewLineEscape();
     std::tuple<char, int> GetCharEx();
     char GetChar();
     void IncrementCursor();

@@ -89,31 +89,30 @@ std::tuple<char, int> Lexer::DecodeTrigraph() {
  * new-line escapes ("\") into a single space character.
  * \return first value as the decoded character;
  *         second value as the encoded sequence's length;
- *         third value as the amount of whitespace after "\"
+ *         third value is true if the the sequence is a new-line escape;
+ *                     otherwise false
  */
-std::tuple<char, int, int> Lexer::DecodeNewLineEscape() {
+std::tuple<char, int, bool> Lexer::DecodeNewLineEscape() {
     auto [firstChar, firstCharLength] = DecodeTrigraph();
 
     if (firstChar == '\\') {
         bool isOnlyWhitespace{ true };
-        int lengthWithoutNewLine{ firstCharLength };
+        int length{ firstCharLength };
 
-        while (Peek(lengthWithoutNewLine) != '\n') {
-            if (!IsWhitespace(Peek(lengthWithoutNewLine))) {
+        while (Peek(length) != '\n') {
+            if (!IsWhitespace(Peek(length))) {
                 isOnlyWhitespace = false;
                 break;
             }
-            ++lengthWithoutNewLine;
+            ++length;
         }
 
         if (isOnlyWhitespace) {
-            int totalLength{ lengthWithoutNewLine + 1 };
-            int trailingWhitespaceLength{ lengthWithoutNewLine - firstCharLength };
-            return std::make_tuple(' ', totalLength, trailingWhitespaceLength);
+            return std::make_tuple(' ', length + 1, true);
         }
     }
 
-    return std::make_tuple(firstChar, firstCharLength, -1);
+    return std::make_tuple(firstChar, firstCharLength, false);
 }
 
 /**
@@ -122,7 +121,7 @@ std::tuple<char, int, int> Lexer::DecodeNewLineEscape() {
  *         second value as the encoded sequence length
  */
 std::tuple<char, int> Lexer::GetCharEx() {
-    std::tuple<char, int, int> values{ DecodeNewLineEscape() };
+    std::tuple<char, int, bool> values{ DecodeNewLineEscape() };
     return std::make_tuple(std::get<0>(values), std::get<1>(values));
 }
 
@@ -135,7 +134,7 @@ char Lexer::GetChar() {
 }
 
 void Lexer::IncrementCursor() {
-    auto [charValue, charLength, trailingWhitespaceLength] = DecodeNewLineEscape();
+    auto [charValue, charLength, isNewLineEscape] = DecodeNewLineEscape();
 
     // New-Line
     if (charValue == '\n') {
@@ -143,25 +142,17 @@ void Lexer::IncrementCursor() {
         l->CurrentLocation.Column = 0;
         l->CurrentFlags |= ST_BEGINNING_OF_LINE;
     }
+    // New-Line Escape Sequence
+    else if (isNewLineEscape) {
+        ++l->CurrentLocation.Line;
+        l->CurrentLocation.Column = 0;
+    }
     // Normal Character
-    else if (trailingWhitespaceLength < 0) {
+    else {
         l->CurrentLocation.Column += charLength;
 
         if (!IsWhitespace(charValue))
             l->CurrentFlags &= ~ST_BEGINNING_OF_LINE;
-    }
-    // New-Line Escape Sequence
-    else {
-        if (trailingWhitespaceLength > 0) {
-            LogAt(
-                &l->CurrentLocation,
-                LL_WARNING,
-                "backslash and newline separated by space"
-            );
-        }
-
-        ++l->CurrentLocation.Line;
-        l->CurrentLocation.Column = 0;
     }
 
     l->Cursor += charLength;
