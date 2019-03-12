@@ -4,13 +4,41 @@
 #include <stdlib.h>
 #include <string.h>
 
-SourceFile::SourceFile(const std::string& fileName) :
-    FileName{ fileName },
-    IsOpen{ false }
+SourceFile::SourceFile(
+    const std::string& name,
+    const std::vector<char>& contents
+) :
+    Name{ name },
+    Contents{ contents }
 {
-    FILE* file{ fopen(fileName.c_str(), "rb") };
-    if (!file) {
-        return;
+    for (size_t i{ 0 }; i < contents.size(); ++i) {
+        if (contents[i] == '\n') {
+            lines.push_back(i);
+        }
+    }
+}
+
+SourceFile::~SourceFile() { }
+
+std::string SourceFile::GetLine(int line) const {
+    int length{ 0 };
+
+    for (int i{ lines[line] }; Contents[i] != '\n'; ++i)
+        ++length;
+
+    std::string lineContents{ };
+    lineContents.reserve(length);
+
+    for (int i{ lines[line] }; Contents[i] != '\n'; ++i)
+        lineContents += Contents[i];
+
+    return lineContents;
+}
+
+Rc<SourceFile> OpenSourceFile(const std::string& path) {
+    FILE* file{ fopen(path.c_str(), "rb") };
+    if (file == nullptr) {
+        return Rc<SourceFile>{ };
     }
 
     fseek(file, 0, SEEK_END);
@@ -24,23 +52,17 @@ SourceFile::SourceFile(const std::string& fileName) :
 
     fclose(file);
 
-    for (size_t i{ 0 }; data[i] != 0; ++i) {
-        Contents.push_back(data[i]);
-    }
-    Contents.push_back('\n');
-    Contents.push_back('\n');
-    Contents.push_back(0);
+    std::vector<char> contents;
+    contents.reserve(length);
 
-    for (size_t i{ 0 }; i < Contents.size(); ++i) {
-        char c{ Contents[i] };
-        if (c == '\n') {
-            Lines.push_back(i);
-        }
+    for (int i{ 0 }; data[i] != 0; ++i) {
+        contents.push_back(data[i]);
     }
-
-    IsOpen = true;
+    contents.push_back('\n');
+    contents.push_back('\n');
+    contents.push_back(0);
 
     delete[] data;
-}
 
-SourceFile::~SourceFile() {}
+    return NewObj<SourceFile>(path, contents);
+}

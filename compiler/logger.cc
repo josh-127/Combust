@@ -93,16 +93,16 @@ void Log(
 }
 
 static void LogMessageAt(
-    const char *loc_msg,
-    PSOURCE_LOC loc,
-    const char *format,
-    va_list     args
+    const char*  loc_msg,
+    PCSOURCE_LOC loc,
+    const char*  format,
+    va_list      args
 )
 {
-    const char* line{ &loc->Source->Contents[loc->Source->Lines[loc->Line]] };
+    std::string line{ loc->Source->GetLine(loc->Line) };
 
     fprintf(stderr, loc_msg,
-            loc->Source->FileName.c_str(), loc->Line + 1, loc->Column + 1);
+            loc->Source->Name.c_str(), loc->Line + 1, loc->Column + 1);
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
 
@@ -116,9 +116,9 @@ static void LogMessageAt(
 }
 
 void LogAt(
-    PSOURCE_LOC  loc,
+    PCSOURCE_LOC loc,
     LOG_LEVEL    level,
-    const char  *format,
+    const char*  format,
     ...
 )
 {
@@ -171,32 +171,32 @@ void LogAt(
 }
 
 static void LogMessageAtRange(
-    const char    *loc_msg,
-    PSOURCE_RANGE  range,
-    const char    *format,
+    const char*    loc_msg,
+    PCSOURCE_RANGE range,
+    const char*    format,
     va_list        args
 )
     noexcept
 {
-    SOURCE_LOC* loc{ &range->Location };
-    SourceFile* source{ loc->Source };
-    const char* line{ &source->Contents[source->Lines[loc->Line]] };
+    PCSOURCE_LOC loc{ &range->Location };
+    Rc<const SourceFile> source{ loc->Source };
+    std::string line{ source->GetLine(loc->Line) };
 
     fprintf(
         stderr,
         loc_msg,
-        range->Location.Source->FileName.c_str(),
+        range->Location.Source->Name.c_str(),
         range->Location.Line + 1,
         range->Location.Column + 1
     );
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
 
-    for (int i{ 0 }; line[i] != '\n'; ++i) {
-        if (line[i] == '\t')
+    for (char c : line) {
+        if (c == '\t')
             fprintf(stderr, "    ");
         else
-            fprintf(stderr, "%c", line[i]);
+            fprintf(stderr, "%c", c);
     }
     fprintf(stderr, "\n");
 
@@ -217,7 +217,7 @@ static void LogMessageAtRange(
 }
 
 void LogAtRange(
-    PSOURCE_RANGE  range,
+    PCSOURCE_RANGE range,
     LOG_LEVEL      level,
     const char    *format,
     ...

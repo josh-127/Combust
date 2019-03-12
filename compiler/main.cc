@@ -9,17 +9,17 @@
 char *g_ProgramName;
 
 static void PreprocessFile(const char* filePath) {
-    SourceFile sourceFile{ filePath };
-    if (!sourceFile.IsOpen) {
+    Rc<SourceFile> sourceFile{ OpenSourceFile(filePath) };
+    if (sourceFile == nullptr) {
         Log(LL_FATAL, "cannot open %s", filePath);
         return;
     }
 
-    Lexer lexer{ &sourceFile };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
 
     Rc<SyntaxToken> t{ };
     do {
-        t = lexer.ReadTokenDirect();
+        t = lexer->ReadTokenDirect();
     }
     while (t);
 }

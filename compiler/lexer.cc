@@ -16,15 +16,15 @@
 #define LM_PP_ANGLED_STRING_CONSTANT 4
 
 struct LEXER_IMPL {
-    SourceFile*     Source{ nullptr };
-    int             Cursor{ 0 };
-    uint32_t        CurrentMode{ 0 };
-    int             CurrentFlags{ 0 };
-    SOURCE_LOC      CurrentLocation{ };
-    Rc<SyntaxToken> CurrentToken{ };
+    Rc<const SourceFile> Source{ nullptr };
+    int                  Cursor{ 0 };
+    uint32_t             CurrentMode{ 0 };
+    int                  CurrentFlags{ 0 };
+    SourceLoc            CurrentLocation{ };
+    Rc<SyntaxToken>      CurrentToken{ };
 };
 
-Lexer::Lexer(IN SourceFile* input) :
+Lexer::Lexer(Rc<const SourceFile> input) :
     l{ std::make_unique<LEXER_IMPL>() }
 {
     l->Source                 = input;
@@ -43,7 +43,7 @@ Rc<SyntaxToken> Lexer::ReadTokenDirect() {
         if (IsToken<StrayToken>(token)) {
             Rc<StrayToken> strayToken{ std::static_pointer_cast<StrayToken>(token) };
 
-            SOURCE_RANGE range{ token->GetLexemeRange() };
+            SourceRange range{ token->GetLexemeRange() };
             LogAtRange(
                 &range,
                 LL_ERROR,
@@ -188,18 +188,19 @@ void Lexer::IncrementCursorBy(IN   int    amount) {
         IncrementCursor();
 }
 
-void Lexer::GetTokenRange(
-    const Rc<SyntaxToken> t,
-    OUT   PSOURCE_RANGE range
-) noexcept {
+SourceRange Lexer::GetTokenRange(const Rc<SyntaxToken> t) {
+    SourceRange range{ };
+
     int line{ t->GetLexemeRange().Location.Line };
     int column{ t->GetLexemeRange().Location.Column };
 
     // TODO: Re-implement length calculation.
-    range->Location.Source = l->Source;
-    range->Location.Line = line;
-    range->Location.Column = column;
-    range->Length = 1;
+    range.Location.Source = l->Source;
+    range.Location.Line = line;
+    range.Location.Column = column;
+    range.Length = 1;
+
+    return range;
 }
 
 /* Precondition: GetChar() is [_A-Za-z] */
@@ -353,8 +354,7 @@ Rc<IntConstantToken> Lexer::ReadOctalLiteral() {
             result->SetValue((result->GetValue() * 8) - (GetChar() - '0'));
         }
         else {
-            SOURCE_RANGE range{ };
-            GetTokenRange(result, &range);
+            SourceRange range{ GetTokenRange(result) };
 
             LogAtRange(
                 &range,
@@ -420,7 +420,7 @@ int Lexer::ReadCharEscapeSequence() {
     int result{ 0 };
 
     if (GetChar() == '\\') {
-        SOURCE_RANGE errorRange{ };
+        SourceRange errorRange{ };
         int digitCount{ 0 };
 
         errorRange.Location = l->CurrentLocation;
@@ -493,12 +493,11 @@ int Lexer::ReadCharEscapeSequence() {
 /* Precondition: GetChar() == '\'' */
 Rc<SyntaxToken> Lexer::ReadCharLiteral() {
     Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
-    SOURCE_RANGE range{ };
 
     IncrementCursor();
 
     if (GetChar() == '\n') {
-        GetTokenRange(result, &range);
+        SourceRange range{ GetTokenRange(result) };
         LogAtRange(
             &range,
             LL_ERROR,
@@ -514,7 +513,7 @@ Rc<SyntaxToken> Lexer::ReadCharLiteral() {
         else {
             while (GetChar() != '\'') {
                 if (GetChar() == '\n') {
-                    GetTokenRange(result, &range);
+                    SourceRange range{ GetTokenRange(result) };
                     LogAtRange(
                         &range,
                         LL_ERROR,
@@ -528,7 +527,7 @@ Rc<SyntaxToken> Lexer::ReadCharLiteral() {
 
             IncrementCursor();
 
-            GetTokenRange(result, &range);
+            SourceRange range{ GetTokenRange(result) };
             LogAtRange(
                 &range,
                 LL_WARNING,
@@ -549,8 +548,7 @@ Rc<SyntaxToken> Lexer::ReadStringLiteral() {
 
     while (GetChar() != '"') {
         if (GetChar() == '\n') {
-            SOURCE_RANGE range{ };
-            GetTokenRange(result, &range);
+            SourceRange range{ GetTokenRange(result) };
 
             LogAtRange(
                 &range,
@@ -581,7 +579,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
         l->CurrentMode = LM_DEFAULT;
 
     int flags{ l->CurrentFlags };
-    SOURCE_RANGE lexemeRange{ };
+    SourceRange lexemeRange{ };
     lexemeRange.Location = l->CurrentLocation;
     lexemeRange.Length = 1;
 
@@ -646,8 +644,6 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
                 result = NewObj<CommentToken>();
 
                 for (;;) {
-                    SOURCE_RANGE range{ };
-
                     if (GetChar() == '*') {
                         IncrementCursor();
 
@@ -656,7 +652,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
                             break;
                         }
                         else if (GetChar() == 0) {
-                            GetTokenRange(result, &range);
+                            SourceRange range{ GetTokenRange(result) };
                             LogAtRange(
                                 &range,
                                 LL_ERROR,
@@ -666,7 +662,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
                         }
                     }
                     else if (GetChar() == 0) {
-                        GetTokenRange(result, &range);
+                        SourceRange range{ GetTokenRange(result) };
                         LogAtRange(
                             &range,
                             LL_ERROR,
@@ -805,8 +801,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
         if (IsToken<IncludeDirectiveKw>(result))
             l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
         else if (IsToken<InvalidDirective>(result)) {
-            SOURCE_RANGE range;
-            GetTokenRange(result, &range);
+            SourceRange range{ GetTokenRange(result) };
             LogAtRange(&range, LL_ERROR, "invalid directive.");
         }
             

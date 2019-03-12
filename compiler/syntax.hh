@@ -42,15 +42,15 @@ public:
 
 class SyntaxNode : public Object {
 public:
-    SOURCE_RANGE GetLexemeRange() const { return lexemeRange; }
-    void SetLexemeRange(const SOURCE_RANGE& to) { lexemeRange = to; }
+    const SourceRange& GetLexemeRange() const { return lexemeRange; }
+    void SetLexemeRange(const SourceRange& to) { lexemeRange = to; }
 
     virtual Rc<Object> Accept(SyntaxNodeVisitor& visitor) = 0;
 protected:
     explicit SyntaxNode() {}
     virtual ~SyntaxNode() {}
 private:
-    SOURCE_RANGE lexemeRange{ };
+    SourceRange lexemeRange{ };
 };
 
 class SyntaxToken : public SyntaxNode {

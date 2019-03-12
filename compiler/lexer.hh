@@ -9,10 +9,9 @@
 
 struct LEXER_IMPL;
 
-class Lexer {
+class Lexer : public Object {
 public:
-    Lexer(IN SourceFile* input);
-    Lexer(const Lexer& obj) = delete;
+    explicit Lexer(Rc<const SourceFile> input);
     virtual ~Lexer();
 
     Rc<SyntaxToken> ReadTokenDirect();
@@ -25,13 +24,9 @@ private:
     char GetChar();
     void IncrementCursor();
     void IncrementCursorBy(IN int amount);
-    void GetTokenRange(
-        const Rc<SyntaxToken> t,
-        OUT   PSOURCE_RANGE range
-    ) noexcept;
+    SourceRange GetTokenRange(const Rc<SyntaxToken> t);
     Rc<SyntaxToken> ReadIdentifier();
     std::string ReadSuffix();
-    void SkipIntSuffixes(const Rc<SyntaxToken> t);
     Rc<SyntaxToken> ReadFractionalLiteral(const Rc<IntConstantToken> t);
     Rc<IntConstantToken> ReadHexLiteral();
     Rc<IntConstantToken> ReadOctalLiteral();

@@ -21,16 +21,16 @@ void Log(
 );
 
 void LogAt(
-    PSOURCE_LOC  loc,
+    PCSOURCE_LOC loc,
     LOG_LEVEL    level,
-    const char  *format,
+    const char*  format,
     ...
 );
 
 void LogAtRange(
-    PSOURCE_RANGE  range,
-    LOG_LEVEL    level,
-    const char    *format,
+    PCSOURCE_RANGE range,
+    LOG_LEVEL      level,
+    const char*    format,
     ...
 );
 

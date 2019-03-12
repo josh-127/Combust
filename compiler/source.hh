@@ -4,27 +4,35 @@
 #include <string>
 #include <vector>
 
-struct SourceFile {
-    SourceFile(const std::string& fileName);
+class SourceFile {
+public:
+    explicit SourceFile(const std::string& name, const std::vector<char>& contents);
     virtual ~SourceFile();
 
-    const std::string& FileName;
-    std::vector<char> Contents;
-    std::vector<int> Lines;
-    bool   IsOpen;
+    std::string GetLine(int line) const;
+
+    const std::string Name;
+    const std::vector<char> Contents;
+
+private:
+    std::vector<int> lines;
 };
 
-struct SOURCE_LOC {
-    SourceFile* Source;
-    int         Line;
-    int         Column;
-};
-using PSOURCE_LOC = SOURCE_LOC*;
+Rc<SourceFile> OpenSourceFile(const std::string& path);
 
-struct SOURCE_RANGE {
-    SOURCE_LOC Location;
-    int        Length;
+struct SourceLoc {
+    Rc<const SourceFile> Source{ };
+    int                  Line{ 0 };
+    int                  Column{ 0 };
 };
-using PSOURCE_RANGE = SOURCE_RANGE*;
+using PSOURCE_LOC = SourceLoc*;
+using PCSOURCE_LOC = const SourceLoc*;
+
+struct SourceRange {
+    SourceLoc Location{ };
+    int       Length{ };
+};
+using PSOURCE_RANGE = SourceRange*;
+using PCSOURCE_RANGE = const SourceRange*;
 
 #endif
