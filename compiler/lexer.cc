@@ -775,11 +775,6 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
 
         if (IsToken<IncludeDirectiveKw>(result))
             l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
-        else if (IsToken<InvalidDirective>(result)) {
-            SourceRange range{ GetTokenRange(result) };
-            LogAtRange(&range, LL_ERROR, "invalid directive.");
-        }
-            
     }
     else if (l->CurrentMode & LM_PP_ANGLED_STRING_CONSTANT) {
         l->CurrentMode &= ~LM_PP_ANGLED_STRING_CONSTANT;
