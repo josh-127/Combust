@@ -1,5 +1,5 @@
-#ifndef PTC_CL_COMMON_H
-#define PTC_CL_COMMON_H
+#ifndef COMBUST_COMMON_HH
+#define COMBUST_COMMON_HH
 #include <memory>
 
 #define IN

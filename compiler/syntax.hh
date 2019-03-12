@@ -1,5 +1,5 @@
-#ifndef PTC_CL_SYNTAX_H
-#define PTC_CL_SYNTAX_H
+#ifndef COMBUST_SYNTAX_HH
+#define COMBUST_SYNTAX_HH
 #include "common.hh"
 #include "source.hh"
 #include <stdint.h>

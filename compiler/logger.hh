@@ -1,5 +1,5 @@
-#ifndef PTC_CL_LOGGER_H
-#define PTC_CL_LOGGER_H
+#ifndef COMBUST_LOGGER_HH
+#define COMBUST_LOGGER_HH
 #include "common.hh"
 #include "source.hh"
 

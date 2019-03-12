@@ -1,5 +1,5 @@
-#ifndef PTC_CL_LEXER_H
-#define PTC_CL_LEXER_H
+#ifndef COMBUST_LEXER_HH
+#define COMBUST_LEXER_HH
 #include "common.hh"
 #include "source.hh"
 #include "syntax.hh"

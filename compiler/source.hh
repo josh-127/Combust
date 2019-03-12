@@ -1,5 +1,5 @@
-#ifndef PTC_CL_SOURCE_H
-#define PTC_CL_SOURCE_H
+#ifndef COMBUST_SOURCE_HH
+#define COMBUST_SOURCE_HH
 #include "common.hh"
 #include <string>
 #include <vector>
