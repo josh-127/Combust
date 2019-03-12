@@ -467,47 +467,27 @@ int Lexer::ReadCharEscapeSequence() {
 
 /* Precondition: GetChar() == '\'' */
 Rc<SyntaxToken> Lexer::ReadCharLiteral() {
-    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
+    Rc<CharLiteralToken> result{ NewObj<CharLiteralToken>() };
 
+    result->SetOpeningQuote(GetChar());
     IncrementCursor();
 
     if (GetChar() == '\n') {
-        SourceRange range{ GetTokenRange(result) };
-        LogAtRange(
-            &range,
-            LL_ERROR,
-            "missing terminating ' character"
-        );
+        return result;
     }
     else {
-        result->SetValue(ReadCharEscapeSequence());
+        std::string contents{ };
 
-        if (GetChar() == '\'') {
+        while (GetChar() != '\'' && GetChar() != '\n') {
+            contents += GetChar();
             IncrementCursor();
         }
-        else {
-            while (GetChar() != '\'') {
-                if (GetChar() == '\n') {
-                    SourceRange range{ GetTokenRange(result) };
-                    LogAtRange(
-                        &range,
-                        LL_ERROR,
-                        "missing terminating ' character"
-                    );
-                    return result;
-                }
 
-                IncrementCursor();
-            }
+        result->SetContents(contents);
 
+        if (GetChar() == '\'') {
+            result->SetClosingQuote(GetChar());
             IncrementCursor();
-
-            SourceRange range{ GetTokenRange(result) };
-            LogAtRange(
-                &range,
-                LL_WARNING,
-                "character constant too long for its type"
-            );
         }
     }
 

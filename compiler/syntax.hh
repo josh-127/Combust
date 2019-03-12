@@ -20,6 +20,7 @@ class IdentifierToken;
 class IntConstantToken;
 class FloatConstantToken;
 class DoubleConstantToken;
+class CharLiteralToken;
 class StringConstantToken;
 class AngledStringConstantToken;
 
@@ -35,6 +36,7 @@ public:
     virtual Rc<Object> Visit(IntConstantToken& obj) = 0;
     virtual Rc<Object> Visit(FloatConstantToken& obj) = 0;
     virtual Rc<Object> Visit(DoubleConstantToken& obj) = 0;
+    virtual Rc<Object> Visit(CharLiteralToken& obj) = 0;
     virtual Rc<Object> Visit(StringConstantToken& obj) = 0;
     virtual Rc<Object> Visit(AngledStringConstantToken& obj) = 0;
 };
@@ -145,6 +147,23 @@ private:
     std::string suffix{ };
 };
 
+class CharLiteralToken : public SyntaxToken {
+public:
+    explicit CharLiteralToken() {}
+    virtual ~CharLiteralToken() {}
+    const std::string& GetContents() const { return contents; }
+    void SetContents(const std::string& to) { contents = to; }
+    char GetOpeningQuote() const { return openingQuote; }
+    void SetOpeningQuote(const char to) { openingQuote = to; }
+    char GetClosingQuote() const { return closingQuote; }
+    void SetClosingQuote(const char to) { closingQuote = to; }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+private:
+    std::string contents{ };
+    char openingQuote{ 0 };
+    char closingQuote{ 0 };
+};
+
 class StringConstantToken : public SyntaxToken {
 public:
     explicit StringConstantToken() {}
@@ -193,6 +212,7 @@ public:
     O(IntConstantToken)
     O(FloatConstantToken)
     O(DoubleConstantToken)
+    O(CharLiteralToken)
     O(StringConstantToken)
     O(AngledStringConstantToken)
 
