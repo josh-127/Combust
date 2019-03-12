@@ -44,6 +44,8 @@ Rc<SourceFile> CreateSourceFile(
 
     for (char c : contents)
         contentsVec.push_back(c);
+    contentsVec.push_back('\n');
+    contentsVec.push_back(0);
 
     return NewObj<SourceFile>(name, contentsVec);
 }

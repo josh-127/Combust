@@ -51,11 +51,11 @@ Rc<SyntaxToken> Lexer::ReadTokenDirect() {
                 strayToken->GetOffendingChar()
             );
         }
-        else if (IsToken<EofToken>(token)) {
-            return Rc<SyntaxToken>{ };
-        }
         else if (IsToken<CommentToken>(token)) {
             return l->CurrentToken;
+        }
+        else {
+            return token;
         }
     }
 }
