@@ -30,9 +30,10 @@ private:
     Rc<NumericLiteralToken> ReadHexLiteral();
     Rc<NumericLiteralToken> ReadDecimalOrOctalLiteral();
     Rc<NumericLiteralToken> ReadNumericLiteral();
-    int ReadCharEscapeSequence();
-    Rc<SyntaxToken> ReadCharLiteral();
-    Rc<SyntaxToken> ReadStringLiteral();
+    Rc<StringLiteralToken> ReadStringLiteral(
+        const char openingQuote,
+        const char closingQuote
+    );
     Rc<SyntaxToken> ReadTokenOnce();
 
 private:

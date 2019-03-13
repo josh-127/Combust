@@ -334,135 +334,25 @@ Rc<NumericLiteralToken> Lexer::ReadNumericLiteral() {
     }
 }
 
-int Lexer::ReadCharEscapeSequence() {
-    int result{ 0 };
+Rc<StringLiteralToken> Lexer::ReadStringLiteral(
+    const char openingQuote,
+    const char closingQuote
+) {
+    if (GetChar() != openingQuote)
+        return Rc<StringLiteralToken>{ };
 
-    if (GetChar() == '\\') {
-        SourceRange errorRange{ };
-        int digitCount{ 0 };
-
-        errorRange.Location = l->CurrentLocation;
-        errorRange.Length = 2;
-
-        IncrementCursor();
-
-        switch (GetChar()) {
-            case '\'': IncrementCursor(); result = '\''; break;
-            case '"':  IncrementCursor(); result = '\"'; break;
-            case '?':  IncrementCursor(); result = '\?'; break;
-            case '\\': IncrementCursor(); result = '\\'; break;
-            case 'a':  IncrementCursor(); result = '\a'; break;
-            case 'b':  IncrementCursor(); result = '\b'; break;
-            case 'f':  IncrementCursor(); result = '\f'; break;
-            case 'n':  IncrementCursor(); result = '\n'; break;
-            case 'r':  IncrementCursor(); result = '\r'; break;
-            case 't':  IncrementCursor(); result = '\t'; break;
-            case 'v':  IncrementCursor(); result = '\v'; break;
-
-            case '0': case '1': case '2': case '3':
-            case '4': case '5': case '6': case '7':
-                result = 0;
-                digitCount = 0;
-
-                while (digitCount < 3 && IsOctal(GetChar())) {
-                    result = (result * 8) + (GetChar() - '0');
-                    ++digitCount;
-                    IncrementCursor();
-                }
-
-                break;
-
-            case 'x':
-                IncrementCursor();
-                result = 0;
-
-                for (; IsHex(GetChar()); IncrementCursor()) {
-                    result *= 16;
-                    if (GetChar() <= '9')
-                        result += GetChar() - '0';
-                    else if (GetChar() <= 'F')
-                        result += GetChar() - 'A' + 10;
-                    else if (GetChar() <= 'f')
-                        result += GetChar() - 'a' + 10;
-                }
-
-                break;
-
-            default:
-                LogAtRange(
-                    &errorRange,
-                    LL_ERROR,
-                    "unknown escape sequence: '\\%c'",
-                    GetChar()
-                );
-
-                IncrementCursor();
-                break;
-        }
-    }
-    else {
-        result = GetChar();
-        IncrementCursor();
-    }
-
-    return result;
-}
-
-/* Precondition: GetChar() == '\'' */
-Rc<SyntaxToken> Lexer::ReadCharLiteral() {
-    Rc<CharLiteralToken> result{ NewObj<CharLiteralToken>() };
-
+    Rc<StringLiteralToken> result{ NewObj<StringLiteralToken>() };
     result->SetOpeningQuote(GetChar());
     IncrementCursor();
 
-    if (GetChar() == '\n') {
-        return result;
-    }
-    else {
-        std::string contents{ };
+    std::string value{ };
 
-        while (GetChar() != '\'' && GetChar() != '\n') {
-            contents += GetChar();
-            IncrementCursor();
-        }
-
-        result->SetContents(contents);
-
-        if (GetChar() == '\'') {
-            result->SetClosingQuote(GetChar());
-            IncrementCursor();
-        }
+    while (GetChar() != closingQuote && GetChar() != '\n') {
+        value += GetChar();
+        IncrementCursor();
     }
 
-    return result;
-}
-
-/* Precondition: GetChar() == '"' */
-Rc<SyntaxToken> Lexer::ReadStringLiteral() {
-    IncrementCursor();
-
-    Rc<StringConstantToken> result{ NewObj<StringConstantToken>() };
-    result->SetValue("");
-
-    while (GetChar() != '"') {
-        if (GetChar() == '\n') {
-            SourceRange range{ GetTokenRange(result) };
-
-            LogAtRange(
-                &range,
-                LL_ERROR,
-                "missing terminating \" character"
-            );
-
-            result->SetValue("");
-            return result;
-        }
-
-        std::string newValue{ result->GetValue() };
-        newValue += ReadCharEscapeSequence();
-        result->SetValue(newValue);
-    }
-
+    result->SetClosingQuote(GetChar());
     IncrementCursor();
     return result;
 }
@@ -675,8 +565,8 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
             result = ReadNumericLiteral();
             break;
 
-        case '\'': result = ReadCharLiteral(); break;
-        case '"': result = ReadStringLiteral(); break;
+        case '\'': result = ReadStringLiteral('\'', '\''); break;
+        case '"': result = ReadStringLiteral('"', '"'); break;
 
         default:
             Rc<StrayToken> strayToken{ NewObj<StrayToken>() };

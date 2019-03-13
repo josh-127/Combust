@@ -18,9 +18,7 @@ class StrayToken;
 class CommentToken;
 class IdentifierToken;
 class NumericLiteralToken;
-class CharLiteralToken;
-class StringConstantToken;
-class AngledStringConstantToken;
+class StringLiteralToken;
 
 
 class SyntaxNodeVisitor : public Object {
@@ -32,9 +30,7 @@ public:
     virtual Rc<Object> Visit(CommentToken& obj) = 0;
     virtual Rc<Object> Visit(IdentifierToken& obj) = 0;
     virtual Rc<Object> Visit(NumericLiteralToken& obj) = 0;
-    virtual Rc<Object> Visit(CharLiteralToken& obj) = 0;
-    virtual Rc<Object> Visit(StringConstantToken& obj) = 0;
-    virtual Rc<Object> Visit(AngledStringConstantToken& obj) = 0;
+    virtual Rc<Object> Visit(StringLiteralToken& obj) = 0;
 };
 
 
@@ -124,43 +120,21 @@ private:
     std::string suffix{ };
 };
 
-class CharLiteralToken : public SyntaxToken {
+class StringLiteralToken : public SyntaxToken {
 public:
-    explicit CharLiteralToken() {}
-    virtual ~CharLiteralToken() {}
-    const std::string& GetContents() const { return contents; }
-    void SetContents(const std::string& to) { contents = to; }
+    explicit StringLiteralToken() {}
+    virtual ~StringLiteralToken() {}
+    const std::string& GetValue() const { return value; }
+    void SetValue(const std::string& to) { value = to; }
     char GetOpeningQuote() const { return openingQuote; }
     void SetOpeningQuote(const char to) { openingQuote = to; }
     char GetClosingQuote() const { return closingQuote; }
     void SetClosingQuote(const char to) { closingQuote = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
 private:
-    std::string contents{ };
+    std::string value{ };
     char openingQuote{ 0 };
     char closingQuote{ 0 };
-};
-
-class StringConstantToken : public SyntaxToken {
-public:
-    explicit StringConstantToken() {}
-    virtual ~StringConstantToken() {}
-    const std::string& GetValue() const { return value; }
-    void SetValue(const std::string& to) { value = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
-private:
-    std::string value{ };
-};
-
-class AngledStringConstantToken : public SyntaxToken {
-public:
-    explicit AngledStringConstantToken() {}
-    virtual ~AngledStringConstantToken() {}
-    const std::string& GetValue() const { return value; }
-    void SetValue(const std::string& to) { value = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
-private:
-    std::string value{ };
 };
 
 
@@ -187,9 +161,7 @@ public:
     O(CommentToken)
     O(IdentifierToken)
     O(NumericLiteralToken)
-    O(CharLiteralToken)
-    O(StringConstantToken)
-    O(AngledStringConstantToken)
+    O(StringLiteralToken)
 #undef O
 
 private:
