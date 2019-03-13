@@ -27,11 +27,9 @@ private:
     SourceRange GetTokenRange(const Rc<SyntaxToken> t);
     Rc<SyntaxToken> ReadIdentifier();
     std::string ReadSuffix();
-    Rc<SyntaxToken> ReadFractionalLiteral(const Rc<IntConstantToken> t);
-    Rc<IntConstantToken> ReadHexLiteral();
-    Rc<IntConstantToken> ReadOctalLiteral();
-    Rc<SyntaxToken> ReadDecimalLiteral();
-    Rc<SyntaxToken> ReadNumericalLiteral();
+    Rc<NumericLiteralToken> ReadHexLiteral();
+    Rc<NumericLiteralToken> ReadDecimalOrOctalLiteral();
+    Rc<NumericLiteralToken> ReadNumericLiteral();
     int ReadCharEscapeSequence();
     Rc<SyntaxToken> ReadCharLiteral();
     Rc<SyntaxToken> ReadStringLiteral();

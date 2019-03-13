@@ -269,125 +269,68 @@ std::string Lexer::ReadSuffix() {
     return suffix;
 }
 
-Rc<SyntaxToken> Lexer::ReadFractionalLiteral(const Rc<IntConstantToken> t) {
-    float floatFrac{ 0.0F };
-    float floatExp{ 0.1F };
-    double doubleFrac{ 0.0 };
-    double doubleExp{ 0.1 };
-
-    for (; IsDecimal(GetChar()); IncrementCursor()) {
-        floatFrac += floatExp * (GetChar() - '0');
-        doubleFrac += doubleExp * (GetChar() - '0');
-        floatExp *= 0.1F;
-        doubleExp *= 0.1;
-    }
-
-    std::string suffix{ ReadSuffix() };
-
-    if (suffix == "f" || suffix == "F") {
-        Rc<FloatConstantToken> constant{ NewObj<FloatConstantToken>() };
-        constant->SetValue(t->GetValue() + floatFrac);
-        constant->SetSuffix(suffix);
-        return constant;
-    }
-    else {
-        Rc<DoubleConstantToken> constant{ NewObj<DoubleConstantToken>() };
-        constant->SetValue(t->GetValue() + doubleFrac);
-        constant->SetSuffix(suffix);
-        return constant;
-    }
-}
-
-Rc<IntConstantToken> Lexer::ReadHexLiteral() {
-    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
-    result->SetValue(0);
+Rc<NumericLiteralToken> Lexer::ReadHexLiteral() {
+    Rc<NumericLiteralToken> result{ NewObj<NumericLiteralToken>() };
+    std::string wholeValue{ };
+    std::string suffix{ };
 
     while (IsHex(GetChar())) {
-        result->SetValue(result->GetValue() * 16);
-
-        if (GetChar() <= '9')
-            result->SetValue(result->GetValue() + GetChar() - '0');
-        else if (GetChar() <= 'F')
-            result->SetValue(result->GetValue() + GetChar() - 'A' + 10);
-        else
-            result->SetValue(result->GetValue() + GetChar() - 'a' + 10);
-
+        wholeValue += GetChar();
         IncrementCursor();
     }
 
-    std::string suffix{ ReadSuffix() };
-    result->SetSuffix(suffix);
-    return result;
-}
-
-Rc<IntConstantToken> Lexer::ReadOctalLiteral() {
-    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
-    result->SetValue(0);
-
-    for (; IsDecimal(GetChar()); IncrementCursor()) {
-        if (IsOctal(GetChar())) {
-            result->SetValue((result->GetValue() * 8) - (GetChar() - '0'));
-        }
-        else {
-            SourceRange range{ GetTokenRange(result) };
-
-            LogAtRange(
-                &range,
-                LL_ERROR,
-                "invalid digit \"%c\" in octal constant",
-                GetChar()
-            );
-        }
+    while (IsLetter(GetChar())) {
+        suffix += GetChar();
+        IncrementCursor();
     }
 
-    std::string suffix{ ReadSuffix() };
+    result->SetWholeValue(wholeValue);
     result->SetSuffix(suffix);
+
     return result;
 }
 
-Rc<SyntaxToken> Lexer::ReadDecimalLiteral() {
-    Rc<IntConstantToken> result{ NewObj<IntConstantToken>() };
-    result->SetValue(0);
+Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral() {
+    Rc<NumericLiteralToken> result{ NewObj<NumericLiteralToken>() };
+    std::string wholeValue{ };
+    std::string fractionalValue{ };
+    std::string suffix{ };
 
-    for (; IsDecimal(GetChar()); IncrementCursor())
-        result->SetValue((result->GetValue() * 10) + (GetChar() - '0'));
+    while (IsDecimal(GetChar())) {
+        wholeValue += GetChar();
+        IncrementCursor();
+    }
 
     if (GetChar() == '.') {
+        result->SetDotSymbol(".");
+
+        while (IsDecimal(GetChar())) {
+            fractionalValue += GetChar();
+            IncrementCursor();
+        }
+    }
+
+    if (wholeValue.size() == 0 || fractionalValue.size() == 0)
+        return Rc<NumericLiteralToken>{ };
+
+    while (IsLetter(GetChar())) {
+        suffix += GetChar();
         IncrementCursor();
-        return ReadFractionalLiteral(result);
     }
-    else {
-        std::string suffix{ ReadSuffix() };
-        result->SetSuffix(suffix);
-        return result;
-    }
+
+    result->SetWholeValue(wholeValue);
+    result->SetFractionalValue(fractionalValue);
+    result->SetSuffix(suffix);
+
+    return result;
 }
 
-Rc<SyntaxToken> Lexer::ReadNumericalLiteral() {
-    if (GetChar() == '0') {
-        int wholeLength{ 0 };
-
-        do {
-            IncrementCursor();
-        }
-        while (GetChar() == '0');
-
-        while (IsDecimal(Peek(wholeLength)))
-            ++wholeLength;
-
-        if (Peek(wholeLength) == '.') {
-            return ReadDecimalLiteral();
-        }
-        else if (GetChar() == 'X' || GetChar() == 'x') {
-            IncrementCursor();
-            return ReadHexLiteral();
-        }
-        else {
-            return ReadOctalLiteral();
-        }
+Rc<NumericLiteralToken> Lexer::ReadNumericLiteral() {
+    if (Peek(0) == '0' && (Peek(1) == 'X' || Peek(2) == 'x')) {
+        return ReadHexLiteral();
     }
     else {
-        return ReadDecimalLiteral();
+        return ReadDecimalOrOctalLiteral();
     }
 }
 
@@ -557,15 +500,16 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
         case '?': IncrementCursor(); result = NewObj<QuestionSymbol>(); break;
         case ':': IncrementCursor(); result = NewObj<ColonSymbol>(); break;
 
-        case '.':
-            IncrementCursor();
-            if (IsDecimal(GetChar())) {
-                Rc<IntConstantToken> zero{ NewObj<IntConstantToken>() };
-                zero->SetValue(0);
-                result = ReadFractionalLiteral(zero);
+        case '.': {
+            Rc<NumericLiteralToken> literal{ ReadNumericLiteral() };
+            if (literal == nullptr) {
+                result = NewObj<DotSymbol>();
             }
-            else { result = NewObj<DotSymbol>(); }
+            else {
+                result = literal;
+            }
             break;
+        }
 
         case '+':
             IncrementCursor();
@@ -728,7 +672,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
             break;
 
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            result = ReadNumericalLiteral();
+            result = ReadNumericLiteral();
             break;
 
         case '\'': result = ReadCharLiteral(); break;

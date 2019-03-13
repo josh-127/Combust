@@ -17,9 +17,7 @@ class SyntaxToken;
 class StrayToken;
 class CommentToken;
 class IdentifierToken;
-class IntConstantToken;
-class FloatConstantToken;
-class DoubleConstantToken;
+class NumericLiteralToken;
 class CharLiteralToken;
 class StringConstantToken;
 class AngledStringConstantToken;
@@ -33,9 +31,7 @@ public:
     virtual Rc<Object> Visit(StrayToken& obj) = 0;
     virtual Rc<Object> Visit(CommentToken& obj) = 0;
     virtual Rc<Object> Visit(IdentifierToken& obj) = 0;
-    virtual Rc<Object> Visit(IntConstantToken& obj) = 0;
-    virtual Rc<Object> Visit(FloatConstantToken& obj) = 0;
-    virtual Rc<Object> Visit(DoubleConstantToken& obj) = 0;
+    virtual Rc<Object> Visit(NumericLiteralToken& obj) = 0;
     virtual Rc<Object> Visit(CharLiteralToken& obj) = 0;
     virtual Rc<Object> Visit(StringConstantToken& obj) = 0;
     virtual Rc<Object> Visit(AngledStringConstantToken& obj) = 0;
@@ -105,45 +101,26 @@ private:
     std::string name{ };
 };
 
-class IntConstantToken : public SyntaxToken {
+class NumericLiteralToken : public SyntaxToken {
 public:
-    explicit IntConstantToken() {}
-    virtual ~IntConstantToken() {}
-    long GetValue() const { return value; }
-    void SetValue(const long to) { value = to; }
+    explicit NumericLiteralToken() {}
+    virtual ~NumericLiteralToken() {}
+    const std::string& GetWholeValue() const { return wholeValue; }
+    void SetWholeValue(const std::string& to) { wholeValue = to; }
+    const std::string& GetFractionalValue() const { return fractionalValue; }
+    void SetFractionalValue(const std::string& to) { fractionalValue = to; }
+    const std::string& GetDotSymbol() const { return dotSymbol; }
+    void SetDotSymbol(const std::string& to) { dotSymbol = to; }
+    const std::string& GetPrefix() const { return prefix; }
+    void SetPrefix(const std::string& to) { prefix = to; }
     const std::string& GetSuffix() const { return suffix; }
     void SetSuffix(const std::string& to) { suffix = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
 private:
-    long value{ 0L };
-    std::string suffix{ };
-};
-
-class FloatConstantToken : public SyntaxToken {
-public:
-    explicit FloatConstantToken() {}
-    virtual ~FloatConstantToken() {}
-    float GetValue() const { return value; }
-    void SetValue(const float to) { value = to; }
-    const std::string& GetSuffix() const { return suffix; }
-    void SetSuffix(const std::string& to) { suffix = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
-private:
-    float value{ 0.0F };
-    std::string suffix{ };
-};
-
-class DoubleConstantToken : public SyntaxToken {
-public:
-    explicit DoubleConstantToken() {}
-    virtual ~DoubleConstantToken() {}
-    double GetValue() const { return value; }
-    void SetValue(const double to) { value = to; }
-    const std::string& GetSuffix() const { return suffix; }
-    void SetSuffix(const std::string& to) { suffix = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
-private:
-    double value{ 0.0 };
+    std::string wholeValue{ };
+    std::string fractionalValue{ };
+    std::string dotSymbol{ };
+    std::string prefix{ };
     std::string suffix{ };
 };
 
@@ -209,12 +186,11 @@ public:
     O(StrayToken)
     O(CommentToken)
     O(IdentifierToken)
-    O(IntConstantToken)
-    O(FloatConstantToken)
-    O(DoubleConstantToken)
+    O(NumericLiteralToken)
     O(CharLiteralToken)
     O(StringConstantToken)
     O(AngledStringConstantToken)
+#undef O
 
 private:
     bool result{ false };
