@@ -260,15 +260,6 @@ Rc<SyntaxToken> Lexer::ReadIdentifier() {
     return result;
 }
 
-std::string Lexer::ReadSuffix() {
-    std::string suffix{ };
-    for (char c{ GetChar() }; IsLetter(c); c = GetChar()) {
-        suffix += c;
-        IncrementCursor();
-    }
-    return suffix;
-}
-
 Rc<NumericLiteralToken> Lexer::ReadHexLiteral() {
     Rc<NumericLiteralToken> result{ NewObj<NumericLiteralToken>() };
     std::string wholeValue{ };

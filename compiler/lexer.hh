@@ -26,7 +26,6 @@ private:
     void IncrementCursorBy(IN int amount);
     SourceRange GetTokenRange(const Rc<SyntaxToken> t);
     Rc<SyntaxToken> ReadIdentifier();
-    std::string ReadSuffix();
     Rc<NumericLiteralToken> ReadHexLiteral();
     Rc<NumericLiteralToken> ReadDecimalOrOctalLiteral();
     Rc<NumericLiteralToken> ReadNumericLiteral();
