@@ -287,3 +287,363 @@ TEST(LexerTest, ReturnKeyword) {
     Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
     ASSERT_TRUE(IsToken<ReturnKeyword>(token));
 }
+
+TEST(LexerTest, LParenSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "(") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<LParenSymbol>(token));
+}
+
+TEST(LexerTest, RParenSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ")") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<RParenSymbol>(token));
+}
+
+TEST(LexerTest, LBracketSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "[") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<LBracketSymbol>(token));
+}
+
+TEST(LexerTest, RBracketSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "]") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<RBracketSymbol>(token));
+}
+
+TEST(LexerTest, LBraceSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "{") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<LBraceSymbol>(token));
+}
+
+TEST(LexerTest, RBraceSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "}") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<RBraceSymbol>(token));
+}
+
+TEST(LexerTest, SemicolonSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ";") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<SemicolonSymbol>(token));
+}
+
+TEST(LexerTest, DotSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ".") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<DotSymbol>(token));
+}
+
+TEST(LexerTest, CommaSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ",") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<CommaSymbol>(token));
+}
+
+TEST(LexerTest, TildeSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "~") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<TildeSymbol>(token));
+}
+
+TEST(LexerTest, QuestionSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "?") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<QuestionSymbol>(token));
+}
+
+TEST(LexerTest, ColonSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ":") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<ColonSymbol>(token));
+}
+
+TEST(LexerTest, PlusSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "+") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PlusSymbol>(token));
+}
+
+TEST(LexerTest, PlusEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "+=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PlusEqualsSymbol>(token));
+}
+
+TEST(LexerTest, PlusPlusSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "++") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PlusPlusSymbol>(token));
+}
+
+TEST(LexerTest, MinusSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "-") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<MinusSymbol>(token));
+}
+
+TEST(LexerTest, MinusEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "-=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<MinusEqualsSymbol>(token));
+}
+
+TEST(LexerTest, MinusMinusSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "--") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<MinusMinusSymbol>(token));
+}
+
+TEST(LexerTest, MinusGtSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "->") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<MinusGtSymbol>(token));
+}
+
+TEST(LexerTest, AsteriskSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "*") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<AsteriskSymbol>(token));
+}
+
+TEST(LexerTest, AsteriskEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "*=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<AsteriskEqualsSymbol>(token));
+}
+
+TEST(LexerTest, SlashSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "/") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<SlashSymbol>(token));
+}
+
+TEST(LexerTest, SlashEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "/=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<SlashEqualsSymbol>(token));
+}
+
+TEST(LexerTest, PercentSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "%") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PercentSymbol>(token));
+}
+
+TEST(LexerTest, PercentEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "%=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PercentEqualsSymbol>(token));
+}
+
+TEST(LexerTest, LtSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "<") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<LtSymbol>(token));
+}
+
+TEST(LexerTest, LtEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "<=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<LtEqualsSymbol>(token));
+}
+
+TEST(LexerTest, LtLtSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "<<") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<LtLtSymbol>(token));
+}
+
+TEST(LexerTest, LtLtEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "<<=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<LtLtEqualsSymbol>(token));
+}
+
+TEST(LexerTest, GtSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ">") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<GtSymbol>(token));
+}
+
+TEST(LexerTest, GtEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ">=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<GtEqualsSymbol>(token));
+}
+
+TEST(LexerTest, GtGtSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ">>") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<GtGtSymbol>(token));
+}
+
+TEST(LexerTest, GtGtEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", ">>=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<GtGtEqualsSymbol>(token));
+}
+
+TEST(LexerTest, EqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<EqualsSymbol>(token));
+}
+
+TEST(LexerTest, EqualsEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "==") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<EqualsEqualsSymbol>(token));
+}
+
+TEST(LexerTest, ExclamationSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "!") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<ExclamationSymbol>(token));
+}
+
+TEST(LexerTest, ExclamationEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "!=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<ExclamationEqualsSymbol>(token));
+}
+
+TEST(LexerTest, AmpersandSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "&") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<AmpersandSymbol>(token));
+}
+
+TEST(LexerTest, AmpersandEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "&=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<AmpersandEqualsSymbol>(token));
+}
+
+TEST(LexerTest, AmpersandAmpersandSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "&&") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<AmpersandAmpersandSymbol>(token));
+}
+
+TEST(LexerTest, CaretSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "^") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<CaretSymbol>(token));
+}
+
+TEST(LexerTest, CaretEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "^=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<CaretEqualsSymbol>(token));
+}
+
+TEST(LexerTest, PipeSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "|") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PipeSymbol>(token));
+}
+
+TEST(LexerTest, PipeEqualsSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "|=") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PipeEqualsSymbol>(token));
+}
+
+TEST(LexerTest, PipePipeSymbol) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "||") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<PipePipeSymbol>(token));
+}
