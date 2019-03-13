@@ -20,6 +20,56 @@ TEST(LexerTest, StrayToken) {
     ASSERT_EQ(strayToken->GetOffendingChar(), '@');
 }
 
+TEST(LexerTest, NumericLiteralToken_Base10_Integer) {
+    std::string value{ "1234567890" };
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", value) };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<NumericLiteralToken>(token));
+
+    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetWholeValue(), value);
+    EXPECT_EQ(literalToken->GetFractionalValue(), "");
+    EXPECT_EQ(literalToken->GetDotSymbol(), "");
+    EXPECT_EQ(literalToken->GetPrefix(), "");
+    EXPECT_EQ(literalToken->GetSuffix(), "");
+}
+
+TEST(LexerTest, NumericLiteralToken_Base10_Integer_WithSuffix_L) {
+    std::string value{ "1234567890" };
+    std::string suffix{ "L" };
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", value + suffix) };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<NumericLiteralToken>(token));
+
+    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetWholeValue(), value);
+    EXPECT_EQ(literalToken->GetFractionalValue(), "");
+    EXPECT_EQ(literalToken->GetDotSymbol(), "");
+    EXPECT_EQ(literalToken->GetPrefix(), "");
+    EXPECT_EQ(literalToken->GetSuffix(), suffix);
+}
+
+TEST(LexerTest, NumericLiteralToken_Base10_Integer_WithInvalidSuffix) {
+    std::string value{ "1234567890" };
+    std::string suffix{ "FooBar" };
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", value + suffix) };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<NumericLiteralToken>(token));
+
+    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetWholeValue(), value);
+    EXPECT_EQ(literalToken->GetFractionalValue(), "");
+    EXPECT_EQ(literalToken->GetDotSymbol(), "");
+    EXPECT_EQ(literalToken->GetPrefix(), "");
+    EXPECT_EQ(literalToken->GetSuffix(), suffix);
+}
+
 TEST(LexerTest, IdentifierToken) {
     constexpr const char* name = "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     Rc<SourceFile> sourceFile{ CreateSourceFile("", name) };

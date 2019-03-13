@@ -310,7 +310,7 @@ Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral() {
         }
     }
 
-    if (wholeValue.size() == 0 || fractionalValue.size() == 0)
+    if (wholeValue.size() == 0 && fractionalValue.size() == 0)
         return Rc<NumericLiteralToken>{ };
 
     while (IsLetter(GetChar())) {
@@ -326,7 +326,7 @@ Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral() {
 }
 
 Rc<NumericLiteralToken> Lexer::ReadNumericLiteral() {
-    if (Peek(0) == '0' && (Peek(1) == 'X' || Peek(2) == 'x')) {
+    if (Peek(0) == '0' && (Peek(1) == 'X' || Peek(1) == 'x')) {
         return ReadHexLiteral();
     }
     else {
