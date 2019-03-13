@@ -344,6 +344,7 @@ Rc<StringLiteralToken> Lexer::ReadStringLiteral(
     }
 
     result->SetClosingQuote(GetChar());
+    result->SetValue(value);
     IncrementCursor();
     return result;
 }

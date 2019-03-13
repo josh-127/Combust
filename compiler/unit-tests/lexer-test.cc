@@ -70,6 +70,97 @@ TEST(LexerTest, NumericLiteralToken_Base10_Integer_WithInvalidSuffix) {
     EXPECT_EQ(literalToken->GetSuffix(), suffix);
 }
 
+TEST(LexerTest, StringLiteralToken_SingleQuotes_SingleCharacter) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "'A'") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<StringLiteralToken>(token));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetValue(), "A");
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
+}
+
+TEST(LexerTest, StringLiteralToken_SingleQuotes_EscapeSequence) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "'\\n'") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<StringLiteralToken>(token));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetValue(), "\\n");
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
+}
+
+TEST(LexerTest, StringLiteralToken_SingleQuotes_MultipleCharacters) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "'FooBar'") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<StringLiteralToken>(token));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetValue(), "FooBar");
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
+}
+
+TEST(LexerTest, StringLiteralToken_SingleQuotes_MissingClosingQuote) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "'FooBar\n") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<StringLiteralToken>(token));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetValue(), "FooBar");
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '\n');
+}
+
+TEST(LexerTest, StringLiteralToken_DoubleQuotes) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "\"FooBar\"") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<StringLiteralToken>(token));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetValue(), "FooBar");
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '"');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '"');
+}
+
+TEST(LexerTest, StringLiteralToken_DoubleQuotes_WithEscapeSequence) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "\"\\n\\r\\t\\0\"") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<StringLiteralToken>(token));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetValue(), "\\n\\r\\t\\0");
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '"');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '"');
+}
+
+TEST(LexerTest, StringLiteralToken_DoubleQuotes_MissingClosingQuote) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "\"FooBar\n") };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<StringLiteralToken>(token));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    EXPECT_EQ(literalToken->GetValue(), "FooBar");
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '"');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '\n');
+}
+
 TEST(LexerTest, IdentifierToken) {
     constexpr const char* name = "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     Rc<SourceFile> sourceFile{ CreateSourceFile("", name) };
