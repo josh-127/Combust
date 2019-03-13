@@ -166,6 +166,7 @@
     <ClCompile Include="logger.cc" />
     <ClCompile Include="source.cc" />
     <ClCompile Include="syntax.cc" />
+    <ClCompile Include="unit-tests\lexer-test.cc" />
     <ClCompile Include="unit-tests\main.cc" />
     <ClCompile Include="vendor\googletest\src\gtest-all.cc" />
   </ItemGroup>

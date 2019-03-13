@@ -7,10 +7,33 @@
     <Filter Include="vendor\googletest">
       <UniqueIdentifier>{03d4c79b-9993-4377-8d82-c5ab49bdb7d3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="unit-tests">
+      <UniqueIdentifier>{86482f78-4ce1-4058-9533-eed64f260229}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vendor\googletest\src\gtest-all.cc">
       <Filter>vendor\googletest</Filter>
     </ClCompile>
+    <ClCompile Include="lexer.cc" />
+    <ClCompile Include="logger.cc" />
+    <ClCompile Include="source.cc" />
+    <ClCompile Include="syntax.cc" />
+    <ClCompile Include="unit-tests\lexer-test.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
+    <ClCompile Include="unit-tests\main.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.hh" />
+    <ClInclude Include="lexer.hh" />
+    <ClInclude Include="logger.hh" />
+    <ClInclude Include="source.hh" />
+    <ClInclude Include="syntax.hh" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="syntax-kinds.def" />
   </ItemGroup>
 </Project>
