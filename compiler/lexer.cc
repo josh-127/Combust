@@ -349,6 +349,49 @@ Rc<StringLiteralToken> Lexer::ReadStringLiteral(
     return result;
 }
 
+Rc<CommentToken> Lexer::ReadCommentToken() {
+    if (GetChar() != '/') {
+        return Rc<CommentToken>{ };
+    }
+
+    IncrementCursor();
+    if (GetChar() != '*') {
+        return Rc<CommentToken>{ };
+    }
+
+    IncrementCursor();
+
+    Rc<CommentToken> result{ NewObj<CommentToken>() };
+    result->SetOpeningToken("/*");
+
+    std::string contents{ };
+
+    while (GetChar() != 0) {
+        char c{ GetChar() };
+
+        if (c == '*') {
+            IncrementCursor();
+
+            if (GetChar() == '/') {
+                result->SetClosingToken("*/");
+                break;
+            }
+            else {
+                contents += '*';
+                contents += GetChar();
+            }
+        }
+        else {
+            contents += c;
+        }
+
+        IncrementCursor();
+    }
+
+    result->SetContents(contents);
+    return result;
+}
+
 Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     Rc<SyntaxToken> result{ };
 
@@ -414,52 +457,22 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
             else { result = NewObj<AsteriskSymbol>(); }
             break;
 
-        case '/':
-            IncrementCursor();
-            if (GetChar() == '=') {
-                IncrementCursor();
-                result = NewObj<SlashEqualsSymbol>();
-            }
-            else if (GetChar() == '*') {
-                IncrementCursor();
-                result = NewObj<CommentToken>();
-
-                for (;;) {
-                    if (GetChar() == '*') {
-                        IncrementCursor();
-
-                        if (GetChar() == '/') {
-                            IncrementCursor();
-                            break;
-                        }
-                        else if (GetChar() == 0) {
-                            SourceRange range{ GetTokenRange(result) };
-                            LogAtRange(
-                                &range,
-                                LL_ERROR,
-                                "unterminated comment"
-                            );
-                            break;
-                        }
-                    }
-                    else if (GetChar() == 0) {
-                        SourceRange range{ GetTokenRange(result) };
-                        LogAtRange(
-                            &range,
-                            LL_ERROR,
-                            "unterminated comment"
-                        );
-                        break;
-                    }
-                    else {
-                        IncrementCursor();
-                    }
+        case '/': {
+            Rc<CommentToken> commentToken{ ReadCommentToken() };
+            if (commentToken == nullptr) {
+                if (GetChar() == '=') {
+                    IncrementCursor();
+                    result = NewObj<SlashEqualsSymbol>();
+                }
+                else {
+                    result = NewObj<SlashSymbol>();
                 }
             }
             else {
-                result = NewObj<SlashSymbol>();
+                result = commentToken;
             }
             break;
+        }
 
         case '%':
             IncrementCursor();

@@ -33,6 +33,7 @@ private:
         const char openingQuote,
         const char closingQuote
     );
+    Rc<CommentToken> ReadCommentToken();
     Rc<SyntaxToken> ReadTokenOnce();
 
 private:

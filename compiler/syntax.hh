@@ -83,7 +83,17 @@ class CommentToken : public SyntaxToken {
 public:
     explicit CommentToken() {}
     virtual ~CommentToken() {}
+    const std::string& GetContents() const { return contents; }
+    void SetContents(const std::string& to) { contents = to; }
+    const std::string& GetOpeningToken() const { return openingToken; }
+    void SetOpeningToken(const std::string& to) { openingToken = to; }
+    const std::string& GetClosingToken() const { return closingToken; }
+    void SetClosingToken(const std::string& to) { closingToken = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+private:
+    std::string contents{ };
+    std::string openingToken{ };
+    std::string closingToken{ };
 };
 
 class IdentifierToken : public SyntaxToken {
