@@ -35,13 +35,11 @@ Lexer::Lexer(Rc<const SourceFile> input) :
 
 Lexer::~Lexer() {}
 
-Rc<SyntaxToken> Lexer::ReadTokenDirect() {
-    for (;;) {
-        Rc<SyntaxToken> token{ ReadTokenOnce() };
-        l->CurrentToken = token;
+Rc<SyntaxToken> Lexer::ReadToken() {
+    Rc<SyntaxToken> token{ ReadTokenOnce() };
+    l->CurrentToken = token;
 
-        return token;
-    }
+    return token;
 }
 
 constexpr bool IsWhitespace(char c) noexcept {

@@ -19,7 +19,7 @@ static void PreprocessFile(const char* filePath) {
 
     Rc<SyntaxToken> t{ };
     do {
-        t = lexer->ReadTokenDirect();
+        t = lexer->ReadToken();
     }
     while (t);
 }

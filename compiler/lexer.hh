@@ -14,7 +14,7 @@ public:
     explicit Lexer(Rc<const SourceFile> input);
     virtual ~Lexer();
 
-    Rc<SyntaxToken> ReadTokenDirect();
+    Rc<SyntaxToken> ReadToken();
 
 private:
     char Peek(int index = 0);
