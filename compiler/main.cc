@@ -21,7 +21,7 @@ static void PreprocessFile(const char* filePath) {
     do {
         t = lexer->ReadToken();
     }
-    while (t);
+    while (!IsToken<EofToken>(t));
 }
 
 int main(int argc, char** argv) {
