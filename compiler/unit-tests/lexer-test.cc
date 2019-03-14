@@ -20,6 +20,39 @@ TEST(LexerTest, StrayToken) {
     ASSERT_EQ(strayToken->GetOffendingChar(), '@');
 }
 
+TEST(LexerTest, CommentToken) {
+    std::string openingToken{ "/*" };
+    std::string closingToken{ "*/" };
+    std::string contents{ "The quick brown fox jumps over the lazy dog." };
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", openingToken + contents + closingToken) };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<CommentToken>(token));
+
+    Rc<CommentToken> commentToken{ std::static_pointer_cast<CommentToken>(token) };
+    EXPECT_EQ(commentToken->GetContents(), contents);
+    EXPECT_EQ(commentToken->GetOpeningToken(), openingToken);
+    EXPECT_EQ(commentToken->GetClosingToken(), closingToken);
+}
+
+TEST(LexerTest, CommentToken_MissingClosingToken) {
+    // NOTE: SourceFile always add a new-line character at the end Contents string.
+    std::string openingToken{ "/*" };
+    std::string closingToken{ "" };
+    std::string contents{ "The quick brown fox jumps over the lazy dog." };
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", openingToken + contents + closingToken) };
+    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+
+    Rc<SyntaxToken> token{ lexer->ReadTokenDirect() };
+    ASSERT_TRUE(IsToken<CommentToken>(token));
+
+    Rc<CommentToken> commentToken{ std::static_pointer_cast<CommentToken>(token) };
+    EXPECT_EQ(commentToken->GetContents(), contents + '\n');
+    EXPECT_EQ(commentToken->GetOpeningToken(), openingToken);
+    EXPECT_EQ(commentToken->GetClosingToken(), closingToken);
+}
+
 TEST(LexerTest, NumericLiteralToken_Base10_Integer) {
     std::string value{ "1234567890" };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", value) };
