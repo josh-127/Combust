@@ -29,7 +29,7 @@ Lexer::Lexer(Rc<const SourceFile> input) :
 {
     l->Source                 = input;
     l->CurrentMode            = LM_DEFAULT;
-    l->CurrentFlags           = ST_BEGINNING_OF_LINE;
+    l->CurrentFlags           = SyntaxToken::BEGINNING_OF_LINE;
     l->CurrentLocation.Source = l->Source;
 }
 
@@ -140,7 +140,7 @@ void Lexer::IncrementCursor() {
     if (charValue == '\n') {
         ++l->CurrentLocation.Line;
         l->CurrentLocation.Column = 0;
-        l->CurrentFlags |= ST_BEGINNING_OF_LINE;
+        l->CurrentFlags |= SyntaxToken::BEGINNING_OF_LINE;
     }
     // New-Line Escape Sequence
     else if (isNewLineEscape) {
@@ -152,7 +152,7 @@ void Lexer::IncrementCursor() {
         l->CurrentLocation.Column += charLength;
 
         if (!IsWhitespace(charValue))
-            l->CurrentFlags &= ~ST_BEGINNING_OF_LINE;
+            l->CurrentFlags &= ~SyntaxToken::BEGINNING_OF_LINE;
     }
 
     l->Cursor += charLength;
@@ -398,7 +398,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     while (IsWhitespace(GetChar()))
         IncrementCursor();
 
-    if (l->CurrentFlags & ST_BEGINNING_OF_LINE)
+    if (l->CurrentFlags & SyntaxToken::BEGINNING_OF_LINE)
         l->CurrentMode = LM_DEFAULT;
 
     int flags{ l->CurrentFlags };
@@ -406,7 +406,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     lexemeRange.Location = l->CurrentLocation;
     lexemeRange.Length = 1;
 
-    if ((flags & ST_BEGINNING_OF_LINE) && GetChar() == '#') {
+    if ((flags & SyntaxToken::BEGINNING_OF_LINE) && GetChar() == '#') {
         IncrementCursor();
         result = NewObj<HashSymbol>();
     }

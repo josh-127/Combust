@@ -6,8 +6,6 @@
 #include <string>
 #include <type_traits>
 
-constexpr int ST_BEGINNING_OF_LINE{ 1 };
-
 
 class SyntaxNode;
 class SyntaxToken;
@@ -49,6 +47,8 @@ private:
 
 class SyntaxToken : public SyntaxNode {
 public:
+    static constexpr uint32_t BEGINNING_OF_LINE = 1;
+
     uint32_t GetFlags() const { return flags; }
     void SetFlags(const uint32_t to) { flags = to; }
 protected:
