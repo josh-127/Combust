@@ -33,6 +33,10 @@ Rc<SyntaxToken> Preprocessor::ReadToken() {
 
         lexer->ReadChar();
 
+        while (IsWhitespace(lexer->PeekChar())) {
+            lexer->ReadChar();
+        }
+
         std::string keyword{ };
         while (IsIdentifierOrKeyword(lexer->PeekChar())) {
             keyword += lexer->ReadChar();
