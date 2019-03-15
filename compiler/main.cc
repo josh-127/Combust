@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     g_ProgramName = argv[0];
 
     if (argc == 1) {
-        printf("compiler 0.2-snapshot\n");
+        printf("compiler v0.3-SNAPSHOT\n");
         printf("\
 Usage: %s [options] file...\n\
 Options:\n\
