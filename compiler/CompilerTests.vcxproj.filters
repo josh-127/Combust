@@ -26,6 +26,9 @@
       <Filter>unit-tests</Filter>
     </ClCompile>
     <ClCompile Include="preprocessor.cc" />
+    <ClCompile Include="unit-tests\preprocessor-test.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.hh" />

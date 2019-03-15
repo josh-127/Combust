@@ -45,6 +45,7 @@ TEST_HHFILES	:= \
 TEST_CCFILES	:= \
 	$(APP_CCFILES) \
 	unit-tests/lexer-test.cc \
+	unit-tests/preprocessor-test.cc \
 	vendor/googletest/src/gtest-all.cc
 
 TEST_ENTRY	:= unit-tests/main.cc

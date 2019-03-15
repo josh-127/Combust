@@ -170,6 +170,7 @@
     <ClCompile Include="syntax.cc" />
     <ClCompile Include="unit-tests\lexer-test.cc" />
     <ClCompile Include="unit-tests\main.cc" />
+    <ClCompile Include="unit-tests\preprocessor-test.cc" />
     <ClCompile Include="vendor\googletest\src\gtest-all.cc" />
   </ItemGroup>
   <ItemGroup>
