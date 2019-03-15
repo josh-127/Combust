@@ -20,6 +20,13 @@ public:
     bool IsAtBeginningOfLine() const;
     const SourceLoc& GetCurrentLocation() const;
 
+    Rc<SyntaxToken> ReadIdentifierOrKeyword();
+    Rc<StringLiteralToken> ReadStringLiteral(
+        const char openingQuote,
+        const char closingQuote
+    );
+    Rc<CommentToken> ReadComment();
+
 private:
     char Peek(int index = 0) const;
     std::tuple<char, int> DecodeTrigraph() const;
@@ -29,15 +36,15 @@ private:
     void IncrementCursor();
     void IncrementCursorBy(IN int amount);
     SourceRange GetTokenRange(const Rc<SyntaxToken> t);
-    Rc<SyntaxToken> ReadIdentifier();
-    Rc<NumericLiteralToken> ReadHexLiteral();
-    Rc<NumericLiteralToken> ReadDecimalOrOctalLiteral();
-    Rc<NumericLiteralToken> ReadNumericLiteral();
-    Rc<StringLiteralToken> ReadStringLiteral(
+    Rc<SyntaxToken> ReadIdentifierOrKeyword_Internal();
+    Rc<NumericLiteralToken> ReadHexLiteral_Internal();
+    Rc<NumericLiteralToken> ReadDecimalOrOctalLiteral_Internal();
+    Rc<NumericLiteralToken> ReadNumericLiteral_Internal();
+    Rc<StringLiteralToken> ReadStringLiteral_Internal(
         const char openingQuote,
         const char closingQuote
     );
-    Rc<CommentToken> ReadCommentToken();
+    Rc<CommentToken> ReadComment_Internal();
     Rc<SyntaxToken> ReadTokenOnce();
 
 private:

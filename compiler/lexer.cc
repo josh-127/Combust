@@ -65,6 +65,76 @@ constexpr bool IsOctal(char c) noexcept { return c >= '0' && c <= '7'; }
 constexpr bool IsHex(char c) noexcept {
     return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
+constexpr bool IsIdentifierFirstChar(char c) noexcept {
+    return IsLetter(c) || c == '_';
+}
+
+// TODO: Extract duplicate code.
+
+Rc<SyntaxToken> Lexer::ReadIdentifierOrKeyword() {
+    Rc<SyntaxToken> result{ };
+
+    while (IsWhitespace(GetChar()))
+        IncrementCursor();
+
+    SourceRange lexemeRange{ };
+    lexemeRange.Location = l->CurrentLocation;
+    lexemeRange.Length = 1;
+
+    result = ReadIdentifierOrKeyword_Internal();
+    if (result == nullptr)
+        return Rc<SyntaxToken>{ };
+
+    result->SetLexemeRange(lexemeRange);
+    result->SetFlags(l->CurrentFlags);
+
+    return result;
+}
+
+Rc<StringLiteralToken> Lexer::ReadStringLiteral(
+    const char openingQuote,
+    const char closingQuote
+) {
+    Rc<StringLiteralToken> result{ };
+
+    while (IsWhitespace(GetChar()))
+        IncrementCursor();
+
+    SourceRange lexemeRange{ };
+    lexemeRange.Location = l->CurrentLocation;
+    lexemeRange.Length = 1;
+
+    result = ReadStringLiteral_Internal(openingQuote, closingQuote);
+    if (result == nullptr)
+        return Rc<StringLiteralToken>{ };
+
+    result->SetLexemeRange(lexemeRange);
+    result->SetFlags(l->CurrentFlags);
+
+    l->CurrentToken = result;
+    return result;
+}
+
+Rc<CommentToken> Lexer::ReadComment() {
+    Rc<CommentToken> result{ };
+
+    while (IsWhitespace(GetChar()))
+        IncrementCursor();
+
+    SourceRange lexemeRange{ };
+    lexemeRange.Location = l->CurrentLocation;
+    lexemeRange.Length = 1;
+
+    result = ReadComment_Internal();
+    if (result == nullptr)
+        return Rc<CommentToken>{ };
+
+    result->SetLexemeRange(lexemeRange);
+    result->SetFlags(l->CurrentFlags);
+
+    l->CurrentToken = result;
+    return result;
+}
 
 char Lexer::Peek(int index) const {
     return l->Source->Contents[l->Cursor + index];
@@ -188,8 +258,10 @@ SourceRange Lexer::GetTokenRange(const Rc<SyntaxToken> t) {
     return range;
 }
 
-/* Precondition: GetChar() is [_A-Za-z] */
-Rc<SyntaxToken> Lexer::ReadIdentifier() {
+Rc<SyntaxToken> Lexer::ReadIdentifierOrKeyword_Internal() {
+    if (!IsIdentifierFirstChar(GetChar()))
+        return Rc<SyntaxToken>{ };
+
     Rc<SyntaxToken> result{ };
     std::string name{ };
 
@@ -274,7 +346,7 @@ Rc<SyntaxToken> Lexer::ReadIdentifier() {
     return result;
 }
 
-Rc<NumericLiteralToken> Lexer::ReadHexLiteral() {
+Rc<NumericLiteralToken> Lexer::ReadHexLiteral_Internal() {
     Rc<NumericLiteralToken> result{ NewObj<NumericLiteralToken>() };
     std::string wholeValue{ };
     std::string suffix{ };
@@ -295,7 +367,7 @@ Rc<NumericLiteralToken> Lexer::ReadHexLiteral() {
     return result;
 }
 
-Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral() {
+Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral_Internal() {
     Rc<NumericLiteralToken> result{ NewObj<NumericLiteralToken>() };
     std::string wholeValue{ };
     std::string fractionalValue{ };
@@ -330,16 +402,16 @@ Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral() {
     return result;
 }
 
-Rc<NumericLiteralToken> Lexer::ReadNumericLiteral() {
+Rc<NumericLiteralToken> Lexer::ReadNumericLiteral_Internal() {
     if (Peek(0) == '0' && (Peek(1) == 'X' || Peek(1) == 'x')) {
-        return ReadHexLiteral();
+        return ReadHexLiteral_Internal();
     }
     else {
-        return ReadDecimalOrOctalLiteral();
+        return ReadDecimalOrOctalLiteral_Internal();
     }
 }
 
-Rc<StringLiteralToken> Lexer::ReadStringLiteral(
+Rc<StringLiteralToken> Lexer::ReadStringLiteral_Internal(
     const char openingQuote,
     const char closingQuote
 ) {
@@ -363,7 +435,7 @@ Rc<StringLiteralToken> Lexer::ReadStringLiteral(
     return result;
 }
 
-Rc<CommentToken> Lexer::ReadCommentToken() {
+Rc<CommentToken> Lexer::ReadComment_Internal() {
     if (GetChar() != '/') {
         return Rc<CommentToken>{ };
     }
@@ -431,7 +503,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     case ':': IncrementCursor(); result = NewObj<ColonSymbol>(); break;
 
     case '.': {
-        Rc<NumericLiteralToken> literal{ ReadNumericLiteral() };
+        Rc<NumericLiteralToken> literal{ ReadNumericLiteral_Internal() };
         if (literal == nullptr) {
             result = NewObj<DotSymbol>();
         }
@@ -463,7 +535,7 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
         break;
 
     case '/': {
-        Rc<CommentToken> commentToken{ ReadCommentToken() };
+        Rc<CommentToken> commentToken{ ReadComment_Internal() };
         if (commentToken == nullptr) {
             if (GetChar() == '=') {
                 IncrementCursor();
@@ -568,15 +640,15 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p':
     case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x':
     case 'y': case 'z':
-        result = ReadIdentifier();
+        result = ReadIdentifierOrKeyword_Internal();
         break;
 
     case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-        result = ReadNumericLiteral();
+        result = ReadNumericLiteral_Internal();
         break;
 
-    case '\'': result = ReadStringLiteral('\'', '\''); break;
-    case '"': result = ReadStringLiteral('"', '"'); break;
+    case '\'': result = ReadStringLiteral_Internal('\'', '\''); break;
+    case '"': result = ReadStringLiteral_Internal('"', '"'); break;
 
     default:
         Rc<StrayToken> strayToken{ NewObj<StrayToken>() };
