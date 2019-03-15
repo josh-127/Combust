@@ -25,6 +25,7 @@
     <ClCompile Include="unit-tests\main.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
+    <ClCompile Include="preprocessor.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.hh" />
@@ -32,6 +33,7 @@
     <ClInclude Include="logger.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
+    <ClInclude Include="preprocessor.hh" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />

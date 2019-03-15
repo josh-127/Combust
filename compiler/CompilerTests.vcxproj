@@ -158,12 +158,14 @@
     <ClInclude Include="common.hh" />
     <ClInclude Include="lexer.hh" />
     <ClInclude Include="logger.hh" />
+    <ClInclude Include="preprocessor.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lexer.cc" />
     <ClCompile Include="logger.cc" />
+    <ClCompile Include="preprocessor.cc" />
     <ClCompile Include="source.cc" />
     <ClCompile Include="syntax.cc" />
     <ClCompile Include="unit-tests\lexer-test.cc" />
