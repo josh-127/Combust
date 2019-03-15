@@ -15,13 +15,13 @@ static void PreprocessFile(const char* filePath) {
         return;
     }
 
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> t{ };
     do {
         t = lexer->ReadToken();
     }
-    while (!IsToken<EofToken>(t));
+    while (!IsSyntaxNode<EofToken>(t));
 }
 
 int main(int argc, char** argv) {
