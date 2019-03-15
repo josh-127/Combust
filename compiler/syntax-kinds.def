@@ -1,19 +1,17 @@
 
 Tk(EofToken);
 
-Tk(HashSymbol);
-Tk(IfDirectiveKw);
-Tk(IfDefDirectiveKw);
-Tk(IfNDefDirectiveKw);
-Tk(ElifDirectiveKw);
-Tk(EndIfDirectiveKw);
-Tk(IncludeDirectiveKw);
-Tk(DefineDirectiveKw);
-Tk(UnDefDirectiveKw);
-Tk(LineDirectiveKw);
-Tk(ErrorDirectiveKw);
-Tk(WarningDirectiveKw);
-Tk(InvalidDirective);
+Tk(IfDirective);
+Tk(IfDefDirective);
+Tk(IfNDefDirective);
+Tk(ElifDirective);
+Tk(EndIfDirective);
+Tk(IncludeDirective);
+Tk(DefineDirective);
+Tk(UnDefDirective);
+Tk(LineDirective);
+Tk(ErrorDirective);
+Tk(WarningDirective);
 
 Tk(LParenSymbol);      Tk(RParenSymbol);
 Tk(LBracketSymbol);    Tk(RBracketSymbol);

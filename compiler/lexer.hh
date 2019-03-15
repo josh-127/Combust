@@ -17,6 +17,8 @@ public:
     Rc<SyntaxToken> ReadToken();
     char PeekChar() const;
     char ReadChar();
+    bool IsAtBeginningOfLine() const;
+    const SourceLoc& GetCurrentLocation() const;
 
 private:
     char Peek(int index = 0) const;

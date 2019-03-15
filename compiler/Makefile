@@ -14,6 +14,7 @@ APP_CXXFLAGS	:= -g -std=gnu++1z -Wall -Wextra
 APP_HHFILES	:= \
 	lexer.hh \
 	logger.hh \
+	preprocessor.hh \
 	source.hh \
 	syntax.hh \
 	syntax-kinds.def
@@ -21,6 +22,7 @@ APP_HHFILES	:= \
 APP_CCFILES	:= \
 	lexer.cc \
 	logger.cc \
+	preprocessor.cc \
 	source.cc \
 	syntax.cc
 

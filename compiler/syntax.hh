@@ -12,6 +12,7 @@ class SyntaxToken;
 #define Tk(className) class className
 #include "syntax-kinds.def"
 #undef Tk
+class InvalidDirective;
 class StrayToken;
 class CommentToken;
 class IdentifierToken;
@@ -24,6 +25,7 @@ public:
 #define Tk(className) virtual Rc<Object> Visit(className& obj) = 0
 #include "syntax-kinds.def"
 #undef Tk
+    virtual Rc<Object> Visit(InvalidDirective& obj) = 0;
     virtual Rc<Object> Visit(StrayToken& obj) = 0;
     virtual Rc<Object> Visit(CommentToken& obj) = 0;
     virtual Rc<Object> Visit(IdentifierToken& obj) = 0;
@@ -67,6 +69,17 @@ private:
     }
 #include "syntax-kinds.def"
 #undef Tk
+
+class InvalidDirective : public SyntaxToken {
+public:
+    explicit InvalidDirective() {}
+    virtual ~InvalidDirective() {}
+    const std::string& GetName() const { return name; }
+    void SetName(const std::string& to) { name = to; }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+private:
+    std::string name{ };
+};
 
 class StrayToken : public SyntaxToken {
 public:
@@ -167,6 +180,7 @@ public:
 #include "syntax-kinds.def"
 #undef Tk
 
+    O(InvalidDirective)
     O(StrayToken)
     O(CommentToken)
     O(IdentifierToken)

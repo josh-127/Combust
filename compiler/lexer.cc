@@ -10,15 +10,9 @@
 #include <cstring>
 #include <algorithm>
 
-#define LM_DEFAULT                   0
-#define LM_PP_DIRECTIVE              1
-#define LM_PP_DIRECTIVE_KW           2
-#define LM_PP_ANGLED_STRING_CONSTANT 4
-
 struct LEXER_IMPL {
     Rc<const SourceFile> Source{ nullptr };
     int                  Cursor{ 0 };
-    uint32_t             CurrentMode{ 0 };
     int                  CurrentFlags{ 0 };
     SourceLoc            CurrentLocation{ };
     Rc<SyntaxToken>      CurrentToken{ };
@@ -28,7 +22,6 @@ Lexer::Lexer(Rc<const SourceFile> input) :
     l{ NewChild<LEXER_IMPL>() }
 {
     l->Source                 = input;
-    l->CurrentMode            = LM_DEFAULT;
     l->CurrentFlags           = SyntaxToken::BEGINNING_OF_LINE;
     l->CurrentLocation.Source = l->Source;
 }
@@ -51,6 +44,14 @@ char Lexer::ReadChar() {
     IncrementCursor();
 
     return c;
+}
+
+bool Lexer::IsAtBeginningOfLine() const {
+    return l->CurrentFlags& SyntaxToken::BEGINNING_OF_LINE;
+}
+
+const SourceLoc& Lexer::GetCurrentLocation() const {
+    return l->CurrentLocation;
 }
 
 constexpr bool IsWhitespace(char c) noexcept {
@@ -210,6 +211,7 @@ Rc<SyntaxToken> Lexer::ReadIdentifier() {
     }
 
 #define o(kw) (name == kw)
+#if 0
     if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
              if (o("if"))       result = NewObj<IfDirectiveKw>();
         else if (o("ifdef"))    result = NewObj<IfDefDirectiveKw>();
@@ -227,6 +229,9 @@ Rc<SyntaxToken> Lexer::ReadIdentifier() {
             name = "<invalid>";
         }
     }
+#else
+    if (false) {}
+#endif
     else if (o("const"))    result = NewObj<ConstKeyword>();
     else if (o("extern"))   result = NewObj<ExternKeyword>();
     else if (o("static"))   result = NewObj<StaticKeyword>();
@@ -407,207 +412,183 @@ Rc<SyntaxToken> Lexer::ReadTokenOnce() {
     while (IsWhitespace(GetChar()))
         IncrementCursor();
 
-    if (l->CurrentFlags & SyntaxToken::BEGINNING_OF_LINE)
-        l->CurrentMode = LM_DEFAULT;
-
-    int flags{ l->CurrentFlags };
     SourceRange lexemeRange{ };
     lexemeRange.Location = l->CurrentLocation;
     lexemeRange.Length = 1;
 
-    if ((flags & SyntaxToken::BEGINNING_OF_LINE) && GetChar() == '#') {
-        IncrementCursor();
-        result = NewObj<HashSymbol>();
+    switch (GetChar()) {
+    case 0:                      result = NewObj<EofToken>(); break;
+    case '(': IncrementCursor(); result = NewObj<LParenSymbol>(); break;
+    case ')': IncrementCursor(); result = NewObj<RParenSymbol>(); break;
+    case '[': IncrementCursor(); result = NewObj<LBracketSymbol>(); break;
+    case ']': IncrementCursor(); result = NewObj<RBracketSymbol>(); break;
+    case '{': IncrementCursor(); result = NewObj<LBraceSymbol>(); break;
+    case '}': IncrementCursor(); result = NewObj<RBraceSymbol>(); break;
+    case ';': IncrementCursor(); result = NewObj<SemicolonSymbol>(); break;
+    case ',': IncrementCursor(); result = NewObj<CommaSymbol>(); break;
+    case '~': IncrementCursor(); result = NewObj<TildeSymbol>(); break;
+    case '?': IncrementCursor(); result = NewObj<QuestionSymbol>(); break;
+    case ':': IncrementCursor(); result = NewObj<ColonSymbol>(); break;
+
+    case '.': {
+        Rc<NumericLiteralToken> literal{ ReadNumericLiteral() };
+        if (literal == nullptr) {
+            result = NewObj<DotSymbol>();
+        }
+        else {
+            result = literal;
+        }
+        break;
     }
-    else {
-        switch (GetChar()) {
-        case 0:                      result = NewObj<EofToken>(); break;
-        case '(': IncrementCursor(); result = NewObj<LParenSymbol>(); break;
-        case ')': IncrementCursor(); result = NewObj<RParenSymbol>(); break;
-        case '[': IncrementCursor(); result = NewObj<LBracketSymbol>(); break;
-        case ']': IncrementCursor(); result = NewObj<RBracketSymbol>(); break;
-        case '{': IncrementCursor(); result = NewObj<LBraceSymbol>(); break;
-        case '}': IncrementCursor(); result = NewObj<RBraceSymbol>(); break;
-        case ';': IncrementCursor(); result = NewObj<SemicolonSymbol>(); break;
-        case ',': IncrementCursor(); result = NewObj<CommaSymbol>(); break;
-        case '~': IncrementCursor(); result = NewObj<TildeSymbol>(); break;
-        case '?': IncrementCursor(); result = NewObj<QuestionSymbol>(); break;
-        case ':': IncrementCursor(); result = NewObj<ColonSymbol>(); break;
 
-        case '.': {
-            Rc<NumericLiteralToken> literal{ ReadNumericLiteral() };
-            if (literal == nullptr) {
-                result = NewObj<DotSymbol>();
+    case '+':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<PlusEqualsSymbol>(); }
+        else if (GetChar() == '+') { IncrementCursor(); result = NewObj<PlusPlusSymbol>(); }
+        else { result = NewObj<PlusSymbol>(); }
+        break;
+
+    case '-':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<MinusEqualsSymbol>(); }
+        else if (GetChar() == '-') { IncrementCursor(); result = NewObj<MinusMinusSymbol>(); }
+        else if (GetChar() == '>') { IncrementCursor(); result = NewObj<MinusGtSymbol>(); }
+        else { result = NewObj<MinusSymbol>(); }
+        break;
+
+    case '*':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<AsteriskEqualsSymbol>(); }
+        else { result = NewObj<AsteriskSymbol>(); }
+        break;
+
+    case '/': {
+        Rc<CommentToken> commentToken{ ReadCommentToken() };
+        if (commentToken == nullptr) {
+            if (GetChar() == '=') {
+                IncrementCursor();
+                result = NewObj<SlashEqualsSymbol>();
             }
             else {
-                result = literal;
+                result = NewObj<SlashSymbol>();
             }
-            break;
         }
-
-        case '+':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<PlusEqualsSymbol>(); }
-            else if (GetChar() == '+') { IncrementCursor(); result = NewObj<PlusPlusSymbol>(); }
-            else { result = NewObj<PlusSymbol>(); }
-            break;
-
-        case '-':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<MinusEqualsSymbol>(); }
-            else if (GetChar() == '-') { IncrementCursor(); result = NewObj<MinusMinusSymbol>(); }
-            else if (GetChar() == '>') { IncrementCursor(); result = NewObj<MinusGtSymbol>(); }
-            else { result = NewObj<MinusSymbol>(); }
-            break;
-
-        case '*':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<AsteriskEqualsSymbol>(); }
-            else { result = NewObj<AsteriskSymbol>(); }
-            break;
-
-        case '/': {
-            Rc<CommentToken> commentToken{ ReadCommentToken() };
-            if (commentToken == nullptr) {
-                if (GetChar() == '=') {
-                    IncrementCursor();
-                    result = NewObj<SlashEqualsSymbol>();
-                }
-                else {
-                    result = NewObj<SlashSymbol>();
-                }
-            }
-            else {
-                result = commentToken;
-            }
-            break;
+        else {
+            result = commentToken;
         }
+        break;
+    }
 
-        case '%':
+    case '%':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<PercentEqualsSymbol>(); }
+        else { result = NewObj<PercentSymbol>(); }
+        break;
+
+    case '<':
+        IncrementCursor();
+        if (GetChar() == '=') {
             IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<PercentEqualsSymbol>(); }
-            else { result = NewObj<PercentSymbol>(); }
-            break;
-
-        case '<':
+            result = NewObj<LtEqualsSymbol>();
+        }
+        else if (GetChar() == '<') {
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result = NewObj<LtEqualsSymbol>();
-            }
-            else if (GetChar() == '<') {
-                IncrementCursor();
-                if (GetChar() == '=') {
-                    IncrementCursor();
-                    result = NewObj<LtLtEqualsSymbol>();
-                }
-                else {
-                    result = NewObj<LtLtSymbol>();
-                }
+                result = NewObj<LtLtEqualsSymbol>();
             }
             else {
-                result = NewObj<LtSymbol>();
+                result = NewObj<LtLtSymbol>();
             }
-            break;
+        }
+        else {
+            result = NewObj<LtSymbol>();
+        }
+        break;
 
-        case '>':
+    case '>':
+        IncrementCursor();
+        if (GetChar() == '=') {
+            IncrementCursor();
+            result = NewObj<GtEqualsSymbol>();
+        }
+        else if (GetChar() == '>') {
             IncrementCursor();
             if (GetChar() == '=') {
                 IncrementCursor();
-                result = NewObj<GtEqualsSymbol>();
-            }
-            else if (GetChar() == '>') {
-                IncrementCursor();
-                if (GetChar() == '=') {
-                    IncrementCursor();
-                    result = NewObj<GtGtEqualsSymbol>();
-                }
-                else {
-                    result = NewObj<GtGtSymbol>();
-                }
+                result = NewObj<GtGtEqualsSymbol>();
             }
             else {
-                result = NewObj<GtSymbol>();
+                result = NewObj<GtGtSymbol>();
             }
-            break;
-
-        case '=':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<EqualsEqualsSymbol>(); }
-            else { result = NewObj<EqualsSymbol>(); }
-            break;
-
-        case '!':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<ExclamationEqualsSymbol>(); }
-            else { result = NewObj<ExclamationSymbol>(); }
-            break;
-
-        case '&':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<AmpersandEqualsSymbol>(); }
-            else if (GetChar() == '&') { IncrementCursor(); result = NewObj<AmpersandAmpersandSymbol>(); }
-            else { result = NewObj<AmpersandSymbol>(); }
-            break;
-
-        case '^':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<CaretEqualsSymbol>(); }
-            else { result = NewObj<CaretSymbol>(); } 
-            break;
-
-        case '|':
-            IncrementCursor();
-            if (GetChar() == '=') { IncrementCursor(); result = NewObj<PipeEqualsSymbol>(); }
-            else if (GetChar() == '|') { IncrementCursor(); result = NewObj<PipePipeSymbol>(); }
-            else { result = NewObj<PipeSymbol>(); }
-            break;
-
-        case '_': case '$':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H':
-        case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P':
-        case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
-        case 'Y': case 'Z': 
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h':
-        case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p':
-        case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x':
-        case 'y': case 'z':
-            result = ReadIdentifier();
-            break;
-
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            result = ReadNumericLiteral();
-            break;
-
-        case '\'': result = ReadStringLiteral('\'', '\''); break;
-        case '"': result = ReadStringLiteral('"', '"'); break;
-
-        default:
-            Rc<StrayToken> strayToken{ NewObj<StrayToken>() };
-            strayToken->SetOffendingChar(GetChar());
-            IncrementCursor();
-
-            result = strayToken;
-            break;
         }
+        else {
+            result = NewObj<GtSymbol>();
+        }
+        break;
+
+    case '=':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<EqualsEqualsSymbol>(); }
+        else { result = NewObj<EqualsSymbol>(); }
+        break;
+
+    case '!':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<ExclamationEqualsSymbol>(); }
+        else { result = NewObj<ExclamationSymbol>(); }
+        break;
+
+    case '&':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<AmpersandEqualsSymbol>(); }
+        else if (GetChar() == '&') { IncrementCursor(); result = NewObj<AmpersandAmpersandSymbol>(); }
+        else { result = NewObj<AmpersandSymbol>(); }
+        break;
+
+    case '^':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<CaretEqualsSymbol>(); }
+        else { result = NewObj<CaretSymbol>(); } 
+        break;
+
+    case '|':
+        IncrementCursor();
+        if (GetChar() == '=') { IncrementCursor(); result = NewObj<PipeEqualsSymbol>(); }
+        else if (GetChar() == '|') { IncrementCursor(); result = NewObj<PipePipeSymbol>(); }
+        else { result = NewObj<PipeSymbol>(); }
+        break;
+
+    case '_': case '$':
+    case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H':
+    case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P':
+    case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
+    case 'Y': case 'Z': 
+    case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h':
+    case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p':
+    case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x':
+    case 'y': case 'z':
+        result = ReadIdentifier();
+        break;
+
+    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+        result = ReadNumericLiteral();
+        break;
+
+    case '\'': result = ReadStringLiteral('\'', '\''); break;
+    case '"': result = ReadStringLiteral('"', '"'); break;
+
+    default:
+        Rc<StrayToken> strayToken{ NewObj<StrayToken>() };
+        strayToken->SetOffendingChar(GetChar());
+        IncrementCursor();
+
+        result = strayToken;
+        break;
     }
 
     result->SetLexemeRange(lexemeRange);
-
-    if (l->CurrentMode == LM_DEFAULT && IsToken<HashSymbol>(result)) {
-        l->CurrentMode |= LM_PP_DIRECTIVE;
-        l->CurrentMode |= LM_PP_DIRECTIVE_KW;
-    }
-    else if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
-        l->CurrentMode &= ~LM_PP_DIRECTIVE_KW;
-
-        if (IsToken<IncludeDirectiveKw>(result))
-            l->CurrentMode |= LM_PP_ANGLED_STRING_CONSTANT;
-    }
-    else if (l->CurrentMode & LM_PP_ANGLED_STRING_CONSTANT) {
-        l->CurrentMode &= ~LM_PP_ANGLED_STRING_CONSTANT;
-    }
-
     result->SetFlags(l->CurrentFlags);
+
     return result;
 }
