@@ -37,6 +37,7 @@
     <ClInclude Include="syntax.hh" />
     <ClInclude Include="code-lexer.hh" />
     <ClInclude Include="preprocessor-lexer.hh" />
+    <ClInclude Include="lexer.hh" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />

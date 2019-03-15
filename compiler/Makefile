@@ -13,6 +13,7 @@ APP_CXXFLAGS	:= -g -std=gnu++1z -Wall -Wextra
 
 APP_HHFILES	:= \
 	code-lexer.hh \
+	lexer.hh \
 	logger.hh \
 	preprocessor-lexer.hh \
 	source.hh \
@@ -21,6 +22,7 @@ APP_HHFILES	:= \
 
 APP_CCFILES	:= \
 	code-lexer.cc \
+	lexer.cc \
 	logger.cc \
 	preprocessor-lexer.cc \
 	source.cc \

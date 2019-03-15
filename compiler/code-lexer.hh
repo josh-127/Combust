@@ -1,6 +1,7 @@
 #ifndef COMBUST_CODE_LEXER_HH
 #define COMBUST_CODE_LEXER_HH
 #include "common.hh"
+#include "lexer.hh"
 #include "source.hh"
 #include "syntax.hh"
 #include <memory>
@@ -9,12 +10,12 @@
 
 struct CODE_LEXER_IMPL;
 
-class CodeLexer : public Object {
+class CodeLexer : public Object, public virtual ILexer {
 public:
     explicit CodeLexer(Rc<const SourceFile> input);
     virtual ~CodeLexer();
 
-    Rc<SyntaxToken> ReadToken();
+    Rc<SyntaxToken> ReadToken() override;
     char PeekChar() const;
     char ReadChar();
     bool IsAtBeginningOfLine() const;

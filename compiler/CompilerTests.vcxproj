@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="code-lexer.hh" />
     <ClInclude Include="common.hh" />
+    <ClInclude Include="lexer.hh" />
     <ClInclude Include="logger.hh" />
     <ClInclude Include="preprocessor-lexer.hh" />
     <ClInclude Include="source.hh" />
