@@ -11,6 +11,48 @@ TEST(PreprocessorTest, EmptyFile) {
     ASSERT_TRUE(IsToken<EofToken>(token));
 }
 
+TEST(PreprocessorTest, HStringLiteralToken) {
+    std::string path{ "FooBar" };
+    Rc<SourceFile> sourceFile{
+        CreateSourceFile("", "#include <" + path + ">")
+    };
+    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+
+    Rc<SyntaxToken> firstToken{ preprocessor->ReadToken() };
+    EXPECT_TRUE(firstToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
+    ASSERT_TRUE(IsToken<IncludeDirective>(firstToken));
+
+    Rc<SyntaxToken> secondToken{ preprocessor->ReadToken() };
+    EXPECT_TRUE(!(secondToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE));
+    ASSERT_TRUE(IsToken<StringLiteralToken>(secondToken));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(secondToken) };
+    EXPECT_EQ(literalToken->GetValue(), path);
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '<');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '>');
+}
+
+TEST(PreprocessorTest, HStringLiteralToken_WithoutWhitespaceInBetween) {
+    std::string path{ "FooBar" };
+    Rc<SourceFile> sourceFile{
+        CreateSourceFile("", "#include<" + path + ">")
+    };
+    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+
+    Rc<SyntaxToken> firstToken{ preprocessor->ReadToken() };
+    EXPECT_TRUE(firstToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
+    ASSERT_TRUE(IsToken<IncludeDirective>(firstToken));
+
+    Rc<SyntaxToken> secondToken{ preprocessor->ReadToken() };
+    EXPECT_TRUE(!(secondToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE));
+    ASSERT_TRUE(IsToken<StringLiteralToken>(secondToken));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(secondToken) };
+    EXPECT_EQ(literalToken->GetValue(), path);
+    EXPECT_EQ(literalToken->GetOpeningQuote(), '<');
+    EXPECT_EQ(literalToken->GetClosingQuote(), '>');
+}
+
 TEST(PreprocessorTest, IdentifierToken) {
     Rc<SourceFile> sourceFile{
         CreateSourceFile(

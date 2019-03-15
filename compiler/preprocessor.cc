@@ -79,9 +79,19 @@ Rc<SyntaxToken> Preprocessor::ReadToken_Internal() {
             while (IsWhitespace(lexer->PeekChar()))
                 lexer->ReadChar();
 
+            SourceLoc startLocation{ lexer->GetCurrentLocation() };
+
+            SourceRange literalRange{ };
+            literalRange.Location = startLocation;
+
             Rc<SyntaxToken> hStringLiteral{ lexer->ReadStringLiteral('<', '>') };
-            if (hStringLiteral != nullptr)
+            if (hStringLiteral != nullptr) {
+                SourceLoc endLocation{ lexer->GetCurrentLocation() };
+                literalRange.Length = endLocation.Column - startLocation.Column;
+
+                hStringLiteral->SetLexemeRange(literalRange);
                 p->tokensToReturn.push(hStringLiteral);
+            }
         }
         else if (keyword == "define") {
             result = NewObj<DefineDirective>();
