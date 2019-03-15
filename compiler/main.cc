@@ -1,4 +1,4 @@
-#include "lexer.hh"
+#include "code-lexer.hh"
 #include "logger.hh"
 #include "source.hh"
 #include "syntax.hh"

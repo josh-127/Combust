@@ -1,5 +1,5 @@
-#ifndef COMBUST_LEXER_HH
-#define COMBUST_LEXER_HH
+#ifndef COMBUST_CODE_LEXER_HH
+#define COMBUST_CODE_LEXER_HH
 #include "common.hh"
 #include "source.hh"
 #include "syntax.hh"
@@ -7,12 +7,12 @@
 #include <string>
 #include <tuple>
 
-struct LEXER_IMPL;
+struct CODE_LEXER_IMPL;
 
-class Lexer : public Object {
+class CodeLexer : public Object {
 public:
-    explicit Lexer(Rc<const SourceFile> input);
-    virtual ~Lexer();
+    explicit CodeLexer(Rc<const SourceFile> input);
+    virtual ~CodeLexer();
 
     Rc<SyntaxToken> ReadToken();
     char PeekChar() const;
@@ -48,7 +48,7 @@ private:
     Rc<SyntaxToken> ReadTokenOnce();
 
 private:
-    Owner<LEXER_IMPL> l;
+    Owner<CODE_LEXER_IMPL> l;
 };
 
 #endif

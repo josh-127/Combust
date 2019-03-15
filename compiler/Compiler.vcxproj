@@ -20,14 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.hh" />
-    <ClInclude Include="lexer.hh" />
+    <ClInclude Include="code-lexer.hh" />
     <ClInclude Include="logger.hh" />
     <ClInclude Include="preprocessor.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lexer.cc" />
+    <ClCompile Include="code-lexer.cc" />
     <ClCompile Include="logger.cc" />
     <ClCompile Include="main.cc" />
     <ClCompile Include="preprocessor.cc" />

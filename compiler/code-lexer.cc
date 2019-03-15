@@ -1,7 +1,7 @@
 #if defined(_WIN32)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
-#include "lexer.hh"
+#include "code-lexer.hh"
 #include "logger.hh"
 #include <cassert>
 #include <cstdint>
@@ -10,7 +10,7 @@
 #include <cstring>
 #include <algorithm>
 
-struct LEXER_IMPL {
+struct CODE_LEXER_IMPL {
     Rc<const SourceFile> Source{ nullptr };
     int                  Cursor{ 0 };
     int                  CurrentFlags{ 0 };
@@ -18,39 +18,39 @@ struct LEXER_IMPL {
     Rc<SyntaxToken>      CurrentToken{ };
 };
 
-Lexer::Lexer(Rc<const SourceFile> input) :
-    l{ NewChild<LEXER_IMPL>() }
+CodeLexer::CodeLexer(Rc<const SourceFile> input) :
+    l{ NewChild<CODE_LEXER_IMPL>() }
 {
     l->Source                 = input;
     l->CurrentFlags           = SyntaxToken::BEGINNING_OF_LINE;
     l->CurrentLocation.Source = l->Source;
 }
 
-Lexer::~Lexer() {}
+CodeLexer::~CodeLexer() {}
 
-Rc<SyntaxToken> Lexer::ReadToken() {
+Rc<SyntaxToken> CodeLexer::ReadToken() {
     Rc<SyntaxToken> token{ ReadTokenOnce() };
     l->CurrentToken = token;
 
     return token;
 }
 
-char Lexer::PeekChar() const {
+char CodeLexer::PeekChar() const {
     return GetChar();
 }
 
-char Lexer::ReadChar() {
+char CodeLexer::ReadChar() {
     char c{ GetChar() };
     IncrementCursor();
 
     return c;
 }
 
-bool Lexer::IsAtBeginningOfLine() const {
+bool CodeLexer::IsAtBeginningOfLine() const {
     return l->CurrentFlags& SyntaxToken::BEGINNING_OF_LINE;
 }
 
-const SourceLoc& Lexer::GetCurrentLocation() const {
+const SourceLoc& CodeLexer::GetCurrentLocation() const {
     return l->CurrentLocation;
 }
 
@@ -71,7 +71,7 @@ constexpr bool IsIdentifierFirstChar(char c) noexcept {
 
 // TODO: Extract duplicate code.
 
-Rc<SyntaxToken> Lexer::ReadIdentifierOrKeyword() {
+Rc<SyntaxToken> CodeLexer::ReadIdentifierOrKeyword() {
     Rc<SyntaxToken> result{ };
 
     while (IsWhitespace(GetChar()))
@@ -92,7 +92,7 @@ Rc<SyntaxToken> Lexer::ReadIdentifierOrKeyword() {
     return result;
 }
 
-Rc<StringLiteralToken> Lexer::ReadStringLiteral(
+Rc<StringLiteralToken> CodeLexer::ReadStringLiteral(
     const char openingQuote,
     const char closingQuote
 ) {
@@ -116,7 +116,7 @@ Rc<StringLiteralToken> Lexer::ReadStringLiteral(
     return result;
 }
 
-Rc<CommentToken> Lexer::ReadComment() {
+Rc<CommentToken> CodeLexer::ReadComment() {
     Rc<CommentToken> result{ };
 
     while (IsWhitespace(GetChar()))
@@ -137,7 +137,7 @@ Rc<CommentToken> Lexer::ReadComment() {
     return result;
 }
 
-char Lexer::Peek(int index) const {
+char CodeLexer::Peek(int index) const {
     return l->Source->Contents[l->Cursor + index];
 }
 
@@ -148,7 +148,7 @@ char Lexer::Peek(int index) const {
  * \return first value as the decoded character;
  *         second value as the encoded sequence's length
  */
-std::tuple<char, int> Lexer::DecodeTrigraph() const {
+std::tuple<char, int> CodeLexer::DecodeTrigraph() const {
     if (Peek(0) == '?' && Peek(1) == '?') {
         switch (Peek(2)) {
         case '=':  return std::make_tuple('#', 3);
@@ -173,7 +173,7 @@ std::tuple<char, int> Lexer::DecodeTrigraph() const {
  *         third value is true if the the sequence is a new-line escape;
  *                     otherwise false
  */
-std::tuple<char, int, bool> Lexer::DecodeNewLineEscape() const {
+std::tuple<char, int, bool> CodeLexer::DecodeNewLineEscape() const {
     auto [firstChar, firstCharLength] = DecodeTrigraph();
 
     if (firstChar == '\\') {
@@ -201,7 +201,7 @@ std::tuple<char, int, bool> Lexer::DecodeNewLineEscape() const {
  * \return first value as the decoded character;
  *         second value as the encoded sequence length
  */
-std::tuple<char, int> Lexer::GetCharEx() const {
+std::tuple<char, int> CodeLexer::GetCharEx() const {
     std::tuple<char, int, bool> values{ DecodeNewLineEscape() };
     return std::make_tuple(std::get<0>(values), std::get<1>(values));
 }
@@ -210,11 +210,11 @@ std::tuple<char, int> Lexer::GetCharEx() const {
  * Decodes the current character sequence.
  * \return the decoded character
  */
-char Lexer::GetChar() const {
+char CodeLexer::GetChar() const {
     return std::get<0>(GetCharEx());
 }
 
-void Lexer::IncrementCursor() {
+void CodeLexer::IncrementCursor() {
     auto [charValue, charLength, isNewLineEscape] = DecodeNewLineEscape();
 
     // New-Line
@@ -239,12 +239,12 @@ void Lexer::IncrementCursor() {
     l->Cursor += charLength;
 }
 
-void Lexer::IncrementCursorBy(IN   int    amount) {
+void CodeLexer::IncrementCursorBy(IN   int    amount) {
     while (amount--)
         IncrementCursor();
 }
 
-SourceRange Lexer::GetTokenRange(const Rc<SyntaxToken> t) {
+SourceRange CodeLexer::GetTokenRange(const Rc<SyntaxToken> t) {
     SourceRange range{ };
 
     int line{ t->GetLexemeRange().Location.Line };
@@ -259,7 +259,7 @@ SourceRange Lexer::GetTokenRange(const Rc<SyntaxToken> t) {
     return range;
 }
 
-Rc<SyntaxToken> Lexer::ReadIdentifierOrKeyword_Internal() {
+Rc<SyntaxToken> CodeLexer::ReadIdentifierOrKeyword_Internal() {
     if (!IsIdentifierFirstChar(GetChar()))
         return Rc<SyntaxToken>{ };
 
@@ -347,7 +347,7 @@ Rc<SyntaxToken> Lexer::ReadIdentifierOrKeyword_Internal() {
     return result;
 }
 
-Rc<NumericLiteralToken> Lexer::ReadHexLiteral_Internal() {
+Rc<NumericLiteralToken> CodeLexer::ReadHexLiteral_Internal() {
     Rc<NumericLiteralToken> result{ NewObj<NumericLiteralToken>() };
     std::string wholeValue{ };
     std::string suffix{ };
@@ -368,7 +368,7 @@ Rc<NumericLiteralToken> Lexer::ReadHexLiteral_Internal() {
     return result;
 }
 
-Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral_Internal() {
+Rc<NumericLiteralToken> CodeLexer::ReadDecimalOrOctalLiteral_Internal() {
     Rc<NumericLiteralToken> result{ NewObj<NumericLiteralToken>() };
     std::string wholeValue{ };
     std::string fractionalValue{ };
@@ -403,7 +403,7 @@ Rc<NumericLiteralToken> Lexer::ReadDecimalOrOctalLiteral_Internal() {
     return result;
 }
 
-Rc<NumericLiteralToken> Lexer::ReadNumericLiteral_Internal() {
+Rc<NumericLiteralToken> CodeLexer::ReadNumericLiteral_Internal() {
     if (Peek(0) == '0' && (Peek(1) == 'X' || Peek(1) == 'x')) {
         return ReadHexLiteral_Internal();
     }
@@ -412,7 +412,7 @@ Rc<NumericLiteralToken> Lexer::ReadNumericLiteral_Internal() {
     }
 }
 
-Rc<StringLiteralToken> Lexer::ReadStringLiteral_Internal(
+Rc<StringLiteralToken> CodeLexer::ReadStringLiteral_Internal(
     const char openingQuote,
     const char closingQuote
 ) {
@@ -436,7 +436,7 @@ Rc<StringLiteralToken> Lexer::ReadStringLiteral_Internal(
     return result;
 }
 
-Rc<CommentToken> Lexer::ReadComment_Internal() {
+Rc<CommentToken> CodeLexer::ReadComment_Internal() {
     if (GetChar() != '/') {
         return Rc<CommentToken>{ };
     }
@@ -479,7 +479,7 @@ Rc<CommentToken> Lexer::ReadComment_Internal() {
     return result;
 }
 
-Rc<SyntaxToken> Lexer::ReadTokenOnce() {
+Rc<SyntaxToken> CodeLexer::ReadTokenOnce() {
     Rc<SyntaxToken> result{ };
 
     while (IsWhitespace(GetChar()))

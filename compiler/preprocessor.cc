@@ -1,5 +1,5 @@
 #include "preprocessor.hh"
-#include "lexer.hh"
+#include "code-lexer.hh"
 #include "source.hh"
 #include "syntax.hh"
 #include <queue>
@@ -21,7 +21,7 @@ struct PREPROCESSOR_IMPL {
 };
 
 Preprocessor::Preprocessor(Rc<const SourceFile> input) :
-    lexer{ NewChild<Lexer>(input) },
+    lexer{ NewChild<CodeLexer>(input) },
     p{ NewChild<PREPROCESSOR_IMPL>() }
 {}
 

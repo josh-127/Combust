@@ -12,7 +12,7 @@ TEST_TARGET	:= test-compiler
 APP_CXXFLAGS	:= -g -std=gnu++1z -Wall -Wextra
 
 APP_HHFILES	:= \
-	lexer.hh \
+	code-lexer.hh \
 	logger.hh \
 	preprocessor.hh \
 	source.hh \
@@ -20,7 +20,7 @@ APP_HHFILES	:= \
 	syntax-kinds.def
 
 APP_CCFILES	:= \
-	lexer.cc \
+	code-lexer.cc \
 	logger.cc \
 	preprocessor.cc \
 	source.cc \
@@ -44,7 +44,7 @@ TEST_HHFILES	:= \
 
 TEST_CCFILES	:= \
 	$(APP_CCFILES) \
-	unit-tests/lexer-test.cc \
+	unit-tests/code-lexer-test.cc \
 	unit-tests/preprocessor-test.cc \
 	vendor/googletest/src/gtest-all.cc
 

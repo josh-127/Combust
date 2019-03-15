@@ -2,7 +2,7 @@
 #define COMBUST_PREPROCESSOR_HH
 #include "common.hh"
 
-class Lexer;
+class CodeLexer;
 class SourceFile;
 class SyntaxToken;
 
@@ -19,7 +19,7 @@ private:
     Rc<SyntaxToken> ReadToken_Internal();
 
 private:
-    Owner<Lexer> lexer;
+    Owner<CodeLexer> lexer;
     Owner<PREPROCESSOR_IMPL> p;
 };
 

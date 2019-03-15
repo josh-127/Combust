@@ -15,13 +15,9 @@
     <ClCompile Include="vendor\googletest\src\gtest-all.cc">
       <Filter>vendor\googletest</Filter>
     </ClCompile>
-    <ClCompile Include="lexer.cc" />
     <ClCompile Include="logger.cc" />
     <ClCompile Include="source.cc" />
     <ClCompile Include="syntax.cc" />
-    <ClCompile Include="unit-tests\lexer-test.cc">
-      <Filter>unit-tests</Filter>
-    </ClCompile>
     <ClCompile Include="unit-tests\main.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
@@ -29,14 +25,18 @@
     <ClCompile Include="unit-tests\preprocessor-test.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
+    <ClCompile Include="code-lexer.cc" />
+    <ClCompile Include="unit-tests\code-lexer-test.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.hh" />
-    <ClInclude Include="lexer.hh" />
     <ClInclude Include="logger.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
     <ClInclude Include="preprocessor.hh" />
+    <ClInclude Include="code-lexer.hh" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />

@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
-#include "../lexer.hh"
+#include "../code-lexer.hh"
 
-TEST(LexerTest, EmptyFile) {
+TEST(CodeLexerTest, EmptyFile) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<EofToken>(token));
 }
 
-TEST(LexerTest, StrayToken) {
+TEST(CodeLexerTest, StrayToken) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "@") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StrayToken>(token));
@@ -20,12 +20,12 @@ TEST(LexerTest, StrayToken) {
     ASSERT_EQ(strayToken->GetOffendingChar(), '@');
 }
 
-TEST(LexerTest, CommentToken) {
+TEST(CodeLexerTest, CommentToken) {
     std::string openingToken{ "/*" };
     std::string closingToken{ "*/" };
     std::string contents{ "The quick brown fox jumps over the lazy dog." };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", openingToken + contents + closingToken) };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<CommentToken>(token));
@@ -36,13 +36,13 @@ TEST(LexerTest, CommentToken) {
     EXPECT_EQ(commentToken->GetClosingToken(), closingToken);
 }
 
-TEST(LexerTest, CommentToken_MissingClosingToken) {
+TEST(CodeLexerTest, CommentToken_MissingClosingToken) {
     // NOTE: SourceFile always add a new-line character at the end Contents string.
     std::string openingToken{ "/*" };
     std::string closingToken{ "" };
     std::string contents{ "The quick brown fox jumps over the lazy dog." };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", openingToken + contents + closingToken) };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<CommentToken>(token));
@@ -53,10 +53,10 @@ TEST(LexerTest, CommentToken_MissingClosingToken) {
     EXPECT_EQ(commentToken->GetClosingToken(), closingToken);
 }
 
-TEST(LexerTest, NumericLiteralToken_Base10_Integer) {
+TEST(CodeLexerTest, NumericLiteralToken_Base10_Integer) {
     std::string value{ "1234567890" };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", value) };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<NumericLiteralToken>(token));
@@ -69,11 +69,11 @@ TEST(LexerTest, NumericLiteralToken_Base10_Integer) {
     EXPECT_EQ(literalToken->GetSuffix(), "");
 }
 
-TEST(LexerTest, NumericLiteralToken_Base10_Integer_WithSuffix_L) {
+TEST(CodeLexerTest, NumericLiteralToken_Base10_Integer_WithSuffix_L) {
     std::string value{ "1234567890" };
     std::string suffix{ "L" };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", value + suffix) };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<NumericLiteralToken>(token));
@@ -86,11 +86,11 @@ TEST(LexerTest, NumericLiteralToken_Base10_Integer_WithSuffix_L) {
     EXPECT_EQ(literalToken->GetSuffix(), suffix);
 }
 
-TEST(LexerTest, NumericLiteralToken_Base10_Integer_WithInvalidSuffix) {
+TEST(CodeLexerTest, NumericLiteralToken_Base10_Integer_WithInvalidSuffix) {
     std::string value{ "1234567890" };
     std::string suffix{ "FooBar" };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", value + suffix) };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<NumericLiteralToken>(token));
@@ -103,9 +103,9 @@ TEST(LexerTest, NumericLiteralToken_Base10_Integer_WithInvalidSuffix) {
     EXPECT_EQ(literalToken->GetSuffix(), suffix);
 }
 
-TEST(LexerTest, StringLiteralToken_SingleQuotes_SingleCharacter) {
+TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_SingleCharacter) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "'A'") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StringLiteralToken>(token));
@@ -116,9 +116,9 @@ TEST(LexerTest, StringLiteralToken_SingleQuotes_SingleCharacter) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
 }
 
-TEST(LexerTest, StringLiteralToken_SingleQuotes_EscapeSequence) {
+TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_EscapeSequence) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "'\\n'") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StringLiteralToken>(token));
@@ -129,9 +129,9 @@ TEST(LexerTest, StringLiteralToken_SingleQuotes_EscapeSequence) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
 }
 
-TEST(LexerTest, StringLiteralToken_SingleQuotes_MultipleCharacters) {
+TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_MultipleCharacters) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "'FooBar'") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StringLiteralToken>(token));
@@ -142,9 +142,9 @@ TEST(LexerTest, StringLiteralToken_SingleQuotes_MultipleCharacters) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
 }
 
-TEST(LexerTest, StringLiteralToken_SingleQuotes_MissingClosingQuote) {
+TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_MissingClosingQuote) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "'FooBar\n") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StringLiteralToken>(token));
@@ -155,9 +155,9 @@ TEST(LexerTest, StringLiteralToken_SingleQuotes_MissingClosingQuote) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '\n');
 }
 
-TEST(LexerTest, StringLiteralToken_DoubleQuotes) {
+TEST(CodeLexerTest, StringLiteralToken_DoubleQuotes) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "\"FooBar\"") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StringLiteralToken>(token));
@@ -168,9 +168,9 @@ TEST(LexerTest, StringLiteralToken_DoubleQuotes) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '"');
 }
 
-TEST(LexerTest, StringLiteralToken_DoubleQuotes_WithEscapeSequence) {
+TEST(CodeLexerTest, StringLiteralToken_DoubleQuotes_WithEscapeSequence) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "\"\\n\\r\\t\\0\"") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StringLiteralToken>(token));
@@ -181,9 +181,9 @@ TEST(LexerTest, StringLiteralToken_DoubleQuotes_WithEscapeSequence) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '"');
 }
 
-TEST(LexerTest, StringLiteralToken_DoubleQuotes_MissingClosingQuote) {
+TEST(CodeLexerTest, StringLiteralToken_DoubleQuotes_MissingClosingQuote) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "\"FooBar\n") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StringLiteralToken>(token));
@@ -194,10 +194,10 @@ TEST(LexerTest, StringLiteralToken_DoubleQuotes_MissingClosingQuote) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '\n');
 }
 
-TEST(LexerTest, IdentifierToken) {
+TEST(CodeLexerTest, IdentifierToken) {
     constexpr const char* name = "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     Rc<SourceFile> sourceFile{ CreateSourceFile("", name) };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<IdentifierToken>(token));
@@ -206,617 +206,617 @@ TEST(LexerTest, IdentifierToken) {
     ASSERT_EQ(identifierToken->GetName(), name);
 }
 
-TEST(LexerTest, ConstKeyword) {
+TEST(CodeLexerTest, ConstKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "const") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ConstKeyword>(token));
 }
 
-TEST(LexerTest, ExternKeyword) {
+TEST(CodeLexerTest, ExternKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "extern") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ExternKeyword>(token));
 }
 
-TEST(LexerTest, StaticKeyword) {
+TEST(CodeLexerTest, StaticKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "static") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StaticKeyword>(token));
 }
 
-TEST(LexerTest, AutoKeyword) {
+TEST(CodeLexerTest, AutoKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "auto") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<AutoKeyword>(token));
 }
 
-TEST(LexerTest, VolatileKeyword) {
+TEST(CodeLexerTest, VolatileKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "volatile") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<VolatileKeyword>(token));
 }
 
-TEST(LexerTest, UnsignedKeyword) {
+TEST(CodeLexerTest, UnsignedKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "unsigned") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<UnsignedKeyword>(token));
 }
 
-TEST(LexerTest, SignedKeyword) {
+TEST(CodeLexerTest, SignedKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "signed") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<SignedKeyword>(token));
 }
 
-TEST(LexerTest, VoidKeyword) {
+TEST(CodeLexerTest, VoidKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "void") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<VoidKeyword>(token));
 }
 
-TEST(LexerTest, CharKeyword) {
+TEST(CodeLexerTest, CharKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "char") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<CharKeyword>(token));
 }
 
-TEST(LexerTest, ShortKeyword) {
+TEST(CodeLexerTest, ShortKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "short") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ShortKeyword>(token));
 }
 
-TEST(LexerTest, IntKeyword) {
+TEST(CodeLexerTest, IntKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "int") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<IntKeyword>(token));
 }
 
-TEST(LexerTest, LongKeyword) {
+TEST(CodeLexerTest, LongKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "long") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LongKeyword>(token));
 }
 
-TEST(LexerTest, FloatKeyword) {
+TEST(CodeLexerTest, FloatKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "float") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<FloatKeyword>(token));
 }
 
-TEST(LexerTest, DoubleKeyword) {
+TEST(CodeLexerTest, DoubleKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "double") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<DoubleKeyword>(token));
 }
 
-TEST(LexerTest, EnumKeyword) {
+TEST(CodeLexerTest, EnumKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "enum") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<EnumKeyword>(token));
 }
 
-TEST(LexerTest, StructKeyword) {
+TEST(CodeLexerTest, StructKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "struct") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<StructKeyword>(token));
 }
 
-TEST(LexerTest, UnionKeyword) {
+TEST(CodeLexerTest, UnionKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "union") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<UnionKeyword>(token));
 }
 
-TEST(LexerTest, TypeDefKeyword) {
+TEST(CodeLexerTest, TypeDefKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "typedef") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<TypeDefKeyword>(token));
 }
 
-TEST(LexerTest, SizeOfKeyword) {
+TEST(CodeLexerTest, SizeOfKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "sizeof") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<SizeOfKeyword>(token));
 }
 
-TEST(LexerTest, RegisterKeyword) {
+TEST(CodeLexerTest, RegisterKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "register") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<RegisterKeyword>(token));
 }
 
-TEST(LexerTest, GotoKeyword) {
+TEST(CodeLexerTest, GotoKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "goto") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<GotoKeyword>(token));
 }
 
-TEST(LexerTest, IfKeyword) {
+TEST(CodeLexerTest, IfKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "if") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<IfKeyword>(token));
 }
 
-TEST(LexerTest, ElseKeyword) {
+TEST(CodeLexerTest, ElseKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "else") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ElseKeyword>(token));
 }
 
-TEST(LexerTest, SwitchKeyword) {
+TEST(CodeLexerTest, SwitchKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "switch") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<SwitchKeyword>(token));
 }
 
-TEST(LexerTest, CaseKeyword) {
+TEST(CodeLexerTest, CaseKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "case") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<CaseKeyword>(token));
 }
 
-TEST(LexerTest, DefaultKeyword) {
+TEST(CodeLexerTest, DefaultKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "default") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<DefaultKeyword>(token));
 }
 
-TEST(LexerTest, DoKeyword) {
+TEST(CodeLexerTest, DoKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "do") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<DoKeyword>(token));
 }
 
-TEST(LexerTest, WhileKeyword) {
+TEST(CodeLexerTest, WhileKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "while") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<WhileKeyword>(token));
 }
 
-TEST(LexerTest, ForKeyword) {
+TEST(CodeLexerTest, ForKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "for") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ForKeyword>(token));
 }
 
-TEST(LexerTest, BreakKeyword) {
+TEST(CodeLexerTest, BreakKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "break") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<BreakKeyword>(token));
 }
 
-TEST(LexerTest, ContinueKeyword) {
+TEST(CodeLexerTest, ContinueKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "continue") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ContinueKeyword>(token));
 }
 
-TEST(LexerTest, ReturnKeyword) {
+TEST(CodeLexerTest, ReturnKeyword) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "return") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ReturnKeyword>(token));
 }
 
-TEST(LexerTest, LParenSymbol) {
+TEST(CodeLexerTest, LParenSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "(") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LParenSymbol>(token));
 }
 
-TEST(LexerTest, RParenSymbol) {
+TEST(CodeLexerTest, RParenSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ")") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<RParenSymbol>(token));
 }
 
-TEST(LexerTest, LBracketSymbol) {
+TEST(CodeLexerTest, LBracketSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "[") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LBracketSymbol>(token));
 }
 
-TEST(LexerTest, RBracketSymbol) {
+TEST(CodeLexerTest, RBracketSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "]") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<RBracketSymbol>(token));
 }
 
-TEST(LexerTest, LBraceSymbol) {
+TEST(CodeLexerTest, LBraceSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "{") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LBraceSymbol>(token));
 }
 
-TEST(LexerTest, RBraceSymbol) {
+TEST(CodeLexerTest, RBraceSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "}") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<RBraceSymbol>(token));
 }
 
-TEST(LexerTest, SemicolonSymbol) {
+TEST(CodeLexerTest, SemicolonSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ";") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<SemicolonSymbol>(token));
 }
 
-TEST(LexerTest, DotSymbol) {
+TEST(CodeLexerTest, DotSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ".") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<DotSymbol>(token));
 }
 
-TEST(LexerTest, CommaSymbol) {
+TEST(CodeLexerTest, CommaSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ",") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<CommaSymbol>(token));
 }
 
-TEST(LexerTest, TildeSymbol) {
+TEST(CodeLexerTest, TildeSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "~") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<TildeSymbol>(token));
 }
 
-TEST(LexerTest, QuestionSymbol) {
+TEST(CodeLexerTest, QuestionSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "?") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<QuestionSymbol>(token));
 }
 
-TEST(LexerTest, ColonSymbol) {
+TEST(CodeLexerTest, ColonSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ":") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ColonSymbol>(token));
 }
 
-TEST(LexerTest, PlusSymbol) {
+TEST(CodeLexerTest, PlusSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "+") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PlusSymbol>(token));
 }
 
-TEST(LexerTest, PlusEqualsSymbol) {
+TEST(CodeLexerTest, PlusEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "+=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PlusEqualsSymbol>(token));
 }
 
-TEST(LexerTest, PlusPlusSymbol) {
+TEST(CodeLexerTest, PlusPlusSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "++") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PlusPlusSymbol>(token));
 }
 
-TEST(LexerTest, MinusSymbol) {
+TEST(CodeLexerTest, MinusSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "-") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<MinusSymbol>(token));
 }
 
-TEST(LexerTest, MinusEqualsSymbol) {
+TEST(CodeLexerTest, MinusEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "-=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<MinusEqualsSymbol>(token));
 }
 
-TEST(LexerTest, MinusMinusSymbol) {
+TEST(CodeLexerTest, MinusMinusSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "--") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<MinusMinusSymbol>(token));
 }
 
-TEST(LexerTest, MinusGtSymbol) {
+TEST(CodeLexerTest, MinusGtSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "->") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<MinusGtSymbol>(token));
 }
 
-TEST(LexerTest, AsteriskSymbol) {
+TEST(CodeLexerTest, AsteriskSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "*") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<AsteriskSymbol>(token));
 }
 
-TEST(LexerTest, AsteriskEqualsSymbol) {
+TEST(CodeLexerTest, AsteriskEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "*=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<AsteriskEqualsSymbol>(token));
 }
 
-TEST(LexerTest, SlashSymbol) {
+TEST(CodeLexerTest, SlashSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "/") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<SlashSymbol>(token));
 }
 
-TEST(LexerTest, SlashEqualsSymbol) {
+TEST(CodeLexerTest, SlashEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "/=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<SlashEqualsSymbol>(token));
 }
 
-TEST(LexerTest, PercentSymbol) {
+TEST(CodeLexerTest, PercentSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "%") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PercentSymbol>(token));
 }
 
-TEST(LexerTest, PercentEqualsSymbol) {
+TEST(CodeLexerTest, PercentEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "%=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PercentEqualsSymbol>(token));
 }
 
-TEST(LexerTest, LtSymbol) {
+TEST(CodeLexerTest, LtSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "<") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LtSymbol>(token));
 }
 
-TEST(LexerTest, LtEqualsSymbol) {
+TEST(CodeLexerTest, LtEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "<=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LtEqualsSymbol>(token));
 }
 
-TEST(LexerTest, LtLtSymbol) {
+TEST(CodeLexerTest, LtLtSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "<<") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LtLtSymbol>(token));
 }
 
-TEST(LexerTest, LtLtEqualsSymbol) {
+TEST(CodeLexerTest, LtLtEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "<<=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<LtLtEqualsSymbol>(token));
 }
 
-TEST(LexerTest, GtSymbol) {
+TEST(CodeLexerTest, GtSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ">") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<GtSymbol>(token));
 }
 
-TEST(LexerTest, GtEqualsSymbol) {
+TEST(CodeLexerTest, GtEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ">=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<GtEqualsSymbol>(token));
 }
 
-TEST(LexerTest, GtGtSymbol) {
+TEST(CodeLexerTest, GtGtSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ">>") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<GtGtSymbol>(token));
 }
 
-TEST(LexerTest, GtGtEqualsSymbol) {
+TEST(CodeLexerTest, GtGtEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", ">>=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<GtGtEqualsSymbol>(token));
 }
 
-TEST(LexerTest, EqualsSymbol) {
+TEST(CodeLexerTest, EqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<EqualsSymbol>(token));
 }
 
-TEST(LexerTest, EqualsEqualsSymbol) {
+TEST(CodeLexerTest, EqualsEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "==") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<EqualsEqualsSymbol>(token));
 }
 
-TEST(LexerTest, ExclamationSymbol) {
+TEST(CodeLexerTest, ExclamationSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "!") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ExclamationSymbol>(token));
 }
 
-TEST(LexerTest, ExclamationEqualsSymbol) {
+TEST(CodeLexerTest, ExclamationEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "!=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<ExclamationEqualsSymbol>(token));
 }
 
-TEST(LexerTest, AmpersandSymbol) {
+TEST(CodeLexerTest, AmpersandSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "&") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<AmpersandSymbol>(token));
 }
 
-TEST(LexerTest, AmpersandEqualsSymbol) {
+TEST(CodeLexerTest, AmpersandEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "&=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<AmpersandEqualsSymbol>(token));
 }
 
-TEST(LexerTest, AmpersandAmpersandSymbol) {
+TEST(CodeLexerTest, AmpersandAmpersandSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "&&") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<AmpersandAmpersandSymbol>(token));
 }
 
-TEST(LexerTest, CaretSymbol) {
+TEST(CodeLexerTest, CaretSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "^") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<CaretSymbol>(token));
 }
 
-TEST(LexerTest, CaretEqualsSymbol) {
+TEST(CodeLexerTest, CaretEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "^=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<CaretEqualsSymbol>(token));
 }
 
-TEST(LexerTest, PipeSymbol) {
+TEST(CodeLexerTest, PipeSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "|") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PipeSymbol>(token));
 }
 
-TEST(LexerTest, PipeEqualsSymbol) {
+TEST(CodeLexerTest, PipeEqualsSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "|=") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PipeEqualsSymbol>(token));
 }
 
-TEST(LexerTest, PipePipeSymbol) {
+TEST(CodeLexerTest, PipePipeSymbol) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "||") };
-    Rc<Lexer> lexer{ NewObj<Lexer>(sourceFile) };
+    Rc<CodeLexer> lexer{ NewObj<CodeLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsToken<PipePipeSymbol>(token));
