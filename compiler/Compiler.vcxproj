@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="common.hh" />
     <ClInclude Include="code-lexer.hh" />
+    <ClInclude Include="language-parser.hh" />
     <ClInclude Include="lexer.hh" />
     <ClInclude Include="logger.hh" />
     <ClInclude Include="preprocessor-lexer.hh" />
@@ -29,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="code-lexer.cc" />
+    <ClCompile Include="language-parser.cc" />
     <ClCompile Include="logger.cc" />
     <ClCompile Include="main.cc" />
     <ClCompile Include="preprocessor-lexer.cc" />

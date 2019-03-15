@@ -29,6 +29,7 @@
     <ClCompile Include="unit-tests\preprocessor-lexer-test.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
+    <ClCompile Include="language-parser.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.hh" />
@@ -38,6 +39,7 @@
     <ClInclude Include="code-lexer.hh" />
     <ClInclude Include="preprocessor-lexer.hh" />
     <ClInclude Include="lexer.hh" />
+    <ClInclude Include="language-parser.hh" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />
