@@ -21,12 +21,12 @@
     <ClCompile Include="unit-tests\main.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
-    <ClCompile Include="preprocessor.cc" />
-    <ClCompile Include="unit-tests\preprocessor-test.cc">
-      <Filter>unit-tests</Filter>
-    </ClCompile>
     <ClCompile Include="code-lexer.cc" />
     <ClCompile Include="unit-tests\code-lexer-test.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
+    <ClCompile Include="preprocessor-lexer.cc" />
+    <ClCompile Include="unit-tests\preprocessor-lexer-test.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,8 +35,8 @@
     <ClInclude Include="logger.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
-    <ClInclude Include="preprocessor.hh" />
     <ClInclude Include="code-lexer.hh" />
+    <ClInclude Include="preprocessor-lexer.hh" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />

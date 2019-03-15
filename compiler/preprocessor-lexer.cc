@@ -1,4 +1,4 @@
-#include "preprocessor.hh"
+#include "preprocessor-lexer.hh"
 #include "code-lexer.hh"
 #include "source.hh"
 #include "syntax.hh"
@@ -16,18 +16,18 @@ constexpr bool IsIdentifierOrKeyword(char c) noexcept {
     return IsLetter(c) || IsDecimal(c);
 }
 
-struct PREPROCESSOR_IMPL {
+struct PREPROCESSOR_LEXER_IMPL {
     std::queue<Rc<SyntaxToken>> tokensToReturn{ };
 };
 
-Preprocessor::Preprocessor(Rc<const SourceFile> input) :
+PreprocessorLexer::PreprocessorLexer(Rc<const SourceFile> input) :
     lexer{ NewChild<CodeLexer>(input) },
-    p{ NewChild<PREPROCESSOR_IMPL>() }
+    p{ NewChild<PREPROCESSOR_LEXER_IMPL>() }
 {}
 
-Preprocessor::~Preprocessor() {}
+PreprocessorLexer::~PreprocessorLexer() {}
 
-Rc<SyntaxToken> Preprocessor::ReadToken() {
+Rc<SyntaxToken> PreprocessorLexer::ReadToken() {
     if (p->tokensToReturn.size() > 0) {
         Rc<SyntaxToken> token{ p->tokensToReturn.front() };
         p->tokensToReturn.pop();
@@ -37,7 +37,7 @@ Rc<SyntaxToken> Preprocessor::ReadToken() {
     return ReadToken_Internal();
 }
 
-Rc<SyntaxToken> Preprocessor::ReadToken_Internal() {
+Rc<SyntaxToken> PreprocessorLexer::ReadToken_Internal() {
     while (IsWhitespace(lexer->PeekChar()))
         lexer->ReadChar();
 

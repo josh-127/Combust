@@ -22,7 +22,7 @@
     <ClInclude Include="common.hh" />
     <ClInclude Include="code-lexer.hh" />
     <ClInclude Include="logger.hh" />
-    <ClInclude Include="preprocessor.hh" />
+    <ClInclude Include="preprocessor-lexer.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
   </ItemGroup>
@@ -30,7 +30,7 @@
     <ClCompile Include="code-lexer.cc" />
     <ClCompile Include="logger.cc" />
     <ClCompile Include="main.cc" />
-    <ClCompile Include="preprocessor.cc" />
+    <ClCompile Include="preprocessor-lexer.cc" />
     <ClCompile Include="source.cc" />
     <ClCompile Include="syntax.cc" />
   </ItemGroup>

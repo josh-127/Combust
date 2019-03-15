@@ -158,19 +158,19 @@
     <ClInclude Include="code-lexer.hh" />
     <ClInclude Include="common.hh" />
     <ClInclude Include="logger.hh" />
-    <ClInclude Include="preprocessor.hh" />
+    <ClInclude Include="preprocessor-lexer.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="code-lexer.cc" />
     <ClCompile Include="logger.cc" />
-    <ClCompile Include="preprocessor.cc" />
+    <ClCompile Include="preprocessor-lexer.cc" />
     <ClCompile Include="source.cc" />
     <ClCompile Include="syntax.cc" />
     <ClCompile Include="unit-tests\code-lexer-test.cc" />
     <ClCompile Include="unit-tests\main.cc" />
-    <ClCompile Include="unit-tests\preprocessor-test.cc" />
+    <ClCompile Include="unit-tests\preprocessor-lexer-test.cc" />
     <ClCompile Include="vendor\googletest\src\gtest-all.cc" />
   </ItemGroup>
   <ItemGroup>

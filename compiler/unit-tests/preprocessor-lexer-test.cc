@@ -1,22 +1,22 @@
 #include <gtest/gtest.h>
-#include "../preprocessor.hh"
+#include "../preprocessor-lexer.hh"
 #include "../source.hh"
 #include "../syntax.hh"
 
-TEST(PreprocessorTest, EmptyFile) {
+TEST(PreprocessorLexerTest, EmptyFile) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     ASSERT_TRUE(IsToken<EofToken>(token));
 }
 
-TEST(PreprocessorTest, HStringLiteralToken) {
+TEST(PreprocessorLexerTest, HStringLiteralToken) {
     std::string path{ "FooBar" };
     Rc<SourceFile> sourceFile{
         CreateSourceFile("", "#include <" + path + ">")
     };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> firstToken{ preprocessor->ReadToken() };
     EXPECT_TRUE(firstToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
@@ -32,12 +32,12 @@ TEST(PreprocessorTest, HStringLiteralToken) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '>');
 }
 
-TEST(PreprocessorTest, HStringLiteralToken_WithoutWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, HStringLiteralToken_WithoutWhitespaceInBetween) {
     std::string path{ "FooBar" };
     Rc<SourceFile> sourceFile{
         CreateSourceFile("", "#include<" + path + ">")
     };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> firstToken{ preprocessor->ReadToken() };
     EXPECT_TRUE(firstToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
@@ -53,23 +53,23 @@ TEST(PreprocessorTest, HStringLiteralToken_WithoutWhitespaceInBetween) {
     EXPECT_EQ(literalToken->GetClosingQuote(), '>');
 }
 
-TEST(PreprocessorTest, IdentifierToken) {
+TEST(PreprocessorLexerTest, IdentifierToken) {
     Rc<SourceFile> sourceFile{
         CreateSourceFile(
             "",
             "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         )
     };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     ASSERT_TRUE(IsToken<IdentifierToken>(token));
 }
 
-TEST(PreprocessorTest, InvalidDirective) {
+TEST(PreprocessorLexerTest, InvalidDirective) {
     std::string name{ "FooBar" };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", '#' + name) };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     ASSERT_TRUE(IsToken<InvalidDirective>(token));
@@ -79,10 +79,10 @@ TEST(PreprocessorTest, InvalidDirective) {
     EXPECT_TRUE(directive->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
 }
 
-TEST(PreprocessorTest, InvalidDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, InvalidDirective_WithWhitespaceInBetween) {
     std::string name{ "FooBar" };
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   " + name) };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
@@ -92,198 +92,198 @@ TEST(PreprocessorTest, InvalidDirective_WithWhitespaceInBetween) {
     EXPECT_EQ(directive->GetName(), name);
 }
 
-TEST(PreprocessorTest, IfDirective) {
+TEST(PreprocessorLexerTest, IfDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#if") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IfDirective>(token));
 }
 
-TEST(PreprocessorTest, IfDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, IfDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   if") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IfDirective>(token));
 }
 
-TEST(PreprocessorTest, IfDefDirective) {
+TEST(PreprocessorLexerTest, IfDefDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#ifdef") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IfDefDirective>(token));
 }
 
-TEST(PreprocessorTest, IfDefDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, IfDefDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   ifdef") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IfDefDirective>(token));
 }
 
-TEST(PreprocessorTest, IfNDefDirective) {
+TEST(PreprocessorLexerTest, IfNDefDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#ifndef") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IfNDefDirective>(token));
 }
 
-TEST(PreprocessorTest, IfNDefDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, IfNDefDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   ifndef") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IfNDefDirective>(token));
 }
 
-TEST(PreprocessorTest, ElifDirective) {
+TEST(PreprocessorLexerTest, ElifDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#elif") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<ElifDirective>(token));
 }
 
-TEST(PreprocessorTest, ElifDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, ElifDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   elif") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<ElifDirective>(token));
 }
 
-TEST(PreprocessorTest, EndIfDirective) {
+TEST(PreprocessorLexerTest, EndIfDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#endif") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<EndIfDirective>(token));
 }
 
-TEST(PreprocessorTest, EndIfDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, EndIfDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   endif") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<EndIfDirective>(token));
 }
 
-TEST(PreprocessorTest, IncludeDirective) {
+TEST(PreprocessorLexerTest, IncludeDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#include") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IncludeDirective>(token));
 }
 
-TEST(PreprocessorTest, IncludeDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, IncludeDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   include") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<IncludeDirective>(token));
 }
 
-TEST(PreprocessorTest, DefineDirective) {
+TEST(PreprocessorLexerTest, DefineDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#define") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<DefineDirective>(token));
 }
 
-TEST(PreprocessorTest, DefineDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, DefineDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   define") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<DefineDirective>(token));
 }
 
-TEST(PreprocessorTest, UnDefDirective) {
+TEST(PreprocessorLexerTest, UnDefDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#undef") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<UnDefDirective>(token));
 }
 
-TEST(PreprocessorTest, UnDefDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, UnDefDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   undef") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<UnDefDirective>(token));
 }
 
-TEST(PreprocessorTest, LineDirective) {
+TEST(PreprocessorLexerTest, LineDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#line") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<LineDirective>(token));
 }
 
-TEST(PreprocessorTest, LineDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, LineDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   line") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<LineDirective>(token));
 }
 
-TEST(PreprocessorTest, ErrorDirective) {
+TEST(PreprocessorLexerTest, ErrorDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#error") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<ErrorDirective>(token));
 }
 
-TEST(PreprocessorTest, ErrorDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, ErrorDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   error") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<ErrorDirective>(token));
 }
 
-TEST(PreprocessorTest, WarningDirective) {
+TEST(PreprocessorLexerTest, WarningDirective) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#warning") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
     ASSERT_TRUE(IsToken<WarningDirective>(token));
 }
 
-TEST(PreprocessorTest, WarningDirective_WithWhitespaceInBetween) {
+TEST(PreprocessorLexerTest, WarningDirective_WithWhitespaceInBetween) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "#   warning") };
-    Rc<Preprocessor> preprocessor{ NewObj<Preprocessor>(sourceFile) };
+    Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
