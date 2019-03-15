@@ -25,7 +25,7 @@ struct LEXER_IMPL {
 };
 
 Lexer::Lexer(Rc<const SourceFile> input) :
-    l{ std::make_unique<LEXER_IMPL>() }
+    l{ NewChild<LEXER_IMPL>() }
 {
     l->Source                 = input;
     l->CurrentMode            = LM_DEFAULT;

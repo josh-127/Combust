@@ -39,7 +39,7 @@ private:
     Rc<SyntaxToken> ReadTokenOnce();
 
 private:
-    std::unique_ptr<LEXER_IMPL> l;
+    Owner<LEXER_IMPL> l;
 };
 
 #endif
