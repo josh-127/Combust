@@ -2,6 +2,7 @@
 #include "lexer.hh"
 #include "source.hh"
 #include "syntax.hh"
+#include <queue>
 #include <string>
 
 constexpr bool IsWhitespace(char c) noexcept {
@@ -15,13 +16,28 @@ constexpr bool IsIdentifierOrKeyword(char c) noexcept {
     return IsLetter(c) || IsDecimal(c);
 }
 
+struct PREPROCESSOR_IMPL {
+    std::queue<Rc<SyntaxToken>> tokensToReturn{ };
+};
+
 Preprocessor::Preprocessor(Rc<const SourceFile> input) :
-    lexer{ NewChild<Lexer>(input) }
+    lexer{ NewChild<Lexer>(input) },
+    p{ NewChild<PREPROCESSOR_IMPL>() }
 {}
 
 Preprocessor::~Preprocessor() {}
 
 Rc<SyntaxToken> Preprocessor::ReadToken() {
+    if (p->tokensToReturn.size() > 0) {
+        Rc<SyntaxToken> token{ p->tokensToReturn.front() };
+        p->tokensToReturn.pop();
+        return token;
+    }
+
+    return ReadToken_Internal();
+}
+
+Rc<SyntaxToken> Preprocessor::ReadToken_Internal() {
     while (IsWhitespace(lexer->PeekChar()))
         lexer->ReadChar();
 
@@ -59,6 +75,13 @@ Rc<SyntaxToken> Preprocessor::ReadToken() {
         }
         else if (keyword == "include") {
             result = NewObj<IncludeDirective>();
+
+            while (IsWhitespace(lexer->PeekChar()))
+                lexer->ReadChar();
+
+            Rc<SyntaxToken> hStringLiteral{ lexer->ReadStringLiteral('<', '>') };
+            if (hStringLiteral != nullptr)
+                p->tokensToReturn.push(hStringLiteral);
         }
         else if (keyword == "define") {
             result = NewObj<DefineDirective>();
