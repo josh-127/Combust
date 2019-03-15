@@ -42,6 +42,17 @@ Rc<SyntaxToken> Lexer::ReadToken() {
     return token;
 }
 
+char Lexer::PeekChar() const {
+    return GetChar();
+}
+
+char Lexer::ReadChar() {
+    char c{ GetChar() };
+    IncrementCursor();
+
+    return c;
+}
+
 constexpr bool IsWhitespace(char c) noexcept {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
 }
@@ -54,7 +65,7 @@ constexpr bool IsHex(char c) noexcept {
     return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
-char Lexer::Peek(int index) {
+char Lexer::Peek(int index) const {
     return l->Source->Contents[l->Cursor + index];
 }
 
@@ -65,7 +76,7 @@ char Lexer::Peek(int index) {
  * \return first value as the decoded character;
  *         second value as the encoded sequence's length
  */
-std::tuple<char, int> Lexer::DecodeTrigraph() {
+std::tuple<char, int> Lexer::DecodeTrigraph() const {
     if (Peek(0) == '?' && Peek(1) == '?') {
         switch (Peek(2)) {
         case '=':  return std::make_tuple('#', 3);
@@ -90,7 +101,7 @@ std::tuple<char, int> Lexer::DecodeTrigraph() {
  *         third value is true if the the sequence is a new-line escape;
  *                     otherwise false
  */
-std::tuple<char, int, bool> Lexer::DecodeNewLineEscape() {
+std::tuple<char, int, bool> Lexer::DecodeNewLineEscape() const {
     auto [firstChar, firstCharLength] = DecodeTrigraph();
 
     if (firstChar == '\\') {
@@ -118,7 +129,7 @@ std::tuple<char, int, bool> Lexer::DecodeNewLineEscape() {
  * \return first value as the decoded character;
  *         second value as the encoded sequence length
  */
-std::tuple<char, int> Lexer::GetCharEx() {
+std::tuple<char, int> Lexer::GetCharEx() const {
     std::tuple<char, int, bool> values{ DecodeNewLineEscape() };
     return std::make_tuple(std::get<0>(values), std::get<1>(values));
 }
@@ -127,7 +138,7 @@ std::tuple<char, int> Lexer::GetCharEx() {
  * Decodes the current character sequence.
  * \return the decoded character
  */
-char Lexer::GetChar() {
+char Lexer::GetChar() const {
     return std::get<0>(GetCharEx());
 }
 

@@ -15,13 +15,15 @@ public:
     virtual ~Lexer();
 
     Rc<SyntaxToken> ReadToken();
+    char PeekChar() const;
+    char ReadChar();
 
 private:
-    char Peek(int index = 0);
-    std::tuple<char, int> DecodeTrigraph();
-    std::tuple<char, int, bool> DecodeNewLineEscape();
-    std::tuple<char, int> GetCharEx();
-    char GetChar();
+    char Peek(int index = 0) const;
+    std::tuple<char, int> DecodeTrigraph() const;
+    std::tuple<char, int, bool> DecodeNewLineEscape() const;
+    std::tuple<char, int> GetCharEx() const;
+    char GetChar() const;
     void IncrementCursor();
     void IncrementCursorBy(IN int amount);
     SourceRange GetTokenRange(const Rc<SyntaxToken> t);
