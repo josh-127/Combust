@@ -88,6 +88,7 @@ Rc<SyntaxToken> Lexer::ReadIdentifierOrKeyword() {
     result->SetLexemeRange(lexemeRange);
     result->SetFlags(l->CurrentFlags);
 
+    l->CurrentToken = result;
     return result;
 }
 
