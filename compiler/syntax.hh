@@ -162,10 +162,10 @@ private:
 
 
 template<typename T>
-class IsTokenVisitor : public SyntaxNodeVisitor {
+class IsSyntaxNodeVisitor : public SyntaxNodeVisitor {
 public:
-    explicit IsTokenVisitor() {}
-    virtual ~IsTokenVisitor() {}
+    explicit IsSyntaxNodeVisitor() {}
+    virtual ~IsSyntaxNodeVisitor() {}
     bool GetResult() const { return result; }
 
 #define O(className)                                     \
@@ -193,8 +193,8 @@ private:
 };
 
 template<typename T>
-[[nodiscard]] inline bool IsToken(Rc<SyntaxToken> token) {
-    IsTokenVisitor<T> visitorFunction{ };
+[[nodiscard]] inline bool IsSyntaxNode(Rc<SyntaxToken> token) {
+    IsSyntaxNodeVisitor<T> visitorFunction{ };
     token->Accept(visitorFunction);
     return visitorFunction.GetResult();
 }

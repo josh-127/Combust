@@ -8,7 +8,7 @@ TEST(PreprocessorLexerTest, EmptyFile) {
     Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
-    ASSERT_TRUE(IsToken<EofToken>(token));
+    ASSERT_TRUE(IsSyntaxNode<EofToken>(token));
 }
 
 TEST(PreprocessorLexerTest, HStringLiteralToken) {
@@ -20,11 +20,11 @@ TEST(PreprocessorLexerTest, HStringLiteralToken) {
 
     Rc<SyntaxToken> firstToken{ preprocessor->ReadToken() };
     EXPECT_TRUE(firstToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IncludeDirective>(firstToken));
+    ASSERT_TRUE(IsSyntaxNode<IncludeDirective>(firstToken));
 
     Rc<SyntaxToken> secondToken{ preprocessor->ReadToken() };
     EXPECT_TRUE(!(secondToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE));
-    ASSERT_TRUE(IsToken<StringLiteralToken>(secondToken));
+    ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(secondToken));
 
     Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(secondToken) };
     EXPECT_EQ(literalToken->GetValue(), path);
@@ -41,11 +41,11 @@ TEST(PreprocessorLexerTest, HStringLiteralToken_WithoutWhitespaceInBetween) {
 
     Rc<SyntaxToken> firstToken{ preprocessor->ReadToken() };
     EXPECT_TRUE(firstToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IncludeDirective>(firstToken));
+    ASSERT_TRUE(IsSyntaxNode<IncludeDirective>(firstToken));
 
     Rc<SyntaxToken> secondToken{ preprocessor->ReadToken() };
     EXPECT_TRUE(!(secondToken->GetFlags() & SyntaxToken::BEGINNING_OF_LINE));
-    ASSERT_TRUE(IsToken<StringLiteralToken>(secondToken));
+    ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(secondToken));
 
     Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(secondToken) };
     EXPECT_EQ(literalToken->GetValue(), path);
@@ -63,7 +63,7 @@ TEST(PreprocessorLexerTest, IdentifierToken) {
     Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
-    ASSERT_TRUE(IsToken<IdentifierToken>(token));
+    ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(token));
 }
 
 TEST(PreprocessorLexerTest, InvalidDirective) {
@@ -72,7 +72,7 @@ TEST(PreprocessorLexerTest, InvalidDirective) {
     Rc<PreprocessorLexer> preprocessor{ NewObj<PreprocessorLexer>(sourceFile) };
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
-    ASSERT_TRUE(IsToken<InvalidDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<InvalidDirective>(token));
 
     Rc<InvalidDirective> directive{ std::static_pointer_cast<InvalidDirective>(token) };
     EXPECT_EQ(directive->GetName(), name);
@@ -86,7 +86,7 @@ TEST(PreprocessorLexerTest, InvalidDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<InvalidDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<InvalidDirective>(token));
 
     Rc<InvalidDirective> directive{ std::static_pointer_cast<InvalidDirective>(token) };
     EXPECT_EQ(directive->GetName(), name);
@@ -98,7 +98,7 @@ TEST(PreprocessorLexerTest, IfDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IfDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IfDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, IfDirective_WithWhitespaceInBetween) {
@@ -107,7 +107,7 @@ TEST(PreprocessorLexerTest, IfDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IfDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IfDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, IfDefDirective) {
@@ -116,7 +116,7 @@ TEST(PreprocessorLexerTest, IfDefDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IfDefDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IfDefDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, IfDefDirective_WithWhitespaceInBetween) {
@@ -125,7 +125,7 @@ TEST(PreprocessorLexerTest, IfDefDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IfDefDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IfDefDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, IfNDefDirective) {
@@ -134,7 +134,7 @@ TEST(PreprocessorLexerTest, IfNDefDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IfNDefDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IfNDefDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, IfNDefDirective_WithWhitespaceInBetween) {
@@ -143,7 +143,7 @@ TEST(PreprocessorLexerTest, IfNDefDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IfNDefDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IfNDefDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, ElifDirective) {
@@ -152,7 +152,7 @@ TEST(PreprocessorLexerTest, ElifDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<ElifDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<ElifDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, ElifDirective_WithWhitespaceInBetween) {
@@ -161,7 +161,7 @@ TEST(PreprocessorLexerTest, ElifDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<ElifDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<ElifDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, EndIfDirective) {
@@ -170,7 +170,7 @@ TEST(PreprocessorLexerTest, EndIfDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<EndIfDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<EndIfDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, EndIfDirective_WithWhitespaceInBetween) {
@@ -179,7 +179,7 @@ TEST(PreprocessorLexerTest, EndIfDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<EndIfDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<EndIfDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, IncludeDirective) {
@@ -188,7 +188,7 @@ TEST(PreprocessorLexerTest, IncludeDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IncludeDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IncludeDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, IncludeDirective_WithWhitespaceInBetween) {
@@ -197,7 +197,7 @@ TEST(PreprocessorLexerTest, IncludeDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<IncludeDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<IncludeDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, DefineDirective) {
@@ -206,7 +206,7 @@ TEST(PreprocessorLexerTest, DefineDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<DefineDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<DefineDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, DefineDirective_WithWhitespaceInBetween) {
@@ -215,7 +215,7 @@ TEST(PreprocessorLexerTest, DefineDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<DefineDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<DefineDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, UnDefDirective) {
@@ -224,7 +224,7 @@ TEST(PreprocessorLexerTest, UnDefDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<UnDefDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<UnDefDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, UnDefDirective_WithWhitespaceInBetween) {
@@ -233,7 +233,7 @@ TEST(PreprocessorLexerTest, UnDefDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<UnDefDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<UnDefDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, LineDirective) {
@@ -242,7 +242,7 @@ TEST(PreprocessorLexerTest, LineDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<LineDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<LineDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, LineDirective_WithWhitespaceInBetween) {
@@ -251,7 +251,7 @@ TEST(PreprocessorLexerTest, LineDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<LineDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<LineDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, ErrorDirective) {
@@ -260,7 +260,7 @@ TEST(PreprocessorLexerTest, ErrorDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<ErrorDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<ErrorDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, ErrorDirective_WithWhitespaceInBetween) {
@@ -269,7 +269,7 @@ TEST(PreprocessorLexerTest, ErrorDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<ErrorDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<ErrorDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, WarningDirective) {
@@ -278,7 +278,7 @@ TEST(PreprocessorLexerTest, WarningDirective) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<WarningDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<WarningDirective>(token));
 }
 
 TEST(PreprocessorLexerTest, WarningDirective_WithWhitespaceInBetween) {
@@ -287,5 +287,5 @@ TEST(PreprocessorLexerTest, WarningDirective_WithWhitespaceInBetween) {
 
     Rc<SyntaxToken> token{ preprocessor->ReadToken() };
     EXPECT_TRUE(token->GetFlags() & SyntaxToken::BEGINNING_OF_LINE);
-    ASSERT_TRUE(IsToken<WarningDirective>(token));
+    ASSERT_TRUE(IsSyntaxNode<WarningDirective>(token));
 }
