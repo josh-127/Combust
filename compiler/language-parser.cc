@@ -28,13 +28,13 @@ static Rc<PrimaryExpression> ParsePrimaryExpression(Rc<BacktrackingLexer> l) {
 static Rc<Expression> ParsePostfixExpression(Rc<BacktrackingLexer> l) {
     BacktrackingLexer::Marker marker{ l->Mark() };
 
-    Rc<PrimaryExpression> expression{ ParsePrimaryExpression(l) };
+    Rc<PrimaryExpression> primaryExpression{ ParsePrimaryExpression(l) };
 
-    if (expression) {
+    if (primaryExpression) {
         marker = l->Mark();
 
         SyntaxNodeVector children{ };
-        children.push_back(expression);
+        children.push_back(primaryExpression);
 
         Rc<SyntaxToken> firstToken{ l->ReadToken() };
         bool hasPostfix{ false };
@@ -68,13 +68,14 @@ static Rc<Expression> ParsePostfixExpression(Rc<BacktrackingLexer> l) {
             hasPostfix = true;
         }
 
-        if (!hasPostfix) {
-            l->Backtrack(marker);
+        if (hasPostfix) {
+            Rc<PostfixExpression> result{ NewObj<PostfixExpression>() };
+            result->SetChildren(children);
+            return result;
         }
 
-        Rc<PostfixExpression> result{ NewObj<PostfixExpression>() };
-        result->SetChildren(children);
-        return result;
+        l->Backtrack(marker);
+        return primaryExpression;
     }
 
     l->Backtrack(marker);
