@@ -224,9 +224,4 @@ template<typename T>
     return visitorFunction.GetResult();
 }
 
-template<typename T, typename... Types>
-[[nodiscard]] inline bool IsAnySyntaxNode(Rc<SyntaxToken> token) {
-    return IsSyntaxNode<T>(token) || IsAnySyntaxNode<Types...>(token);
-}
-
 #endif
