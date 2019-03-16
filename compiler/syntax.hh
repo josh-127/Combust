@@ -218,9 +218,9 @@ private:
 };
 
 template<typename T>
-[[nodiscard]] inline bool IsSyntaxNode(Rc<SyntaxToken> token) {
+[[nodiscard]] inline bool IsSyntaxNode(Rc<SyntaxNode> node) {
     IsSyntaxNodeVisitor<T> visitorFunction{ };
-    token->Accept(visitorFunction);
+    node->Accept(visitorFunction);
     return visitorFunction.GetResult();
 }
 
