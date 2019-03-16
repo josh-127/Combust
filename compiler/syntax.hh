@@ -60,6 +60,25 @@ private:
     uint32_t    flags{ 0 };
 };
 
+class Expression : public SyntaxNode {
+protected:
+    explicit Expression() {}
+    virtual ~Expression() {}
+};
+
+class Declaration : public SyntaxNode {
+protected:
+    explicit Declaration() {}
+    virtual ~Declaration() {}
+};
+
+class Statement : public SyntaxNode {
+protected:
+    explicit Statement() {}
+    virtual ~Statement() {}
+};
+
+
 #define Tk(className) \
     class className : public SyntaxToken {                 \
     public:                                                \
@@ -158,6 +177,21 @@ private:
     std::string value{ };
     char openingQuote{ 0 };
     char closingQuote{ 0 };
+};
+
+
+/**
+ * Expression that holds an lvalue, a function designator, or a void
+ * expression.
+ */
+class PrimaryExpression : public Expression {
+public:
+    explicit PrimaryExpression() {}
+    virtual ~PrimaryExpression() {}
+    Rc<SyntaxNode> GetValue() const { return value; }
+    void SetValue(Rc<SyntaxNode> to) { value = to; }
+private:
+    Rc<SyntaxNode> value{ };
 };
 
 
