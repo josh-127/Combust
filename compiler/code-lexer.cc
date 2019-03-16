@@ -286,28 +286,7 @@ Rc<SyntaxToken> CodeLexer::ReadIdentifierOrKeyword_Internal() {
     }
 
 #define o(kw) (name == kw)
-#if 0
-    if (l->CurrentMode & LM_PP_DIRECTIVE_KW) {
-             if (o("if"))       result = NewObj<IfDirectiveKw>();
-        else if (o("ifdef"))    result = NewObj<IfDefDirectiveKw>();
-        else if (o("ifndef"))   result = NewObj<IfNDefDirectiveKw>();
-        else if (o("elif"))     result = NewObj<ElifDirectiveKw>();
-        else if (o("endif"))    result = NewObj<EndIfDirectiveKw>();
-        else if (o("include"))  result = NewObj<IncludeDirectiveKw>();
-        else if (o("define"))   result = NewObj<DefineDirectiveKw>();
-        else if (o("undef"))    result = NewObj<UnDefDirectiveKw>();
-        else if (o("line"))     result = NewObj<LineDirectiveKw>();
-        else if (o("error"))    result = NewObj<ErrorDirectiveKw>();
-        else if (o("warning"))  result = NewObj<WarningDirectiveKw>();
-        else {
-            result = NewObj<InvalidDirective>();
-            name = "<invalid>";
-        }
-    }
-#else
-    if (false) {}
-#endif
-    else if (o("const"))    result = NewObj<ConstKeyword>();
+         if (o("const"))    result = NewObj<ConstKeyword>();
     else if (o("extern"))   result = NewObj<ExternKeyword>();
     else if (o("static"))   result = NewObj<StaticKeyword>();
     else if (o("auto"))     result = NewObj<AutoKeyword>();
