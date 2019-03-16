@@ -7,7 +7,7 @@ struct BACKTRACKING_LEXER_IMPL;
 
 class BacktrackingLexer : public Object, public virtual ILexer {
 public:
-    using Marker = int;
+    using Marker = size_t;
 
     explicit BacktrackingLexer(Rc<ILexer> lexer);
     virtual ~BacktrackingLexer();
