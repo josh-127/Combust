@@ -23,6 +23,11 @@ template<typename Ty, typename... Types>
     return std::make_unique<Ty>(args...);
 }
 
+template<typename To, typename From>
+[[nodiscard]] auto As(const Rc<From>& obj) -> decltype(std::static_pointer_cast<To>(obj)) {
+    return std::static_pointer_cast<To>(obj);
+}
+
 class Object {
 public:
     explicit Object() {}

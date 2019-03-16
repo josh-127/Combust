@@ -18,7 +18,7 @@ TEST(CodeLexerTest, StrayToken) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StrayToken>(token));
 
-    Rc<StrayToken> strayToken{ std::static_pointer_cast<StrayToken>(token) };
+    Rc<StrayToken> strayToken{ As<StrayToken>(token) };
     ASSERT_EQ(strayToken->GetOffendingChar(), '@');
 }
 
@@ -32,7 +32,7 @@ TEST(CodeLexerTest, CommentToken) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<CommentToken>(token));
 
-    Rc<CommentToken> commentToken{ std::static_pointer_cast<CommentToken>(token) };
+    Rc<CommentToken> commentToken{ As<CommentToken>(token) };
     EXPECT_EQ(commentToken->GetContents(), contents);
     EXPECT_EQ(commentToken->GetOpeningToken(), openingToken);
     EXPECT_EQ(commentToken->GetClosingToken(), closingToken);
@@ -49,7 +49,7 @@ TEST(CodeLexerTest, CommentToken_MissingClosingToken) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<CommentToken>(token));
 
-    Rc<CommentToken> commentToken{ std::static_pointer_cast<CommentToken>(token) };
+    Rc<CommentToken> commentToken{ As<CommentToken>(token) };
     EXPECT_EQ(commentToken->GetContents(), contents + '\n');
     EXPECT_EQ(commentToken->GetOpeningToken(), openingToken);
     EXPECT_EQ(commentToken->GetClosingToken(), closingToken);
@@ -63,7 +63,7 @@ TEST(CodeLexerTest, NumericLiteralToken_Base10_Integer) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(token));
 
-    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(token) };
+    Rc<NumericLiteralToken> literalToken{ As<NumericLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetWholeValue(), value);
     EXPECT_EQ(literalToken->GetFractionalValue(), "");
     EXPECT_EQ(literalToken->GetDotSymbol(), "");
@@ -80,7 +80,7 @@ TEST(CodeLexerTest, NumericLiteralToken_Base10_Integer_WithSuffix_L) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(token));
 
-    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(token) };
+    Rc<NumericLiteralToken> literalToken{ As<NumericLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetWholeValue(), value);
     EXPECT_EQ(literalToken->GetFractionalValue(), "");
     EXPECT_EQ(literalToken->GetDotSymbol(), "");
@@ -97,7 +97,7 @@ TEST(CodeLexerTest, NumericLiteralToken_Base10_Integer_WithInvalidSuffix) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(token));
 
-    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(token) };
+    Rc<NumericLiteralToken> literalToken{ As<NumericLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetWholeValue(), value);
     EXPECT_EQ(literalToken->GetFractionalValue(), "");
     EXPECT_EQ(literalToken->GetDotSymbol(), "");
@@ -112,7 +112,7 @@ TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_SingleCharacter) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(token));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetValue(), "A");
     EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
     EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
@@ -125,7 +125,7 @@ TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_EscapeSequence) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(token));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetValue(), "\\n");
     EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
     EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
@@ -138,7 +138,7 @@ TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_MultipleCharacters) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(token));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetValue(), "FooBar");
     EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
     EXPECT_EQ(literalToken->GetClosingQuote(), '\'');
@@ -151,7 +151,7 @@ TEST(CodeLexerTest, StringLiteralToken_SingleQuotes_MissingClosingQuote) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(token));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetValue(), "FooBar");
     EXPECT_EQ(literalToken->GetOpeningQuote(), '\'');
     EXPECT_EQ(literalToken->GetClosingQuote(), '\n');
@@ -164,7 +164,7 @@ TEST(CodeLexerTest, StringLiteralToken_DoubleQuotes) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(token));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetValue(), "FooBar");
     EXPECT_EQ(literalToken->GetOpeningQuote(), '"');
     EXPECT_EQ(literalToken->GetClosingQuote(), '"');
@@ -177,7 +177,7 @@ TEST(CodeLexerTest, StringLiteralToken_DoubleQuotes_WithEscapeSequence) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(token));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetValue(), "\\n\\r\\t\\0");
     EXPECT_EQ(literalToken->GetOpeningQuote(), '"');
     EXPECT_EQ(literalToken->GetClosingQuote(), '"');
@@ -190,7 +190,7 @@ TEST(CodeLexerTest, StringLiteralToken_DoubleQuotes_MissingClosingQuote) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(token));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(token) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(token) };
     EXPECT_EQ(literalToken->GetValue(), "FooBar");
     EXPECT_EQ(literalToken->GetOpeningQuote(), '"');
     EXPECT_EQ(literalToken->GetClosingQuote(), '\n');
@@ -204,7 +204,7 @@ TEST(CodeLexerTest, IdentifierToken) {
     Rc<SyntaxToken> token{ lexer->ReadToken() };
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(token));
 
-    Rc<IdentifierToken> identifierToken{ std::static_pointer_cast<IdentifierToken>(token) };
+    Rc<IdentifierToken> identifierToken{ As<IdentifierToken>(token) };
     ASSERT_EQ(identifierToken->GetName(), name);
 }
 

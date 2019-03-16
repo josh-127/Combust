@@ -77,14 +77,14 @@ TEST(ExpressionParserTest, PrimaryExpression_Identifier) {
     ASSERT_TRUE(expression);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
 
-    Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
+    Rc<PrimaryExpression> primaryExpression{ As<PrimaryExpression>(expression) };
     ASSERT_TRUE(primaryExpression->IsIdentifier());
     EXPECT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(value));
 
-    Rc<IdentifierToken> identifier{ std::static_pointer_cast<IdentifierToken>(value) };
+    Rc<IdentifierToken> identifier{ As<IdentifierToken>(value) };
     EXPECT_EQ(identifier->GetName(), identifierName);
 }
 
@@ -101,14 +101,14 @@ TEST(ExpressionParserTest, PrimaryExpression_NumericLiteral) {
     ASSERT_TRUE(expression);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
 
-    Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
+    Rc<PrimaryExpression> primaryExpression{ As<PrimaryExpression>(expression) };
     ASSERT_TRUE(primaryExpression->IsNumericLiteral());
     ASSERT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(value));
 
-    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(value) };
+    Rc<NumericLiteralToken> literalToken{ As<NumericLiteralToken>(value) };
     EXPECT_EQ(literalToken->GetWholeValue(), wholeValue);
 }
 
@@ -125,14 +125,14 @@ TEST(ExpressionParserTest, PrimaryExpression_StringLiteral) {
     ASSERT_TRUE(expression);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
 
-    Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
+    Rc<PrimaryExpression> primaryExpression{ As<PrimaryExpression>(expression) };
     ASSERT_TRUE(primaryExpression->IsStringLiteral());
     ASSERT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(value));
 
-    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(value) };
+    Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(value) };
     EXPECT_EQ(literalToken->GetValue(), literalValue);
 }
 
@@ -153,21 +153,21 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess) {
     ASSERT_TRUE(postfixExpressionBase);
     ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(postfixExpressionBase));
 
-    Rc<PostfixExpression> postfixExpression{ std::static_pointer_cast<PostfixExpression>(postfixExpressionBase) };
+    Rc<PostfixExpression> postfixExpression{ As<PostfixExpression>(postfixExpressionBase) };
     ASSERT_TRUE(postfixExpression->IsArrayAccessor());
     ASSERT_TRUE(postfixExpression->IsValid());
 
     Rc<SyntaxNode> primaryExpressionBase{ postfixExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(primaryExpressionBase));
 
-    Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(primaryExpressionBase) };
+    Rc<PrimaryExpression> primaryExpression{ As<PrimaryExpression>(primaryExpressionBase) };
     ASSERT_TRUE(primaryExpression->IsIdentifier());
     ASSERT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> identifierBase{ primaryExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(identifierBase));
 
-    Rc<IdentifierToken> identifier{ std::static_pointer_cast<IdentifierToken>(identifierBase) };
+    Rc<IdentifierToken> identifier{ As<IdentifierToken>(identifierBase) };
     EXPECT_EQ(identifier->GetName(), identifierName);
 
     Rc<SyntaxNode> lBracketBase{ postfixExpression->GetChildren()[1] };
@@ -176,13 +176,13 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess) {
     Rc<SyntaxNode> indexValueBase{ postfixExpression->GetChildren()[2] };
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(indexValueBase));
 
-    Rc<PrimaryExpression> indexValue{ std::static_pointer_cast<PrimaryExpression>(indexValueBase) };
+    Rc<PrimaryExpression> indexValue{ As<PrimaryExpression>(indexValueBase) };
     ASSERT_TRUE(indexValue->IsNumericLiteral());
     ASSERT_TRUE(indexValue->IsValid());
 
     Rc<SyntaxNode> numericLiteralBase{ indexValue->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(numericLiteralBase));
 
-    Rc<NumericLiteralToken> numericLiteral{ std::static_pointer_cast<NumericLiteralToken>(numericLiteralBase) };
+    Rc<NumericLiteralToken> numericLiteral{ As<NumericLiteralToken>(numericLiteralBase) };
     EXPECT_EQ(numericLiteral->GetWholeValue(), numericValue);
 }
