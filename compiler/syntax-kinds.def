@@ -1,4 +1,13 @@
 
+Sn(InvalidDirective);
+Sn(StrayToken);
+Sn(CommentToken);
+Sn(IdentifierToken);
+Sn(NumericLiteralToken);
+Sn(StringLiteralToken);
+
+Sn(PrimaryExpression);
+
 Tk(EofToken);
 
 Tk(IfDirective);

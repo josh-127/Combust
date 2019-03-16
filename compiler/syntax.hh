@@ -7,30 +7,24 @@
 #include <type_traits>
 
 
-class SyntaxNode;
-class SyntaxToken;
-#define Tk(className) class className
+#define O(className) class className
+#define Sn(className) O(className)
+#define Tk(className) O(className)
 #include "syntax-kinds.def"
 #undef Tk
-class InvalidDirective;
-class StrayToken;
-class CommentToken;
-class IdentifierToken;
-class NumericLiteralToken;
-class StringLiteralToken;
+#undef Sn
+#undef O
 
 
 class SyntaxNodeVisitor : public Object {
 public:
-#define Tk(className) virtual Rc<Object> Visit(className& obj) = 0
+#define O(className) virtual Rc<Object> Visit(className& obj) = 0
+#define Sn(className) O(className)
+#define Tk(className) O(className)
 #include "syntax-kinds.def"
 #undef Tk
-    virtual Rc<Object> Visit(InvalidDirective& obj) = 0;
-    virtual Rc<Object> Visit(StrayToken& obj) = 0;
-    virtual Rc<Object> Visit(CommentToken& obj) = 0;
-    virtual Rc<Object> Visit(IdentifierToken& obj) = 0;
-    virtual Rc<Object> Visit(NumericLiteralToken& obj) = 0;
-    virtual Rc<Object> Visit(StringLiteralToken& obj) = 0;
+#undef Sn
+#undef O
 };
 
 
@@ -79,6 +73,7 @@ protected:
 };
 
 
+#define Sn(className)
 #define Tk(className) \
     class className : public SyntaxToken {                 \
     public:                                                \
@@ -88,40 +83,41 @@ protected:
     }
 #include "syntax-kinds.def"
 #undef Tk
+#undef Sn
 
 class InvalidDirective : public SyntaxToken {
 public:
-    explicit InvalidDirective() {}
-    virtual ~InvalidDirective() {}
+    explicit InvalidDirective();
+    virtual ~InvalidDirective();
     const std::string& GetName() const { return name; }
     void SetName(const std::string& to) { name = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 private:
     std::string name{ };
 };
 
 class StrayToken : public SyntaxToken {
 public:
-    explicit StrayToken() {}
-    virtual ~StrayToken() {}
+    explicit StrayToken();
+    virtual ~StrayToken();
     char GetOffendingChar() const { return offendingChar; }
     void SetOffendingChar(const char to) { offendingChar = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 private:
     char offendingChar{ 0 };
 };
 
 class CommentToken : public SyntaxToken {
 public:
-    explicit CommentToken() {}
-    virtual ~CommentToken() {}
+    explicit CommentToken();
+    virtual ~CommentToken();
     const std::string& GetContents() const { return contents; }
     void SetContents(const std::string& to) { contents = to; }
     const std::string& GetOpeningToken() const { return openingToken; }
     void SetOpeningToken(const std::string& to) { openingToken = to; }
     const std::string& GetClosingToken() const { return closingToken; }
     void SetClosingToken(const std::string& to) { closingToken = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 private:
     std::string contents{ };
     std::string openingToken{ };
@@ -130,19 +126,19 @@ private:
 
 class IdentifierToken : public SyntaxToken {
 public:
-    explicit IdentifierToken() {}
-    virtual ~IdentifierToken() {}
+    explicit IdentifierToken();
+    virtual ~IdentifierToken();
     const std::string& GetName() const { return name; }
     void SetName(const std::string& to) { name = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 private:
     std::string name{ };
 };
 
 class NumericLiteralToken : public SyntaxToken {
 public:
-    explicit NumericLiteralToken() {}
-    virtual ~NumericLiteralToken() {}
+    explicit NumericLiteralToken();
+    virtual ~NumericLiteralToken();
     const std::string& GetWholeValue() const { return wholeValue; }
     void SetWholeValue(const std::string& to) { wholeValue = to; }
     const std::string& GetFractionalValue() const { return fractionalValue; }
@@ -153,7 +149,7 @@ public:
     void SetPrefix(const std::string& to) { prefix = to; }
     const std::string& GetSuffix() const { return suffix; }
     void SetSuffix(const std::string& to) { suffix = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 private:
     std::string wholeValue{ };
     std::string fractionalValue{ };
@@ -164,15 +160,15 @@ private:
 
 class StringLiteralToken : public SyntaxToken {
 public:
-    explicit StringLiteralToken() {}
-    virtual ~StringLiteralToken() {}
+    explicit StringLiteralToken();
+    virtual ~StringLiteralToken();
     const std::string& GetValue() const { return value; }
     void SetValue(const std::string& to) { value = to; }
     char GetOpeningQuote() const { return openingQuote; }
     void SetOpeningQuote(const char to) { openingQuote = to; }
     char GetClosingQuote() const { return closingQuote; }
     void SetClosingQuote(const char to) { closingQuote = to; }
-    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override { return visitor.Visit(*this); }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 private:
     std::string value{ };
     char openingQuote{ 0 };
@@ -186,10 +182,11 @@ private:
  */
 class PrimaryExpression : public Expression {
 public:
-    explicit PrimaryExpression() {}
-    virtual ~PrimaryExpression() {}
+    explicit PrimaryExpression();
+    virtual ~PrimaryExpression();
     Rc<SyntaxNode> GetValue() const { return value; }
     void SetValue(Rc<SyntaxNode> to) { value = to; }
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 private:
     Rc<SyntaxNode> value{ };
 };
@@ -209,17 +206,11 @@ public:
             result = true;                               \
         return Rc<Object>{ };                            \
     }
-
+#define Sn(className) O(className)
 #define Tk(className) O(className)
 #include "syntax-kinds.def"
 #undef Tk
-
-    O(InvalidDirective)
-    O(StrayToken)
-    O(CommentToken)
-    O(IdentifierToken)
-    O(NumericLiteralToken)
-    O(StringLiteralToken)
+#undef Sn
 #undef O
 
 private:
