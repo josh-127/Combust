@@ -2,11 +2,13 @@
 #define COMBUST_LANGUAGE_PARSER_HH
 #include "common.hh"
 
-class SyntaxNode;
-class Expression;
-class Statement;
-class Declaration;
+class BacktrackingLexer;
 
-Rc<Expression> ParseExpression();
+class Expression;
+class Declaration;
+class Statement;
+class SyntaxNode;
+
+Rc<Expression> ParseExpression(Rc<BacktrackingLexer> lexer);
 
 #endif
