@@ -78,7 +78,9 @@ TEST(ExpressionParserTest, PrimaryExpression_Identifier) {
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
 
     Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
-    Rc<SyntaxNode> value{ primaryExpression->GetValue() };
+    ASSERT_TRUE(primaryExpression->IsIdentifier());
+
+    Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(value));
 
     Rc<IdentifierToken> identifier{ std::static_pointer_cast<IdentifierToken>(value) };
@@ -99,7 +101,9 @@ TEST(ExpressionParserTest, PrimaryExpression_NumericLiteral) {
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
 
     Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
-    Rc<SyntaxNode> value{ primaryExpression->GetValue() };
+    ASSERT_TRUE(primaryExpression->IsNumericLiteral());
+
+    Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(value));
 
     Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(value) };
@@ -120,7 +124,9 @@ TEST(ExpressionParserTest, PrimaryExpression_StringLiteral) {
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
 
     Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
-    Rc<SyntaxNode> value{ primaryExpression->GetValue() };
+    ASSERT_TRUE(primaryExpression->IsStringLiteral());
+
+    Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(value));
 
     Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(value) };

@@ -41,6 +41,8 @@ private:
     SourceRange lexemeRange{ };
 };
 
+using SyntaxNodeVector = std::vector<Rc<SyntaxNode>>;
+
 class SyntaxToken : public SyntaxNode {
 public:
     static constexpr uint32_t BEGINNING_OF_LINE = 1;
@@ -55,9 +57,18 @@ private:
 };
 
 class Expression : public SyntaxNode {
+public:
+    const SyntaxNodeVector& GetChildren() const { return children; }
+    SyntaxNodeVector& GetChildren() { return children; }
+    void SetChildren(const SyntaxNodeVector& to) { children = to; }
+
+    virtual bool IsValid() const = 0;
+
 protected:
     explicit Expression() {}
     virtual ~Expression() {}
+
+    SyntaxNodeVector children{ };
 };
 
 class Declaration : public SyntaxNode {
@@ -87,8 +98,8 @@ protected:
 
 class InvalidDirective : public SyntaxToken {
 public:
-    explicit InvalidDirective();
-    virtual ~InvalidDirective();
+    explicit InvalidDirective() {}
+    virtual ~InvalidDirective() {}
     const std::string& GetName() const { return name; }
     void SetName(const std::string& to) { name = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
@@ -98,8 +109,8 @@ private:
 
 class StrayToken : public SyntaxToken {
 public:
-    explicit StrayToken();
-    virtual ~StrayToken();
+    explicit StrayToken() {}
+    virtual ~StrayToken() {}
     char GetOffendingChar() const { return offendingChar; }
     void SetOffendingChar(const char to) { offendingChar = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
@@ -109,8 +120,8 @@ private:
 
 class CommentToken : public SyntaxToken {
 public:
-    explicit CommentToken();
-    virtual ~CommentToken();
+    explicit CommentToken() {}
+    virtual ~CommentToken() {}
     const std::string& GetContents() const { return contents; }
     void SetContents(const std::string& to) { contents = to; }
     const std::string& GetOpeningToken() const { return openingToken; }
@@ -126,8 +137,8 @@ private:
 
 class IdentifierToken : public SyntaxToken {
 public:
-    explicit IdentifierToken();
-    virtual ~IdentifierToken();
+    explicit IdentifierToken() {}
+    virtual ~IdentifierToken() {}
     const std::string& GetName() const { return name; }
     void SetName(const std::string& to) { name = to; }
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
@@ -137,8 +148,8 @@ private:
 
 class NumericLiteralToken : public SyntaxToken {
 public:
-    explicit NumericLiteralToken();
-    virtual ~NumericLiteralToken();
+    explicit NumericLiteralToken() {}
+    virtual ~NumericLiteralToken() {}
     const std::string& GetWholeValue() const { return wholeValue; }
     void SetWholeValue(const std::string& to) { wholeValue = to; }
     const std::string& GetFractionalValue() const { return fractionalValue; }
@@ -160,8 +171,8 @@ private:
 
 class StringLiteralToken : public SyntaxToken {
 public:
-    explicit StringLiteralToken();
-    virtual ~StringLiteralToken();
+    explicit StringLiteralToken() {}
+    virtual ~StringLiteralToken() {}
     const std::string& GetValue() const { return value; }
     void SetValue(const std::string& to) { value = to; }
     char GetOpeningQuote() const { return openingQuote; }
@@ -182,13 +193,14 @@ private:
  */
 class PrimaryExpression : public Expression {
 public:
-    explicit PrimaryExpression();
-    virtual ~PrimaryExpression();
-    Rc<SyntaxNode> GetValue() const { return value; }
-    void SetValue(Rc<SyntaxNode> to) { value = to; }
+    explicit PrimaryExpression() {}
+    virtual ~PrimaryExpression() {}
+    bool IsIdentifier() const;
+    bool IsNumericLiteral() const;
+    bool IsStringLiteral() const;
+    bool IsParenthesizedExpression() const;
+    bool IsValid() const override;
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
-private:
-    Rc<SyntaxNode> value{ };
 };
 
 
@@ -220,6 +232,39 @@ private:
 template<typename T>
 [[nodiscard]] inline bool IsSyntaxNode(Rc<SyntaxNode> node) {
     IsSyntaxNodeVisitor<T> visitorFunction{ };
+    node->Accept(visitorFunction);
+    return visitorFunction.GetResult();
+}
+
+
+template<typename T>
+class IsBaseOfSyntaxNodeVisitor : public SyntaxNodeVisitor {
+public:
+    explicit IsBaseOfSyntaxNodeVisitor() {}
+    virtual ~IsBaseOfSyntaxNodeVisitor() {}
+    bool GetResult() const { return result; }
+
+#define O(className)                                        \
+    Rc<Object> Visit(className& obj) override {             \
+        (void) obj;                                         \
+        if constexpr (std::is_base_of<T, className>::value) \
+            result = true;                                  \
+        return Rc<Object>{ };                               \
+    }
+#define Sn(className) O(className)
+#define Tk(className) O(className)
+#include "syntax-kinds.def"
+#undef Tk
+#undef Sn
+#undef O
+
+private:
+    bool result{ false };
+};
+
+template<typename T>
+[[nodiscard]] inline bool IsBaseOfSyntaxNode(Rc<SyntaxNode> node) {
+    IsBaseOfSyntaxNodeVisitor<T> visitorFunction{ };
     node->Accept(visitorFunction);
     return visitorFunction.GetResult();
 }

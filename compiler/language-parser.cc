@@ -12,7 +12,7 @@ static Rc<Expression> ParsePrimaryExpression(Rc<BacktrackingLexer> l) {
         IsSyntaxNode<StringLiteralToken>(token))
     {
         Rc<PrimaryExpression> expression{ NewObj<PrimaryExpression>() };
-        expression->SetValue(token);
+        expression->SetChildren({ token });
 
         return expression;
     }
