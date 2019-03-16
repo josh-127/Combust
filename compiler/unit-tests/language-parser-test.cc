@@ -35,6 +35,26 @@ static Rc<EofToken> NewEofToken() {
     return NewObj<EofToken>();
 }
 
+static Rc<IdentifierToken> NewIdentifierToken(const std::string& name) {
+    Rc<IdentifierToken> token{ NewObj<IdentifierToken>() };
+    token->SetName(name);
+    return token;
+}
+
+static Rc<NumericLiteralToken> NewNumericLiteralToken(const std::string& wholeValue) {
+    Rc<NumericLiteralToken> token{ NewObj<NumericLiteralToken>() };
+    token->SetWholeValue(wholeValue);
+    return token;
+}
+
+static Rc<StringLiteralToken> NewStringLiteralToken(const std::string& value) {
+    Rc<StringLiteralToken> token{ NewObj<StringLiteralToken>() };
+    token->SetValue(value);
+    token->SetOpeningQuote('"');
+    token->SetClosingQuote('"');
+    return token;
+}
+
 TEST(ExpressionParserTest, EmptyFile) {
     std::vector<Rc<SyntaxToken>> tokens{ NewEofToken() };
     Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
@@ -42,4 +62,67 @@ TEST(ExpressionParserTest, EmptyFile) {
 
     Rc<Expression> expression{ ParseExpression(backtrackingLexer) };
     ASSERT_TRUE(!expression);
+}
+
+TEST(ExpressionParserTest, PrimaryExpression_Identifier) {
+    std::string identifierName{ "FooBar" };
+    std::vector<Rc<SyntaxToken>> tokens{
+        NewIdentifierToken(identifierName),
+        NewEofToken()
+    };
+    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+
+    Rc<Expression> expression{ ParseExpression(backtrackingLexer) };
+    ASSERT_TRUE(expression);
+    ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
+
+    Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
+    Rc<SyntaxNode> value{ primaryExpression->GetValue() };
+    ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(value));
+
+    Rc<IdentifierToken> identifier{ std::static_pointer_cast<IdentifierToken>(value) };
+    EXPECT_EQ(identifier->GetName(), identifierName);
+}
+
+TEST(ExpressionParserTest, PrimaryExpression_NumericLiteral) {
+    std::string wholeValue{ "1234567890" };
+    std::vector<Rc<SyntaxToken>> tokens{
+        NewNumericLiteralToken(wholeValue),
+        NewEofToken()
+    };
+    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+
+    Rc<Expression> expression{ ParseExpression(backtrackingLexer) };
+    ASSERT_TRUE(expression);
+    ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
+
+    Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
+    Rc<SyntaxNode> value{ primaryExpression->GetValue() };
+    ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(value));
+
+    Rc<NumericLiteralToken> literalToken{ std::static_pointer_cast<NumericLiteralToken>(value) };
+    EXPECT_EQ(literalToken->GetWholeValue(), wholeValue);
+}
+
+TEST(ExpressionParserTest, PrimaryExpression_StringLiteral) {
+    std::string literalValue{ "The quick brown fox jumps over the lazy dog." };
+    std::vector<Rc<SyntaxToken>> tokens{
+        NewStringLiteralToken(literalValue),
+        NewEofToken()
+    };
+    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+
+    Rc<Expression> expression{ ParseExpression(backtrackingLexer) };
+    ASSERT_TRUE(expression);
+    ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
+
+    Rc<PrimaryExpression> primaryExpression{ std::static_pointer_cast<PrimaryExpression>(expression) };
+    Rc<SyntaxNode> value{ primaryExpression->GetValue() };
+    ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(value));
+
+    Rc<StringLiteralToken> literalToken{ std::static_pointer_cast<StringLiteralToken>(value) };
+    EXPECT_EQ(literalToken->GetValue(), literalValue);
 }
