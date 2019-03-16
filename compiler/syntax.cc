@@ -67,18 +67,21 @@ bool PostfixExpression::IsStructureReference() const {
 }
 bool PostfixExpression::IsStructureDereference() const {
     return children.size() == 3
-        && IsSyntaxNode<PostfixExpression>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[0])
+            || IsSyntaxNode<PostfixExpression>(children[0]))
         && IsSyntaxNode<MinusGtSymbol>(children[1])
         && IsSyntaxNode<IdentifierToken>(children[2]);
 }
 bool PostfixExpression::IsPostIncrement() const {
     return children.size() == 2
-        && IsSyntaxNode<PostfixExpression>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[0])
+            || IsSyntaxNode<PostfixExpression>(children[0]))
         && IsSyntaxNode<PlusPlusSymbol>(children[1]);
 }
 bool PostfixExpression::IsPostDecrement() const {
     return children.size() == 2
-        && IsSyntaxNode<PostfixExpression>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[0])
+            || IsSyntaxNode<PostfixExpression>(children[0]))
         && IsSyntaxNode<MinusMinusSymbol>(children[1]);
 }
 bool PostfixExpression::IsValid() const {
