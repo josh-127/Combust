@@ -30,6 +30,7 @@
       <Filter>unit-tests</Filter>
     </ClCompile>
     <ClCompile Include="language-parser.cc" />
+    <ClCompile Include="backtracking-lexer.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.hh" />
@@ -40,6 +41,7 @@
     <ClInclude Include="preprocessor-lexer.hh" />
     <ClInclude Include="lexer.hh" />
     <ClInclude Include="language-parser.hh" />
+    <ClInclude Include="backtracking-lexer.hh" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />

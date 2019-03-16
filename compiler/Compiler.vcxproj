@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="backtracking-lexer.hh" />
     <ClInclude Include="common.hh" />
     <ClInclude Include="code-lexer.hh" />
     <ClInclude Include="language-parser.hh" />
@@ -29,6 +30,7 @@
     <ClInclude Include="syntax.hh" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="backtracking-lexer.cc" />
     <ClCompile Include="code-lexer.cc" />
     <ClCompile Include="language-parser.cc" />
     <ClCompile Include="logger.cc" />
