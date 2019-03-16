@@ -43,3 +43,48 @@ bool PrimaryExpression::IsValid() const {
         || IsStringLiteral()
         || IsParenthesizedExpression();
 }
+
+bool PostfixExpression::IsPrimaryExpression() const {
+    return children.size() == 1 && IsSyntaxNode<PrimaryExpression>(children[0]);
+}
+bool PostfixExpression::IsArrayAccessor() const {
+    return children.size() == 4
+        && IsSyntaxNode<PostfixExpression>(children[0])
+        && IsSyntaxNode<LBracketSymbol>(children[1])
+        && IsSyntaxNode<Expression>(children[2])
+        && IsSyntaxNode<RBracketSymbol>(children[3]);
+}
+bool PostfixExpression::IsFunctionCall() const {
+    return false;
+}
+bool PostfixExpression::IsStructureReference() const {
+    return children.size() == 3
+        && IsSyntaxNode<PostfixExpression>(children[0])
+        && IsSyntaxNode<DotSymbol>(children[1])
+        && IsSyntaxNode<IdentifierToken>(children[2]);
+}
+bool PostfixExpression::IsStructureDereference() const {
+    return children.size() == 3
+        && IsSyntaxNode<PostfixExpression>(children[0])
+        && IsSyntaxNode<MinusGtSymbol>(children[1])
+        && IsSyntaxNode<IdentifierToken>(children[2]);
+}
+bool PostfixExpression::IsPostIncrement() const {
+    return children.size() == 2
+        && IsSyntaxNode<PostfixExpression>(children[0])
+        && IsSyntaxNode<PlusPlusSymbol>(children[1]);
+}
+bool PostfixExpression::IsPostDecrement() const {
+    return children.size() == 2
+        && IsSyntaxNode<PostfixExpression>(children[0])
+        && IsSyntaxNode<MinusMinusSymbol>(children[1]);
+}
+bool PostfixExpression::IsValid() const {
+    return IsPrimaryExpression()
+        || IsArrayAccessor()
+        || IsFunctionCall()
+        || IsStructureReference()
+        || IsStructureDereference()
+        || IsPostIncrement()
+        || IsPostDecrement();
+}

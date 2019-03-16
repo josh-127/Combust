@@ -203,6 +203,21 @@ public:
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 };
 
+class PostfixExpression : public Expression {
+public:
+    explicit PostfixExpression() {}
+    virtual ~PostfixExpression() {}
+    bool IsPrimaryExpression() const;
+    bool IsArrayAccessor() const;
+    bool IsFunctionCall() const;
+    bool IsStructureReference() const;
+    bool IsStructureDereference() const;
+    bool IsPostIncrement() const;
+    bool IsPostDecrement() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
 
 template<typename T>
 class IsSyntaxNodeVisitor : public SyntaxNodeVisitor {
