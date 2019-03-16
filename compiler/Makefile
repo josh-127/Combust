@@ -12,6 +12,7 @@ TEST_TARGET	:= test-compiler
 APP_CXXFLAGS	:= -g -std=gnu++1z -Wall -Wextra
 
 APP_HHFILES	:= \
+	backtracking-lexer.hh \
 	code-lexer.hh \
 	language-parser.hh \
 	lexer.hh \
@@ -22,6 +23,7 @@ APP_HHFILES	:= \
 	syntax-kinds.def
 
 APP_CCFILES	:= \
+	backtracking-lexer.cc \
 	code-lexer.cc \
 	language-parser.cc \
 	logger.cc \
