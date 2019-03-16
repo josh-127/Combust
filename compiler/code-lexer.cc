@@ -3,6 +3,8 @@
 #endif
 #include "code-lexer.hh"
 #include "logger.hh"
+#include "source.hh"
+#include "syntax.hh"
 #include <cassert>
 #include <cstdint>
 #include <cstdio>

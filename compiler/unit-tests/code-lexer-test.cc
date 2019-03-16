@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include "../code-lexer.hh"
+#include "../source.hh"
+#include "../syntax.hh"
 
 TEST(CodeLexerTest, EmptyFile) {
     Rc<SourceFile> sourceFile{ CreateSourceFile("", "") };

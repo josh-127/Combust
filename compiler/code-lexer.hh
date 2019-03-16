@@ -2,11 +2,18 @@
 #define COMBUST_CODE_LEXER_HH
 #include "common.hh"
 #include "lexer.hh"
-#include "source.hh"
-#include "syntax.hh"
 #include <memory>
 #include <string>
 #include <tuple>
+
+class SourceFile;
+struct SourceLoc;
+struct SourceRange;
+
+class CommentToken;
+class NumericLiteralToken;
+class SyntaxToken;
+class StringLiteralToken;
 
 struct CODE_LEXER_IMPL;
 
