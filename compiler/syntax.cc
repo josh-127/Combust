@@ -49,9 +49,10 @@ bool PostfixExpression::IsPrimaryExpression() const {
 }
 bool PostfixExpression::IsArrayAccessor() const {
     return children.size() == 4
-        && IsSyntaxNode<PostfixExpression>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[0])
+            || IsSyntaxNode<PostfixExpression>(children[0]))
         && IsSyntaxNode<LBracketSymbol>(children[1])
-        && IsSyntaxNode<Expression>(children[2])
+        && IsBaseOfSyntaxNode<Expression>(children[2])
         && IsSyntaxNode<RBracketSymbol>(children[3]);
 }
 bool PostfixExpression::IsFunctionCall() const {
