@@ -7,6 +7,7 @@ Sn(NumericLiteralToken);
 Sn(StringLiteralToken);
 
 Sn(PrimaryExpression);
+Sn(PostfixExpression);
 
 Tk(EofToken);
 
