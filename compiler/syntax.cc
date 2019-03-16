@@ -60,7 +60,8 @@ bool PostfixExpression::IsFunctionCall() const {
 }
 bool PostfixExpression::IsStructureReference() const {
     return children.size() == 3
-        && IsSyntaxNode<PostfixExpression>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[0])
+            || IsSyntaxNode<PostfixExpression>(children[0]))
         && IsSyntaxNode<DotSymbol>(children[1])
         && IsSyntaxNode<IdentifierToken>(children[2]);
 }
