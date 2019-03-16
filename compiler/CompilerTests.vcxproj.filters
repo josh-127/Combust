@@ -31,6 +31,9 @@
     </ClCompile>
     <ClCompile Include="language-parser.cc" />
     <ClCompile Include="backtracking-lexer.cc" />
+    <ClCompile Include="unit-tests\language-parser-test.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.hh" />

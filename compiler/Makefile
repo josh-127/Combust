@@ -50,6 +50,7 @@ TEST_HHFILES	:= \
 TEST_CCFILES	:= \
 	$(APP_CCFILES) \
 	unit-tests/code-lexer-test.cc \
+	unit-tests/language-parser-test.cc \
 	unit-tests/preprocessor-lexer-test.cc \
 	vendor/googletest/src/gtest-all.cc
 
