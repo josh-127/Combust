@@ -24,7 +24,6 @@ APP_HHFILES	:= \
 APP_CCFILES	:= \
 	code-lexer.cc \
 	language-parser.cc \
-	lexer.cc \
 	logger.cc \
 	preprocessor-lexer.cc \
 	source.cc \
