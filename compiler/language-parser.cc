@@ -33,6 +33,8 @@ static Rc<Expression> ParsePostfixExpression(Rc<BacktrackingLexer> l) {
     BacktrackingLexer::Marker marker{ l->Mark() };
 
     if (Rc<PrimaryExpression> obj{ ParsePrimaryExpression(l) }; obj) {
+        marker = l->Mark();
+
         if (Rc<SyntaxToken> lBracket{ l->Accept<LBracketSymbol>() }; lBracket) {
             if (Rc<Expression> index{ ParseExpression(l) }; index) {
                 if (Rc<SyntaxToken> rBracket{ l->Accept<RBracketSymbol>() }; rBracket) {
@@ -58,6 +60,7 @@ static Rc<Expression> ParsePostfixExpression(Rc<BacktrackingLexer> l) {
             return result;
         }
 
+        l->Backtrack(marker);
         return obj;
     }
 
