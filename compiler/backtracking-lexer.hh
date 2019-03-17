@@ -2,6 +2,7 @@
 #define COMBUST_BACKTRACKING_LEXER_HH
 #include "common.hh"
 #include "lexer.hh"
+#include "syntax.hh"
 
 struct BACKTRACKING_LEXER_IMPL;
 
@@ -16,6 +17,28 @@ public:
     Rc<SyntaxToken> PeekToken();
     Marker Mark();
     void Backtrack(const Marker& to);
+
+    template<typename T>
+    [[nodiscard]] Rc<SyntaxToken> AcceptSingle() {
+        Rc<SyntaxToken> token{ PeekToken() };
+        if (IsSyntaxNode<T>(token)) {
+            ReadToken();
+            return token;
+        }
+        return Rc<SyntaxToken>{ };
+    }
+
+    template<typename First, typename... Types>
+    [[nodiscard]] Rc<SyntaxToken> Accept() {
+        if constexpr (sizeof...(Types) > 0) {
+            if (Rc<SyntaxToken> token{ AcceptSingle<First>() }; token)
+                return token;
+            return Accept<Types...>();
+        }
+        else {
+            return AcceptSingle<First>();
+        }
+    }
 
 private:
     Owner<BACKTRACKING_LEXER_IMPL> l;
