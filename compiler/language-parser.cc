@@ -68,6 +68,29 @@ static Rc<Expression> ParsePostfixExpression(Rc<BacktrackingLexer> l) {
     return Rc<Expression>{ };
 }
 
+static Rc<Expression> ParseUnaryExpression(Rc<BacktrackingLexer> l) {
+    BacktrackingLexer::Marker marker{ l->Mark() };
+
+    if (Rc<SyntaxToken> op{ l->Accept<PlusPlusSymbol, MinusMinusSymbol>() }; op) {
+    }
+    else if (Rc<SyntaxToken> op{ l->Accept<AmpersandSymbol,
+                                           AsteriskSymbol,
+                                           PlusSymbol,
+                                           MinusSymbol,
+                                           TildeSymbol,
+                                           ExclamationSymbol>() }; op)
+    {
+    }
+    else if (Rc<SyntaxToken> op{ l->Accept<SizeOfKeyword>() }; op) {
+    }
+    else if (Rc<Expression> expression{ ParsePostfixExpression(l) }; expression) {
+        return expression;
+    }
+
+    l->Backtrack(marker);
+    return Rc<Expression>{ };
+}
+
 Rc<Expression> ParseExpression(Rc<BacktrackingLexer> lexer) {
-    return ParsePostfixExpression(lexer);
+    return ParseUnaryExpression(lexer);
 }
