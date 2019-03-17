@@ -40,6 +40,11 @@ public:
         }
     }
 
+    template<typename T>
+    [[nodiscard]] Rc<SyntaxToken> Expect() {
+        return AcceptSingle();
+    }
+
 private:
     Owner<BACKTRACKING_LEXER_IMPL> l;
 };
