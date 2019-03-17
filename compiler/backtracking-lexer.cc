@@ -32,6 +32,10 @@ Rc<SyntaxToken> BacktrackingLexer::ReadToken() {
     return token;
 }
 
+Rc<SyntaxToken> BacktrackingLexer::PeekToken() {
+    return l->tokens[l->currentPos];
+}
+
 BacktrackingLexer::Marker BacktrackingLexer::Mark() {
     return l->currentPos;
 }

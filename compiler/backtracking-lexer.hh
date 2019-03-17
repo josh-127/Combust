@@ -13,6 +13,7 @@ public:
     virtual ~BacktrackingLexer();
 
     Rc<SyntaxToken> ReadToken() override;
+    Rc<SyntaxToken> PeekToken();
     Marker Mark();
     void Backtrack(const Marker& to);
 
