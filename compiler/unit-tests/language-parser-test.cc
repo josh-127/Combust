@@ -82,6 +82,7 @@ TEST(ExpressionParserTest, PrimaryExpression_Identifier) {
     EXPECT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
+    ASSERT_TRUE(value);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(value));
 
     Rc<IdentifierToken> identifier{ As<IdentifierToken>(value) };
@@ -106,6 +107,7 @@ TEST(ExpressionParserTest, PrimaryExpression_NumericLiteral) {
     ASSERT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
+    ASSERT_TRUE(value);
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(value));
 
     Rc<NumericLiteralToken> literalToken{ As<NumericLiteralToken>(value) };
@@ -130,6 +132,7 @@ TEST(ExpressionParserTest, PrimaryExpression_StringLiteral) {
     ASSERT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> value{ primaryExpression->GetChildren()[0] };
+    ASSERT_TRUE(value);
     ASSERT_TRUE(IsSyntaxNode<StringLiteralToken>(value));
 
     Rc<StringLiteralToken> literalToken{ As<StringLiteralToken>(value) };
@@ -156,9 +159,11 @@ TEST(ExpressionParserTest, PrimaryExpression_ParenthesizedExpression) {
     ASSERT_TRUE(parenthesizedExpression->IsValid());
 
     Rc<SyntaxNode> lParenBase{ parenthesizedExpression->GetChildren()[0] };
+    ASSERT_TRUE(lParenBase);
     ASSERT_TRUE(IsSyntaxNode<LParenSymbol>(lParenBase));
 
     Rc<SyntaxNode> objBase{ parenthesizedExpression->GetChildren()[1] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -166,12 +171,14 @@ TEST(ExpressionParserTest, PrimaryExpression_ParenthesizedExpression) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), identifierName);
 
     Rc<SyntaxNode> rParenBase{ parenthesizedExpression->GetChildren()[2] };
+    ASSERT_TRUE(rParenBase);
     ASSERT_TRUE(IsSyntaxNode<RParenSymbol>(rParenBase));
 }
 
@@ -197,6 +204,7 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess) {
     ASSERT_TRUE(postfixExpression->IsValid());
 
     Rc<SyntaxNode> primaryExpressionBase{ postfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(primaryExpressionBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(primaryExpressionBase));
 
     Rc<PrimaryExpression> primaryExpression{ As<PrimaryExpression>(primaryExpressionBase) };
@@ -204,15 +212,18 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess) {
     ASSERT_TRUE(primaryExpression->IsValid());
 
     Rc<SyntaxNode> identifierBase{ primaryExpression->GetChildren()[0] };
+    ASSERT_TRUE(identifierBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(identifierBase));
 
     Rc<IdentifierToken> identifier{ As<IdentifierToken>(identifierBase) };
     EXPECT_EQ(identifier->GetName(), identifierName);
 
     Rc<SyntaxNode> lBracketBase{ postfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(lBracketBase);
     ASSERT_TRUE(IsSyntaxNode<LBracketSymbol>(lBracketBase));
 
     Rc<SyntaxNode> indexValueBase{ postfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(indexValueBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(indexValueBase));
 
     Rc<PrimaryExpression> indexValue{ As<PrimaryExpression>(indexValueBase) };
@@ -220,6 +231,7 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess) {
     ASSERT_TRUE(indexValue->IsValid());
 
     Rc<SyntaxNode> numericLiteralBase{ indexValue->GetChildren()[0] };
+    ASSERT_TRUE(numericLiteralBase);
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(numericLiteralBase));
 
     Rc<NumericLiteralToken> numericLiteral{ As<NumericLiteralToken>(numericLiteralBase) };
@@ -252,6 +264,7 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_Chained) {
     ASSERT_TRUE(rightPostfixExpression->IsValid());
 
     Rc<SyntaxNode> leftPostfixExpressionBase{ rightPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(leftPostfixExpressionBase);
     ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(leftPostfixExpressionBase));
 
     Rc<PostfixExpression> leftPostfixExpression{ As<PostfixExpression>(leftPostfixExpressionBase) };
@@ -259,6 +272,7 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_Chained) {
     ASSERT_TRUE(leftPostfixExpression->IsValid());
 
     Rc<SyntaxNode> objBase{ leftPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -266,15 +280,18 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_Chained) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> leftLBracketBase{ leftPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(leftLBracketBase);
     ASSERT_TRUE(IsSyntaxNode<LBracketSymbol>(leftLBracketBase));
 
     Rc<SyntaxNode> leftIndexBase{ leftPostfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(leftIndexBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(leftIndexBase));
 
     Rc<PrimaryExpression> leftIndex{ As<PrimaryExpression>(leftIndexBase) };
@@ -282,18 +299,22 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_Chained) {
     ASSERT_TRUE(leftIndex->IsValid());
 
     Rc<SyntaxNode> leftIndexTokenBase{ leftIndex->GetChildren()[0] };
+    ASSERT_TRUE(leftIndexTokenBase);
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(leftIndexTokenBase));
 
     Rc<NumericLiteralToken> leftIndexToken{ As<NumericLiteralToken>(leftIndexTokenBase) };
     EXPECT_EQ(leftIndexToken->GetWholeValue(), numericValue1);
 
     Rc<SyntaxNode> leftRBracketBase{ leftPostfixExpression->GetChildren()[3] };
+    ASSERT_TRUE(leftRBracketBase);
     ASSERT_TRUE(IsSyntaxNode<RBracketSymbol>(leftRBracketBase));
 
     Rc<SyntaxNode> rightLBracketBase{ rightPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(rightLBracketBase);
     ASSERT_TRUE(IsSyntaxNode<LBracketSymbol>(rightLBracketBase));
 
     Rc<SyntaxNode> rightIndexBase{ rightPostfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(rightIndexBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(rightIndexBase));
 
     Rc<PrimaryExpression> rightIndex{ As<PrimaryExpression>(rightIndexBase) };
@@ -301,12 +322,14 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_Chained) {
     ASSERT_TRUE(rightIndex->IsValid());
 
     Rc<SyntaxNode> rightIndexTokenBase{ rightIndex->GetChildren()[0] };
+    ASSERT_TRUE(rightIndexTokenBase);
     ASSERT_TRUE(IsSyntaxNode<NumericLiteralToken>(rightIndexTokenBase));
 
     Rc<NumericLiteralToken> rightIndexToken{ As<NumericLiteralToken>(rightIndexTokenBase) };
     EXPECT_EQ(rightIndexToken->GetWholeValue(), numericValue2);
 
     Rc<SyntaxNode> rightRBracketBase{ rightPostfixExpression->GetChildren()[3] };
+    ASSERT_TRUE(rightRBracketBase);
     ASSERT_TRUE(IsSyntaxNode<RBracketSymbol>(rightRBracketBase));
 }
 
@@ -390,6 +413,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberAccess) {
     ASSERT_TRUE(postfixExpression->IsValid());
 
     Rc<SyntaxNode> objBase{ postfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -397,15 +421,18 @@ TEST(ExpressionParserTest, PostfixExpression_MemberAccess) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> dotSymbolBase{ postfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(dotSymbolBase);
     ASSERT_TRUE(IsSyntaxNode<DotSymbol>(dotSymbolBase));
 
     Rc<SyntaxNode> memberBase{ postfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(memberBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(memberBase));
 
     Rc<IdentifierToken> member{ As<IdentifierToken>(memberBase) };
@@ -435,6 +462,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberAccess_Chained) {
     ASSERT_TRUE(rightPostfixExpression->IsValid());
 
     Rc<SyntaxNode> leftPostfixExpressionBase{ rightPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(leftPostfixExpressionBase);
     ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(leftPostfixExpressionBase));
 
     Rc<PostfixExpression> leftPostfixExpression{ As<PostfixExpression>(leftPostfixExpressionBase) };
@@ -442,6 +470,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberAccess_Chained) {
     ASSERT_TRUE(leftPostfixExpression->IsValid());
 
     Rc<SyntaxNode> objBase{ leftPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -449,24 +478,29 @@ TEST(ExpressionParserTest, PostfixExpression_MemberAccess_Chained) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> leftDotSymbolBase{ leftPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(leftDotSymbolBase);
     ASSERT_TRUE(IsSyntaxNode<DotSymbol>(leftDotSymbolBase));
 
     Rc<SyntaxNode> memberBase1{ leftPostfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(memberBase1);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(memberBase1));
 
     Rc<IdentifierToken> member1{ As<IdentifierToken>(memberBase1) };
     EXPECT_EQ(member1->GetName(), memberName1);
 
     Rc<SyntaxNode> rightDotSymbolBase{ rightPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(rightDotSymbolBase);
     ASSERT_TRUE(IsSyntaxNode<DotSymbol>(rightDotSymbolBase));
 
     Rc<SyntaxNode> memberBase2{ rightPostfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(memberBase2);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(memberBase2));
 
     Rc<IdentifierToken> member2{ As<IdentifierToken>(memberBase2) };
@@ -494,6 +528,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberPointerAccess) {
     ASSERT_TRUE(postfixExpression->IsValid());
 
     Rc<SyntaxNode> objBase{ postfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -501,15 +536,18 @@ TEST(ExpressionParserTest, PostfixExpression_MemberPointerAccess) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> minusGtSymbolBase{ postfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(minusGtSymbolBase);
     ASSERT_TRUE(IsSyntaxNode<MinusGtSymbol>(minusGtSymbolBase));
 
     Rc<SyntaxNode> memberBase{ postfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(memberBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(memberBase));
 
     Rc<IdentifierToken> member{ As<IdentifierToken>(memberBase) };
@@ -539,6 +577,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberPointerAccess_Chained) {
     ASSERT_TRUE(rightPostfixExpression->IsValid());
 
     Rc<SyntaxNode> leftPostfixExpressionBase{ rightPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(leftPostfixExpressionBase);
     ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(leftPostfixExpressionBase));
 
     Rc<PostfixExpression> leftPostfixExpression{ As<PostfixExpression>(leftPostfixExpressionBase) };
@@ -546,6 +585,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberPointerAccess_Chained) {
     ASSERT_TRUE(leftPostfixExpression->IsValid());
 
     Rc<SyntaxNode> objBase{ leftPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -553,24 +593,29 @@ TEST(ExpressionParserTest, PostfixExpression_MemberPointerAccess_Chained) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> leftArrowSymbolBase{ leftPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(leftArrowSymbolBase);
     ASSERT_TRUE(IsSyntaxNode<MinusGtSymbol>(leftArrowSymbolBase));
 
     Rc<SyntaxNode> memberBase1{ leftPostfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(memberBase1);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(memberBase1));
 
     Rc<IdentifierToken> member1{ As<IdentifierToken>(memberBase1) };
     EXPECT_EQ(member1->GetName(), memberName1);
 
     Rc<SyntaxNode> rightArrowSymbolBase{ rightPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(rightArrowSymbolBase);
     ASSERT_TRUE(IsSyntaxNode<MinusGtSymbol>(rightArrowSymbolBase));
 
     Rc<SyntaxNode> memberBase2{ rightPostfixExpression->GetChildren()[2] };
+    ASSERT_TRUE(memberBase2);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(memberBase2));
 
     Rc<IdentifierToken> member2{ As<IdentifierToken>(memberBase2) };
@@ -596,6 +641,7 @@ TEST(ExpressionParserTest, PostfixExpression_PostIncrement) {
     ASSERT_TRUE(postfixExpression->IsValid());
 
     Rc<SyntaxNode> objBase{ postfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -603,12 +649,14 @@ TEST(ExpressionParserTest, PostfixExpression_PostIncrement) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> postIncrementBase{ postfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(postIncrementBase);
     ASSERT_TRUE(IsSyntaxNode<PlusPlusSymbol>(postIncrementBase));
 }
 
@@ -631,6 +679,7 @@ TEST(ExpressionParserTest, PostfixExpression_PostDecrement) {
     ASSERT_TRUE(postfixExpression->IsValid());
 
     Rc<SyntaxNode> objBase{ postfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
     ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
 
     Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
@@ -638,11 +687,13 @@ TEST(ExpressionParserTest, PostfixExpression_PostDecrement) {
     ASSERT_TRUE(obj->IsValid());
 
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
     Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> postDecrementBase{ postfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(postDecrementBase);
     ASSERT_TRUE(IsSyntaxNode<MinusMinusSymbol>(postDecrementBase));
 }
