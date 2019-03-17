@@ -93,3 +93,95 @@ bool PostfixExpression::IsValid() const {
         || IsPostIncrement()
         || IsPostDecrement();
 }
+
+bool UnaryExpression::IsPassthrough() const {
+    return children.size() == 1
+        && (IsSyntaxNode<PrimaryExpression>(children[0])
+            || IsSyntaxNode<PostfixExpression>(children[0])
+            || IsSyntaxNode<UnaryExpression>(children[0]));
+}
+bool UnaryExpression::IsPreIncrement() const {
+    return children.size() == 2
+        && IsSyntaxNode<PlusPlusSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsPreDecrement() const {
+    return children.size() == 2
+        && IsSyntaxNode<MinusMinusSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsAddressOf() const {
+    return children.size() == 2
+        && IsSyntaxNode<AmpersandSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsPointerDereference() const {
+    return children.size() == 2
+        && IsSyntaxNode<AsteriskSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsPositive() const {
+    return children.size() == 2
+        && IsSyntaxNode<PlusPlusSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsNegative() const {
+    return children.size() == 2
+        && IsSyntaxNode<MinusMinusSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsBitwiseComplement() const {
+    return children.size() == 2
+        && IsSyntaxNode<TildeSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsLogicalNot() const {
+    return children.size() == 2
+        && IsSyntaxNode<ExclamationSymbol>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsSizeOf() const {
+    return children.size() == 2
+        && IsSyntaxNode<SizeOfKeyword>(children[0])
+        && (IsSyntaxNode<PrimaryExpression>(children[1])
+            || IsSyntaxNode<PostfixExpression>(children[1])
+            || IsSyntaxNode<UnaryExpression>(children[1]));
+}
+bool UnaryExpression::IsParenthesizedSizeOf() const {
+    return children.size() == 4
+        && IsSyntaxNode<SizeOfKeyword>(children[0])
+        && IsSyntaxNode<LParenSymbol>(children[1])
+        && (IsSyntaxNode<PrimaryExpression>(children[2])
+            || IsSyntaxNode<PostfixExpression>(children[2])
+            || IsSyntaxNode<UnaryExpression>(children[2]))
+        && IsSyntaxNode<RParenSymbol>(children[3]);
+}
+bool UnaryExpression::IsValid() const {
+    return IsPassthrough()
+        || IsPreIncrement()
+        || IsPreDecrement()
+        || IsAddressOf()
+        || IsPointerDereference()
+        || IsPositive()
+        || IsNegative()
+        || IsBitwiseComplement()
+        || IsLogicalNot()
+        || IsSizeOf()
+        || IsParenthesizedSizeOf();
+}
