@@ -207,7 +207,7 @@ class PostfixExpression : public Expression {
 public:
     explicit PostfixExpression() {}
     virtual ~PostfixExpression() {}
-    bool IsPrimaryExpression() const;
+    bool IsPassthrough() const;
     bool IsArrayAccessor() const;
     bool IsFunctionCall() const;
     bool IsStructureReference() const;

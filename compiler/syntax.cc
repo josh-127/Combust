@@ -44,7 +44,7 @@ bool PrimaryExpression::IsValid() const {
         || IsParenthesizedExpression();
 }
 
-bool PostfixExpression::IsPrimaryExpression() const {
+bool PostfixExpression::IsPassthrough() const {
     return children.size() == 1 && IsSyntaxNode<PrimaryExpression>(children[0]);
 }
 bool PostfixExpression::IsArrayAccessor() const {
@@ -85,7 +85,7 @@ bool PostfixExpression::IsPostDecrement() const {
         && IsSyntaxNode<MinusMinusSymbol>(children[1]);
 }
 bool PostfixExpression::IsValid() const {
-    return IsPrimaryExpression()
+    return IsPassthrough()
         || IsArrayAccessor()
         || IsFunctionCall()
         || IsStructureReference()
