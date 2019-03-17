@@ -392,7 +392,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberAccess_Chained) {
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
-    Rc<IdentifierToken> objToken{ As<IdentifierToken>(objToken) };
+    Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> leftDotSymbolBase{ leftPostfixExpression->GetChildren()[1] };
@@ -496,7 +496,7 @@ TEST(ExpressionParserTest, PostfixExpression_MemberPointerAccess_Chained) {
     Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
     ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
 
-    Rc<IdentifierToken> objToken{ As<IdentifierToken>(objToken) };
+    Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
     EXPECT_EQ(objToken->GetName(), objName);
 
     Rc<SyntaxNode> leftArrowSymbolBase{ leftPostfixExpression->GetChildren()[1] };

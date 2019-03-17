@@ -30,42 +30,39 @@ static Rc<PrimaryExpression> ParsePrimaryExpression(Rc<BacktrackingLexer> l) {
 }
 
 static Rc<Expression> ParsePostfixExpression(Rc<BacktrackingLexer> l) {
+    Rc<Expression> obj{ ParsePrimaryExpression(l) };
     BacktrackingLexer::Marker marker{ l->Mark() };
+    bool isDone{ false };
 
-    if (Rc<PrimaryExpression> obj{ ParsePrimaryExpression(l) }; obj) {
-        marker = l->Mark();
+    while (!isDone) {
+        Rc<PostfixExpression> result{ NewObj<PostfixExpression>() };
+        isDone = true;
 
         if (Rc<SyntaxToken> lBracket{ l->Accept<LBracketSymbol>() }; lBracket) {
             if (Rc<Expression> index{ ParseExpression(l) }; index) {
                 if (Rc<SyntaxToken> rBracket{ l->Accept<RBracketSymbol>() }; rBracket) {
-                    Rc<PostfixExpression> result{ NewObj<PostfixExpression>() };
                     result->SetChildren({ obj, lBracket, index, rBracket });
-
-                    return result;
+                    isDone = false;
                 }
             }
         }
         else if (Rc<SyntaxToken> accessor{ l->Accept<DotSymbol, MinusGtSymbol>() }; accessor) {
             if (Rc<SyntaxToken> memberName{ l->Accept<IdentifierToken>() }; memberName) {
-                Rc<PostfixExpression> result{ NewObj<PostfixExpression>() };
                 result->SetChildren({ obj, accessor, memberName });
-
-                return result;
+                isDone = false;
             }
         }
         else if (Rc<SyntaxToken> op{ l->Accept<PlusPlusSymbol, MinusMinusSymbol>() }; op) {
-            Rc<PostfixExpression> result{ NewObj<PostfixExpression>() };
             result->SetChildren({ obj, op });
-
-            return result;
+            isDone = false;
         }
 
-        l->Backtrack(marker);
-        return obj;
+        if (!isDone) {
+            obj = result;
+        }
     }
 
-    l->Backtrack(marker);
-    return Rc<Expression>{ };
+    return obj;
 }
 
 static Rc<Expression> ParseUnaryExpression(Rc<BacktrackingLexer> l) {
