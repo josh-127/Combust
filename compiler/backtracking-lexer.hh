@@ -42,7 +42,11 @@ public:
 
     template<typename T>
     [[nodiscard]] Rc<SyntaxToken> Expect() {
-        return AcceptSingle();
+        if (Rc<SyntaxToken> token{ AcceptSingle<T>() }; token)
+            return token;
+        Rc<T> missingToken{ NewObj<T>() };
+        missingToken->SetFlag(SyntaxToken::IS_MISSING);
+        return missingToken;
     }
 
 private:
