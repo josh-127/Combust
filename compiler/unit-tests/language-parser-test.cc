@@ -388,7 +388,11 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_MissingRBracket) {
     EXPECT_EQ(indexToken->GetWholeValue(), indexValue);
 
     Rc<SyntaxNode> rBracketBase{ postfixExpression->GetChildren()[3] };
-    ASSERT_TRUE(!rBracketBase);
+    ASSERT_TRUE(rBracketBase);
+    ASSERT_TRUE(IsSyntaxNode<RBracketSymbol>(rBracketBase));
+
+    Rc<RBracketSymbol> rBracket{ As<RBracketSymbol>(rBracketBase) };
+    EXPECT_TRUE(rBracket->GetFlags() & SyntaxToken::IS_MISSING);
 }
 
 TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_MissingFirstRBracket_Chained) {
@@ -450,7 +454,11 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_MissingFirstRBracket_Ch
     EXPECT_EQ(indexToken->GetWholeValue(), indexValue1);
 
     Rc<SyntaxNode> rBracketBase{ postfixExpression->GetChildren()[3] };
-    ASSERT_TRUE(!rBracketBase);
+    ASSERT_TRUE(rBracketBase);
+    ASSERT_TRUE(IsSyntaxNode<RBracketSymbol>(rBracketBase));
+
+    Rc<RBracketSymbol> rBracket{ As<RBracketSymbol>(rBracketBase) };
+    EXPECT_TRUE(rBracket->GetFlags() & SyntaxToken::IS_MISSING);
 }
 
 TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_MissingSecondRBracket_Chained) {
@@ -543,7 +551,11 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_MissingSecondRBracket_C
     EXPECT_EQ(rightIndexToken->GetWholeValue(), indexValue2);
 
     Rc<SyntaxNode> rightRBracketBase{ rightPostfixExpression->GetChildren()[3] };
-    ASSERT_TRUE(!rightRBracketBase);
+    ASSERT_TRUE(rightRBracketBase);
+    ASSERT_TRUE(IsSyntaxNode<RBracketSymbol>(rightRBracketBase));
+
+    Rc<RBracketSymbol> rightRBracket{ As<RBracketSymbol>(rightRBracketBase) };
+    EXPECT_TRUE(rightRBracket->GetFlags() & SyntaxToken::IS_MISSING);
 }
 
 TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_MissingBothRBrackets_Chained) {
@@ -604,7 +616,11 @@ TEST(ExpressionParserTest, PostfixExpression_ArrayAccess_MissingBothRBrackets_Ch
     EXPECT_EQ(indexToken->GetWholeValue(), indexValue1);
 
     Rc<SyntaxNode> rBracketBase{ postfixExpression->GetChildren()[3] };
-    ASSERT_TRUE(!rBracketBase);
+    ASSERT_TRUE(rBracketBase);
+    ASSERT_TRUE(IsSyntaxNode<RBracketSymbol>(rBracketBase));
+
+    Rc<RBracketSymbol> rBracket{ As<RBracketSymbol>(rBracket) };
+    EXPECT_TRUE(rBracket->GetFlags() & SyntaxToken::IS_MISSING);
 }
 
 TEST(ExpressionParserTest, PostfixExpression_MemberAccess) {
