@@ -8,6 +8,21 @@ Sn(StringLiteralToken);
 
 Sn(PrimaryExpression);
 Sn(PostfixExpression);
+Sn(UnaryExpression);
+Sn(CastExpression);
+Sn(MultiplicativeExpression);
+Sn(AdditiveExpression);
+Sn(ShiftExpression);
+Sn(RelationalExpression);
+Sn(EqualityExpression);
+Sn(AndExpression);
+Sn(ExclusiveOrExpression);
+Sn(InclusiveOrExpression);
+Sn(LogicalAndExpression);
+Sn(LogicalOrExpression);
+Sn(ConditionalExpression);
+Sn(AssignmentExpression);
+Sn(CommaExpression);
 
 Tk(EofToken);
 

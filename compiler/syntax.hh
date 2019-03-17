@@ -218,6 +218,182 @@ public:
     Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
 };
 
+class UnaryExpression : public Expression {
+public:
+    explicit UnaryExpression() {}
+    virtual ~UnaryExpression() {}
+    bool IsPassthrough() const;
+    bool IsPreIncrement() const;
+    bool IsPreDecrement() const;
+    bool IsAddressOf() const;
+    bool IsPointerDereference() const;
+    bool IsPositive() const;
+    bool IsNegative() const;
+    bool IsBitwiseComplement() const;
+    bool IsLogicalNot() const;
+    bool IsSizeOf() const;
+    bool IsParenthesizedSizeOf() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class CastExpression : public Expression {
+public:
+    explicit CastExpression() {}
+    virtual ~CastExpression() {}
+    bool IsPassthrough() const;
+    bool IsCast() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class MultiplicativeExpression : public Expression {
+public:
+    explicit MultiplicativeExpression() {}
+    virtual ~MultiplicativeExpression() {}
+    bool IsPassthrough() const;
+    bool IsMultiplication() const;
+    bool IsDivision() const;
+    bool IsModulo() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class AdditiveExpression : public Expression {
+public:
+    explicit AdditiveExpression() {}
+    virtual ~AdditiveExpression() {}
+    bool IsPassthrough() const;
+    bool IsAddition() const;
+    bool IsSubtraction() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class ShiftExpression : public Expression {
+    explicit ShiftExpression() {}
+    virtual ~ShiftExpression() {}
+    bool IsPassthrough() const;
+    bool IsLeftShift() const;
+    bool IsRightShift() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class RelationalExpression : public Expression {
+public:
+    explicit RelationalExpression() {}
+    virtual ~RelationalExpression() {}
+    bool IsPassthrough() const;
+    bool IsLessThan() const;
+    bool IsGreaterThan() const;
+    bool IsLessThanOrEqualTo() const;
+    bool IsGreaterThanOrEqualTo() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class EqualityExpression : public Expression {
+public:
+    explicit EqualityExpression() {}
+    virtual ~EqualityExpression() {}
+    bool IsPassthrough() const;
+    bool IsEqual() const;
+    bool IsNotEqual() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class AndExpression : public Expression {
+public:
+    explicit AndExpression() {}
+    virtual ~AndExpression() {}
+    bool IsPassthrough() const;
+    bool IsBitwiseAnd() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class ExclusiveOrExpression : public Expression {
+public:
+    explicit ExclusiveOrExpression() {}
+    virtual ~ExclusiveOrExpression() {}
+    bool IsPassthrough() const;
+    bool IsBitwiseXor() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class InclusiveOrExpression : public Expression {
+public:
+    explicit InclusiveOrExpression() {}
+    virtual ~InclusiveOrExpression() {}
+    bool IsPassthrough() const;
+    bool IsBitwiseOr() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class LogicalAndExpression : public Expression {
+public:
+    explicit LogicalAndExpression() {}
+    virtual ~LogicalAndExpression() {}
+    bool IsPassthrough() const;
+    bool IsLogicalAnd() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class LogicalOrExpression : public Expression {
+public:
+    explicit LogicalOrExpression() {}
+    virtual ~LogicalOrExpression() {}
+    bool IsPassthrough() const;
+    bool IsLogicalOr() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class ConditionalExpression : public Expression {
+public:
+    explicit ConditionalExpression() {}
+    virtual ~ConditionalExpression() {}
+    bool IsPassthrough() const;
+    bool IsConditional() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class AssignmentExpression : public Expression {
+public:
+    explicit AssignmentExpression() {}
+    virtual ~AssignmentExpression() {}
+    bool IsPassthrough() const;
+    bool IsAssignment() const;
+    bool IsMultiplyAssignment() const;
+    bool IsDivideAssignment() const;
+    bool IsModuloAssignment() const;
+    bool IsAdditionAssignment() const;
+    bool IsSubtractionAssignment() const;
+    bool IsLeftShiftAssignment() const;
+    bool IsRightShiftAssignment() const;
+    bool IsBitwiseAndAssignment() const;
+    bool IsBitwiseXorAssignment() const;
+    bool IsBitwiseOrAssignment() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
+class CommaExpression : public Expression {
+public:
+    explicit CommaExpression() {}
+    virtual ~CommaExpression() {}
+    bool IsPassthrough() const;
+    bool IsComma() const;
+    bool IsValid() const override;
+    Rc<Object> Accept(SyntaxNodeVisitor& visitor) override;
+};
+
 
 template<typename T>
 class IsSyntaxNodeVisitor : public SyntaxNodeVisitor {
