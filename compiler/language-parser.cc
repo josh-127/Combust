@@ -5,21 +5,25 @@
 static Rc<PrimaryExpression> ParsePrimaryExpression(Rc<BacktrackingLexer> l) {
     BacktrackingLexer::Marker marker{ l->Mark() };
 
-    Rc<SyntaxToken> token{ l->ReadToken() };
-
-    if (IsSyntaxNode<IdentifierToken>(token) ||
-        IsSyntaxNode<NumericLiteralToken>(token) ||
-        IsSyntaxNode<StringLiteralToken>(token))
+    if (Rc<SyntaxToken> token{ l->Accept<IdentifierToken,
+                                         NumericLiteralToken,
+                                         StringLiteralToken>() }; token)
     {
         Rc<PrimaryExpression> expression{ NewObj<PrimaryExpression>() };
         expression->SetChildren({ token });
 
         return expression;
     }
-#if 0
-    else if (IsSyntaxNode<LParenSymbol>(token)) {
+    else if (Rc<SyntaxToken> lParen{ l->Accept<LParenSymbol>() }; lParen) {
+        if (Rc<Expression> innerExpression{ ParseExpression(l) }; innerExpression) {
+            if (Rc<SyntaxToken> rParen{ l->Accept<RParenSymbol>() }; rParen) {
+                Rc<PrimaryExpression> expression{ NewObj<PrimaryExpression>() };
+                expression->SetChildren({ lParen, innerExpression, rParen });
+
+                return expression;
+            }
+        }
     }
-#endif
 
     l->Backtrack(marker);
     return Rc<PrimaryExpression>{ };

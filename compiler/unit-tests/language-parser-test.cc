@@ -136,6 +136,45 @@ TEST(ExpressionParserTest, PrimaryExpression_StringLiteral) {
     EXPECT_EQ(literalToken->GetValue(), literalValue);
 }
 
+TEST(ExpressionParserTest, PrimaryExpression_ParenthesizedExpression) {
+    std::string identifierName{ "FooBar" };
+    std::vector<Rc<SyntaxToken>> tokens{
+        NewObj<LParenSymbol>(),
+        NewIdentifierToken(identifierName),
+        NewObj<RParenSymbol>(),
+        NewObj<EofToken>()
+    };
+    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+
+    Rc<Expression> expression{ ParseExpression(backtrackingLexer) };
+    ASSERT_TRUE(expression);
+    ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(expression));
+
+    Rc<PrimaryExpression> parenthesizedExpression{ As<PrimaryExpression>(expression) };
+    ASSERT_TRUE(parenthesizedExpression->IsParenthesizedExpression());
+    ASSERT_TRUE(parenthesizedExpression->IsValid());
+
+    Rc<SyntaxNode> lParenBase{ parenthesizedExpression->GetChildren()[0] };
+    ASSERT_TRUE(IsSyntaxNode<LParenSymbol>(lParenBase));
+
+    Rc<SyntaxNode> objBase{ parenthesizedExpression->GetChildren()[1] };
+    ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
+
+    Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
+    ASSERT_TRUE(obj->IsIdentifier());
+    ASSERT_TRUE(obj->IsValid());
+
+    Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
+
+    Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
+    EXPECT_EQ(objToken->GetName(), identifierName);
+
+    Rc<SyntaxNode> rParenBase{ parenthesizedExpression->GetChildren()[2] };
+    ASSERT_TRUE(IsSyntaxNode<RParenSymbol>(rParenBase));
+}
+
 TEST(ExpressionParserTest, PostfixExpression_ArrayAccess) {
     std::string identifierName{ "FooBar" };
     std::string numericValue{ "1000" };
