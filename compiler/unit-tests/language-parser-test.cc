@@ -891,6 +891,57 @@ TEST(ExpressionParserTest, PostfixExpression_PostIncrement) {
     ASSERT_TRUE(IsSyntaxNode<PlusPlusSymbol>(postIncrementBase));
 }
 
+TEST(ExpressionParserTest, PostfixExpression_PostIncrement_Chained) {
+    std::string objName{ "FooBar" };
+    std::vector<Rc<SyntaxToken>> tokens{
+        NewIdentifierToken(objName),
+        NewObj<PlusPlusSymbol>(),
+        NewObj<PlusPlusSymbol>(),
+        NewObj<EofToken>()
+    };
+    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+
+    Rc<Expression> rightPostfixExpressionBase{ ParseExpression(backtrackingLexer) };
+    ASSERT_TRUE(rightPostfixExpressionBase);
+    ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(rightPostfixExpressionBase));
+
+    Rc<PostfixExpression> rightPostfixExpression{ As<PostfixExpression>(rightPostfixExpressionBase) };
+    ASSERT_TRUE(rightPostfixExpression->IsPostIncrement());
+    ASSERT_TRUE(rightPostfixExpression->IsValid());
+
+    Rc<SyntaxNode> leftPostfixExpressionBase{ rightPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(leftPostfixExpressionBase);
+    ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(leftPostfixExpressionBase));
+
+    Rc<PostfixExpression> leftPostfixExpression{ As<PostfixExpression>(leftPostfixExpressionBase) };
+    ASSERT_TRUE(leftPostfixExpression->IsPostIncrement());
+    ASSERT_TRUE(leftPostfixExpression->IsValid());
+
+    Rc<SyntaxNode> objBase{ leftPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
+    ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
+
+    Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
+    ASSERT_TRUE(obj->IsIdentifier());
+    ASSERT_TRUE(obj->IsValid());
+
+    Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
+    ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
+
+    Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
+    EXPECT_EQ(objToken->GetName(), objName);
+
+    Rc<SyntaxNode> firstIncrement{ leftPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(firstIncrement);
+    ASSERT_TRUE(IsSyntaxNode<PlusPlusSymbol>(firstIncrement));
+
+    Rc<SyntaxNode> secondIncrement{ rightPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(secondIncrement);
+    ASSERT_TRUE(IsSyntaxNode<PlusPlusSymbol>(secondIncrement));
+}
+
 TEST(ExpressionParserTest, PostfixExpression_PostDecrement) {
     std::string objName{ "FooBar" };
     std::vector<Rc<SyntaxToken>> tokens{
@@ -927,4 +978,55 @@ TEST(ExpressionParserTest, PostfixExpression_PostDecrement) {
     Rc<SyntaxNode> postDecrementBase{ postfixExpression->GetChildren()[1] };
     ASSERT_TRUE(postDecrementBase);
     ASSERT_TRUE(IsSyntaxNode<MinusMinusSymbol>(postDecrementBase));
+}
+
+TEST(ExpressionParserTest, PostfixExpression_PostDecrement_Chained) {
+    std::string objName{ "FooBar" };
+    std::vector<Rc<SyntaxToken>> tokens{
+        NewIdentifierToken(objName),
+        NewObj<MinusMinusSymbol>(),
+        NewObj<MinusMinusSymbol>(),
+        NewObj<EofToken>()
+    };
+    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+
+    Rc<Expression> rightPostfixExpressionBase{ ParseExpression(backtrackingLexer) };
+    ASSERT_TRUE(rightPostfixExpressionBase);
+    ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(rightPostfixExpressionBase));
+
+    Rc<PostfixExpression> rightPostfixExpression{ As<PostfixExpression>(rightPostfixExpressionBase) };
+    ASSERT_TRUE(rightPostfixExpression->IsPostDecrement());
+    ASSERT_TRUE(rightPostfixExpression->IsValid());
+
+    Rc<SyntaxNode> leftPostfixExpressionBase{ rightPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(leftPostfixExpressionBase);
+    ASSERT_TRUE(IsSyntaxNode<PostfixExpression>(leftPostfixExpressionBase));
+
+    Rc<PostfixExpression> leftPostfixExpression{ As<PostfixExpression>(leftPostfixExpressionBase) };
+    ASSERT_TRUE(leftPostfixExpression->IsPostDecrement());
+    ASSERT_TRUE(leftPostfixExpression->IsValid());
+
+    Rc<SyntaxNode> objBase{ leftPostfixExpression->GetChildren()[0] };
+    ASSERT_TRUE(objBase);
+    ASSERT_TRUE(IsSyntaxNode<PrimaryExpression>(objBase));
+
+    Rc<PrimaryExpression> obj{ As<PrimaryExpression>(objBase) };
+    ASSERT_TRUE(obj->IsIdentifier());
+    ASSERT_TRUE(obj->IsValid());
+
+    Rc<SyntaxNode> objTokenBase{ obj->GetChildren()[0] };
+    ASSERT_TRUE(objTokenBase);
+    ASSERT_TRUE(IsSyntaxNode<IdentifierToken>(objTokenBase));
+
+    Rc<IdentifierToken> objToken{ As<IdentifierToken>(objTokenBase) };
+    EXPECT_EQ(objToken->GetName(), objName);
+
+    Rc<SyntaxNode> firstDecrement{ leftPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(firstDecrement);
+    ASSERT_TRUE(IsSyntaxNode<MinusMinusSymbol>(firstDecrement));
+
+    Rc<SyntaxNode> secondDecrement{ rightPostfixExpression->GetChildren()[1] };
+    ASSERT_TRUE(secondDecrement);
+    ASSERT_TRUE(IsSyntaxNode<MinusMinusSymbol>(secondDecrement));
 }
