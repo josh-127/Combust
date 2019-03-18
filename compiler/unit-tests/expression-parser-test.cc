@@ -1,55 +1,10 @@
 #include <catch.hpp>
 #include "../backtracking-lexer.hh"
+#include "../code-lexer.hh"
 #include "../language-parser.hh"
-#include "../lexer.hh"
+#include "../source.hh"
 #include "../syntax.hh"
 #include <vector>
-
-class MockLexer : public Object, public virtual ILexer {
-public:
-    explicit MockLexer(const std::vector<Rc<SyntaxToken>>& tokens);
-    virtual ~MockLexer();
-
-    Rc<SyntaxToken> ReadToken() override;
-
-private:
-    std::vector<Rc<SyntaxToken>> tokens{ };
-    size_t currentPos{ 0 };
-};
-
-MockLexer::MockLexer(const std::vector<Rc<SyntaxToken>>& tokens) :
-    tokens{ tokens },
-    currentPos{ 0 }
-{}
-
-MockLexer::~MockLexer() {}
-
-Rc<SyntaxToken> MockLexer::ReadToken() {
-    Rc<SyntaxToken> token{ tokens[currentPos] };
-    if (currentPos + 1 < tokens.size())
-        ++currentPos;
-    return token;
-}
-
-static Rc<IdentifierToken> NewIdentifierToken(const std::string& name) {
-    Rc<IdentifierToken> token{ NewObj<IdentifierToken>() };
-    token->SetName(name);
-    return token;
-}
-
-static Rc<NumericLiteralToken> NewNumericLiteralToken(const std::string& wholeValue) {
-    Rc<NumericLiteralToken> token{ NewObj<NumericLiteralToken>() };
-    token->SetWholeValue(wholeValue);
-    return token;
-}
-
-static Rc<StringLiteralToken> NewStringLiteralToken(const std::string& value) {
-    Rc<StringLiteralToken> token{ NewObj<StringLiteralToken>() };
-    token->SetValue(value);
-    token->SetOpeningQuote('"');
-    token->SetClosingQuote('"');
-    return token;
-}
 
 template<typename T>
 static inline Rc<T> M(Rc<SyntaxNode> node) {
@@ -59,55 +14,45 @@ static inline Rc<T> M(Rc<SyntaxNode> node) {
 }
 
 template<typename T>
-static Rc<T> Setup(const std::vector<Rc<SyntaxToken>>& tokens) {
-    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
-    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+static Rc<T> Setup(const std::string& source) {
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", source) };
+    Rc<CodeLexer> codeLexer{ NewObj<CodeLexer>(sourceFile) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(codeLexer) };
 
     Rc<Expression> expression{ ParseExpression(backtrackingLexer) };
     return M<T>(expression);
 }
 
 TEST_CASE("ExpressionParser PrimaryExpression EmptyFile") {
-    std::vector<Rc<SyntaxToken>> tokens{ NewObj<EofToken>() };
-    Rc<MockLexer> mockLexer{ NewObj<MockLexer>(tokens) };
-    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(mockLexer) };
+    Rc<SourceFile> sourceFile{ CreateSourceFile("", "") };
+    Rc<CodeLexer> codeLexer{ NewObj<CodeLexer>(sourceFile) };
+    Rc<BacktrackingLexer> backtrackingLexer{ NewObj<BacktrackingLexer>(codeLexer) };
 
     Rc<Expression> expression{ ParseExpression(backtrackingLexer) };
     REQUIRE(!expression);
 }
 
 TEST_CASE("ExpressionParser PrimaryExpression Identifier") {
-    std::string identifierName{ "FooBar" };
-    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>({
-        NewIdentifierToken(identifierName),
-        NewObj<EofToken>()
-    }) };
+    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>("FooBar") };
     REQUIRE(expression->IsIdentifier());
     REQUIRE(expression->IsValid());
 
     Rc<IdentifierToken> identifier{ M<IdentifierToken>(expression->GetChild(0)) };
-    REQUIRE(identifier->GetName() == identifierName);
+    REQUIRE(identifier->GetName() == "FooBar");
 }
 
 TEST_CASE("ExpressionParser PrimaryExpression NumericLiteral") {
-    std::string wholeValue{ "1234567890" };
-    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>({
-        NewNumericLiteralToken(wholeValue),
-        NewObj<EofToken>()
-    }) };
+    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>("1234567890") };
     REQUIRE(expression->IsNumericLiteral());
     REQUIRE(expression->IsValid());
 
     Rc<NumericLiteralToken> identifier{ M<NumericLiteralToken>(expression->GetChild(0)) };
-    REQUIRE(identifier->GetWholeValue() == wholeValue);
+    REQUIRE(identifier->GetWholeValue() == "1234567890");
 }
 
 TEST_CASE("ExpressionParser PrimaryExpression StringLiteral") {
     std::string literalValue{ "The quick brown fox jumps over the lazy dog." };
-    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>({
-        NewStringLiteralToken(literalValue),
-        NewObj<EofToken>()
-    }) };
+    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>("\"" + literalValue + "\"") };
     REQUIRE(expression->IsStringLiteral());
     REQUIRE(expression->IsValid());
 
@@ -116,13 +61,7 @@ TEST_CASE("ExpressionParser PrimaryExpression StringLiteral") {
 }
 
 TEST_CASE("ExpressionParser PrimaryExpression ParenthesizedExpression") {
-    std::string identifierName{ "FooBar" };
-    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>({
-        NewObj<LParenSymbol>(),
-        NewIdentifierToken(identifierName),
-        NewObj<RParenSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PrimaryExpression> expression{ Setup<PrimaryExpression>("(FooBar)") };
     REQUIRE(expression->IsParenthesizedExpression());
     REQUIRE(expression->IsValid());
 
@@ -132,22 +71,16 @@ TEST_CASE("ExpressionParser PrimaryExpression ParenthesizedExpression") {
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
+    M<LParenSymbol>(expression->GetChild(0));
+
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == identifierName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<RParenSymbol>(expression->GetChild(2));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess") {
-    std::string identifierName{ "FooBar" };
-    std::string numericValue{ "1000" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(identifierName),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(numericValue),
-        NewObj<RBracketSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar[1000]") };
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(postfixExpression->IsValid());
 
@@ -156,7 +89,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess") {
     REQUIRE(primaryExpression->IsValid());
 
     Rc<IdentifierToken> identifier{ M<IdentifierToken>(primaryExpression->GetChild(0)) };
-    REQUIRE(identifier->GetName() == identifierName);
+    REQUIRE(identifier->GetName() == "FooBar");
 
     M<LBracketSymbol>(postfixExpression->GetChild(1));
 
@@ -165,29 +98,15 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess") {
     REQUIRE(indexValue->IsValid());
 
     Rc<NumericLiteralToken> numericLiteral{ M<NumericLiteralToken>(indexValue->GetChild(0)) };
-    REQUIRE(numericLiteral->GetWholeValue() == numericValue);
+    REQUIRE(numericLiteral->GetWholeValue() == "1000");
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_Chained") {
-    std::string objName{ "FooBar" };
-    std::string numericValue1{ "1000" };
-    std::string numericValue2{ "2000" };
-    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(numericValue1),
-        NewObj<RBracketSymbol>(),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(numericValue2),
-        NewObj<RBracketSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>("FooBar[1000][2000]") };
     REQUIRE(rightPostfixExpression->IsArrayAccessor());
     REQUIRE(rightPostfixExpression->IsValid());
 
-    Rc<PostfixExpression> leftPostfixExpression{
-        M<PostfixExpression>(rightPostfixExpression->GetChild(0))
-    };
+    Rc<PostfixExpression> leftPostfixExpression{ M<PostfixExpression>(rightPostfixExpression->GetChild(0)) };
     REQUIRE(leftPostfixExpression->IsArrayAccessor());
     REQUIRE(leftPostfixExpression->IsValid());
 
@@ -196,7 +115,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_Chained") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<LBracketSymbol>(leftPostfixExpression->GetChild(1));
 
@@ -205,7 +124,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_Chained") {
     REQUIRE(leftIndex->IsValid());
 
     Rc<NumericLiteralToken> leftIndexToken{ M<NumericLiteralToken>(leftIndex->GetChild(0)) };
-    REQUIRE(leftIndexToken->GetWholeValue() == numericValue1);
+    REQUIRE(leftIndexToken->GetWholeValue() == "1000");
 
     M<RBracketSymbol>(leftPostfixExpression->GetChild(3));
 
@@ -216,20 +135,13 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_Chained") {
     REQUIRE(rightIndex->IsValid());
 
     Rc<NumericLiteralToken> rightIndexToken{ M<NumericLiteralToken>(rightIndex->GetChild(0)) };
-    REQUIRE(rightIndexToken->GetWholeValue() == numericValue2);
+    REQUIRE(rightIndexToken->GetWholeValue() == "2000");
 
     M<RBracketSymbol>(rightPostfixExpression->GetChild(3));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingRBracket") {
-    std::string objName{ "FooBar" };
-    std::string indexValue{ "1000" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(indexValue),
-        NewObj<EofToken>(),
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar[1000") };
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(!postfixExpression->IsValid());
 
@@ -238,7 +150,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingRBracket") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<LBracketSymbol>(postfixExpression->GetChild(1));
 
@@ -247,25 +159,14 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingRBracket") {
     REQUIRE(index->IsValid());
 
     Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChild(0)) };
-    REQUIRE(indexToken->GetWholeValue() == indexValue);
+    REQUIRE(indexToken->GetWholeValue() == "1000");
 
     Rc<SyntaxNode> rBracket{ postfixExpression->GetChild(3) };
     REQUIRE(!rBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingFirstRBracket_Chained") {
-    std::string objName{ "FooBar" };
-    std::string indexValue1{ "1000" };
-    std::string indexValue2{ "2000" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(indexValue1),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(indexValue2),
-        NewObj<RBracketSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar[1000[2000]") };
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(!postfixExpression->IsValid());
 
@@ -274,7 +175,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingFirstRBracket_C
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<LBracketSymbol>(postfixExpression->GetChild(1));
 
@@ -283,25 +184,14 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingFirstRBracket_C
     REQUIRE(index->IsValid());
 
     Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChild(0)) };
-    REQUIRE(indexToken->GetWholeValue() == indexValue1);
+    REQUIRE(indexToken->GetWholeValue() == "1000");
 
     Rc<SyntaxNode> rBracket{ postfixExpression->GetChild(3) };
     REQUIRE(!rBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingSecondRBracket_Chained") {
-    std::string objName{ "FooBar" };
-    std::string indexValue1{ "1000" };
-    std::string indexValue2{ "2000" };
-    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(indexValue1),
-        NewObj<RBracketSymbol>(),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(indexValue2),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>("FooBar[1000][2000") };
     REQUIRE(rightPostfixExpression->IsArrayAccessor());
     REQUIRE(!rightPostfixExpression->IsValid());
 
@@ -314,7 +204,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingSecondRBracket_
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<LBracketSymbol>(leftPostfixExpression->GetChild(1));
 
@@ -323,7 +213,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingSecondRBracket_
     REQUIRE(leftIndex->IsValid());
 
     Rc<NumericLiteralToken> leftIndexToken{ M<NumericLiteralToken>(leftIndex->GetChild(0)) };
-    REQUIRE(leftIndexToken->GetWholeValue() == indexValue1);
+    REQUIRE(leftIndexToken->GetWholeValue() == "1000");
 
     M<RBracketSymbol>(leftPostfixExpression->GetChild(3));
 
@@ -334,24 +224,14 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingSecondRBracket_
     REQUIRE(rightIndex->IsValid());
 
     Rc<NumericLiteralToken> rightIndexToken{ M<NumericLiteralToken>(rightIndex->GetChild(0)) };
-    REQUIRE(rightIndexToken->GetWholeValue() == indexValue2);
+    REQUIRE(rightIndexToken->GetWholeValue() == "2000");
 
     Rc<SyntaxNode> rightRBracket{ rightPostfixExpression->GetChild(3) };
     REQUIRE(!rightRBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingBothRBrackets_Chained") {
-    std::string objName{ "FooBar" };
-    std::string indexValue1{ "1000" };
-    std::string indexValue2{ "2000" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(indexValue1),
-        NewObj<LBracketSymbol>(),
-        NewNumericLiteralToken(indexValue2),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar[1000[2000") };
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(!postfixExpression->IsValid());
 
@@ -360,7 +240,7 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingBothRBrackets_C
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<LBracketSymbol>(postfixExpression->GetChild(1));
 
@@ -369,21 +249,14 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingBothRBrackets_C
     REQUIRE(index->IsValid());
 
     Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChild(0)) };
-    REQUIRE(indexToken->GetWholeValue() == indexValue1);
+    REQUIRE(indexToken->GetWholeValue() == "1000");
 
     Rc<SyntaxNode> rBracket{ postfixExpression->GetChild(3) };
     REQUIRE(!rBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression MemberAccess") {
-    std::string objName{ "FooBar" };
-    std::string memberName{ "Value" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<DotSymbol>(),
-        NewIdentifierToken(memberName),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar.Value") };
     REQUIRE(postfixExpression->IsStructureReference());
     REQUIRE(postfixExpression->IsValid());
 
@@ -392,26 +265,16 @@ TEST_CASE("ExpressionParser PostfixExpression MemberAccess") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<DotSymbol>(postfixExpression->GetChild(1));
 
     Rc<IdentifierToken> member{ M<IdentifierToken>(postfixExpression->GetChild(2)) };
-    REQUIRE(member->GetName() == memberName);
+    REQUIRE(member->GetName() == "Value");
 }
 
 TEST_CASE("ExpressionParser PostfixExpression MemberAccess_Chained") {
-    std::string objName{ "FooBar" };
-    std::string memberName1{ "Member1" };
-    std::string memberName2{ "Member2" };
-    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<DotSymbol>(),
-        NewIdentifierToken(memberName1),
-        NewObj<DotSymbol>(),
-        NewIdentifierToken(memberName2),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>("FooBar.Member1.Member2") };
     REQUIRE(rightPostfixExpression->IsStructureReference());
     REQUIRE(rightPostfixExpression->IsValid());
 
@@ -424,28 +287,21 @@ TEST_CASE("ExpressionParser PostfixExpression MemberAccess_Chained") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<DotSymbol>(leftPostfixExpression->GetChild(1));
 
     Rc<IdentifierToken> member1{ M<IdentifierToken>(leftPostfixExpression->GetChild(2)) };
-    REQUIRE(member1->GetName() == memberName1);
+    REQUIRE(member1->GetName() == "Member1");
 
     M<DotSymbol>(rightPostfixExpression->GetChild(1));
 
     Rc<IdentifierToken> member2{ M<IdentifierToken>(rightPostfixExpression->GetChild(2)) };
-    REQUIRE(member2->GetName() == memberName2);
+    REQUIRE(member2->GetName() == "Member2");
 }
 
 TEST_CASE("ExpressionParser PostfixExpression MemberAccess_MissingMemberName") {
-    std::string objName{ "FooBar" };
-    std::string memberName{ "Value" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<DotSymbol>(),
-        NewIdentifierToken(memberName),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar.") };
     REQUIRE(postfixExpression->IsStructureReference());
     REQUIRE(!postfixExpression->IsValid());
 
@@ -454,7 +310,7 @@ TEST_CASE("ExpressionParser PostfixExpression MemberAccess_MissingMemberName") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<DotSymbol>(postfixExpression->GetChild(1));
 
@@ -463,14 +319,7 @@ TEST_CASE("ExpressionParser PostfixExpression MemberAccess_MissingMemberName") {
 }
 
 TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess") {
-    std::string objName{ "FooBar" };
-    std::string memberName{ "Value" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<MinusGtSymbol>(),
-        NewIdentifierToken(memberName),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar->Value") };
     REQUIRE(postfixExpression->IsStructureDereference());
     REQUIRE(postfixExpression->IsValid());
 
@@ -479,26 +328,16 @@ TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<MinusGtSymbol>(postfixExpression->GetChild(1));
 
     Rc<IdentifierToken> member{ M<IdentifierToken>(postfixExpression->GetChild(2)) };
-    REQUIRE(member->GetName() == memberName);
+    REQUIRE(member->GetName() == "Value");
 }
 
 TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess_Chained") {
-    std::string objName{ "FooBar" };
-    std::string memberName1{ "Member1" };
-    std::string memberName2{ "Member2" };
-    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<MinusGtSymbol>(),
-        NewIdentifierToken(memberName1),
-        NewObj<MinusGtSymbol>(),
-        NewIdentifierToken(memberName2),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>("FooBar->Member1->Member2") };
     REQUIRE(rightPostfixExpression->IsStructureDereference());
     REQUIRE(rightPostfixExpression->IsValid());
 
@@ -511,28 +350,21 @@ TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess_Chained") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<MinusGtSymbol>(leftPostfixExpression->GetChild(1));
 
     Rc<IdentifierToken> member1{ M<IdentifierToken>(leftPostfixExpression->GetChild(2)) };
-    REQUIRE(member1->GetName() == memberName1);
+    REQUIRE(member1->GetName() == "Member1");
 
     M<MinusGtSymbol>(rightPostfixExpression->GetChild(1));
 
     Rc<IdentifierToken> member2{ M<IdentifierToken>(rightPostfixExpression->GetChild(2)) };
-    REQUIRE(member2->GetName() == memberName2);
+    REQUIRE(member2->GetName() == "Member2");
 }
 
 TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess_MissingMemberName") {
-    std::string objName{ "FooBar" };
-    std::string memberName{ "Value" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<MinusGtSymbol>(),
-        NewIdentifierToken(memberName),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar->") };
     REQUIRE(postfixExpression->IsStructureDereference());
     REQUIRE(!postfixExpression->IsValid());
 
@@ -541,7 +373,7 @@ TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess_MissingMemberN
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<MinusGtSymbol>(postfixExpression->GetChild(1));
 
@@ -550,12 +382,7 @@ TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess_MissingMemberN
 }
 
 TEST_CASE("ExpressionParser PostfixExpression PostIncrement") {
-    std::string objName{ "FooBar" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<PlusPlusSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar++") };
     REQUIRE(postfixExpression->IsPostIncrement());
     REQUIRE(postfixExpression->IsValid());
 
@@ -564,19 +391,13 @@ TEST_CASE("ExpressionParser PostfixExpression PostIncrement") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<PlusPlusSymbol>(postfixExpression->GetChild(1));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression PostIncrement_Chained") {
-    std::string objName{ "FooBar" };
-    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<PlusPlusSymbol>(),
-        NewObj<PlusPlusSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>("FooBar++++") };
     REQUIRE(rightPostfixExpression->IsPostIncrement());
     REQUIRE(rightPostfixExpression->IsValid());
 
@@ -589,19 +410,14 @@ TEST_CASE("ExpressionParser PostfixExpression PostIncrement_Chained") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<PlusPlusSymbol>(leftPostfixExpression->GetChild(1));
     M<PlusPlusSymbol>(rightPostfixExpression->GetChild(1));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression PostDecrement") {
-    std::string objName{ "FooBar" };
-    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<MinusMinusSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> postfixExpression{ Setup<PostfixExpression>("FooBar--") };
     REQUIRE(postfixExpression->IsPostDecrement());
     REQUIRE(postfixExpression->IsValid());
 
@@ -610,19 +426,13 @@ TEST_CASE("ExpressionParser PostfixExpression PostDecrement") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<MinusMinusSymbol>(postfixExpression->GetChild(1));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression PostDecrement_Chained") {
-    std::string objName{ "FooBar" };
-    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>({
-        NewIdentifierToken(objName),
-        NewObj<MinusMinusSymbol>(),
-        NewObj<MinusMinusSymbol>(),
-        NewObj<EofToken>()
-    }) };
+    Rc<PostfixExpression> rightPostfixExpression{ Setup<PostfixExpression>("FooBar----") };
     REQUIRE(rightPostfixExpression->IsPostDecrement());
     REQUIRE(rightPostfixExpression->IsValid());
 
@@ -635,7 +445,7 @@ TEST_CASE("ExpressionParser PostfixExpression PostDecrement_Chained") {
     REQUIRE(obj->IsValid());
 
     Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
-    REQUIRE(objToken->GetName() == objName);
+    REQUIRE(objToken->GetName() == "FooBar");
 
     M<MinusMinusSymbol>(leftPostfixExpression->GetChild(1));
     M<MinusMinusSymbol>(rightPostfixExpression->GetChild(1));
