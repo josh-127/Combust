@@ -58,6 +58,7 @@ private:
 
 class Expression : public SyntaxNode {
 public:
+    Rc<SyntaxNode> GetChild(const int index) { return children[index]; }
     const SyntaxNodeVector& GetChildren() const { return children; }
     SyntaxNodeVector& GetChildren() { return children; }
     void SetChildren(const SyntaxNodeVector& to) { children = to; }

@@ -85,7 +85,7 @@ TEST_CASE("ExpressionParser PrimaryExpression Identifier") {
     REQUIRE(expression->IsIdentifier());
     REQUIRE(expression->IsValid());
 
-    Rc<IdentifierToken> identifier{ M<IdentifierToken>(expression->GetChildren()[0]) };
+    Rc<IdentifierToken> identifier{ M<IdentifierToken>(expression->GetChild(0)) };
     REQUIRE(identifier->GetName() == identifierName);
 }
 
@@ -98,7 +98,7 @@ TEST_CASE("ExpressionParser PrimaryExpression NumericLiteral") {
     REQUIRE(expression->IsNumericLiteral());
     REQUIRE(expression->IsValid());
 
-    Rc<NumericLiteralToken> identifier{ M<NumericLiteralToken>(expression->GetChildren()[0]) };
+    Rc<NumericLiteralToken> identifier{ M<NumericLiteralToken>(expression->GetChild(0)) };
     REQUIRE(identifier->GetWholeValue() == wholeValue);
 }
 
@@ -111,7 +111,7 @@ TEST_CASE("ExpressionParser PrimaryExpression StringLiteral") {
     REQUIRE(expression->IsStringLiteral());
     REQUIRE(expression->IsValid());
 
-    Rc<StringLiteralToken> literalToken{ M<StringLiteralToken>(expression->GetChildren()[0]) };
+    Rc<StringLiteralToken> literalToken{ M<StringLiteralToken>(expression->GetChild(0)) };
     REQUIRE(literalToken->GetValue() == literalValue);
 }
 
@@ -126,16 +126,16 @@ TEST_CASE("ExpressionParser PrimaryExpression ParenthesizedExpression") {
     REQUIRE(expression->IsParenthesizedExpression());
     REQUIRE(expression->IsValid());
 
-    M<LParenSymbol>(expression->GetChildren()[0]);
+    M<LParenSymbol>(expression->GetChild(0));
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(expression->GetChildren()[1]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(expression->GetChild(1)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == identifierName);
 
-    M<RParenSymbol>(expression->GetChildren()[2]);
+    M<RParenSymbol>(expression->GetChild(2));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess") {
@@ -151,20 +151,20 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess") {
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> primaryExpression{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> primaryExpression{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(primaryExpression->IsIdentifier());
     REQUIRE(primaryExpression->IsValid());
 
-    Rc<IdentifierToken> identifier{ M<IdentifierToken>(primaryExpression->GetChildren()[0]) };
+    Rc<IdentifierToken> identifier{ M<IdentifierToken>(primaryExpression->GetChild(0)) };
     REQUIRE(identifier->GetName() == identifierName);
 
-    M<LBracketSymbol>(postfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(postfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> indexValue{ M<PrimaryExpression>(postfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> indexValue{ M<PrimaryExpression>(postfixExpression->GetChild(2)) };
     REQUIRE(indexValue->IsNumericLiteral());
     REQUIRE(indexValue->IsValid());
 
-    Rc<NumericLiteralToken> numericLiteral{ M<NumericLiteralToken>(indexValue->GetChildren()[0]) };
+    Rc<NumericLiteralToken> numericLiteral{ M<NumericLiteralToken>(indexValue->GetChild(0)) };
     REQUIRE(numericLiteral->GetWholeValue() == numericValue);
 }
 
@@ -186,39 +186,39 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_Chained") {
     REQUIRE(rightPostfixExpression->IsValid());
 
     Rc<PostfixExpression> leftPostfixExpression{
-        M<PostfixExpression>(rightPostfixExpression->GetChildren()[0])
+        M<PostfixExpression>(rightPostfixExpression->GetChild(0))
     };
     REQUIRE(leftPostfixExpression->IsArrayAccessor());
     REQUIRE(leftPostfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<LBracketSymbol>(leftPostfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(leftPostfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> leftIndex{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> leftIndex{ M<PrimaryExpression>(leftPostfixExpression->GetChild(2)) };
     REQUIRE(leftIndex->IsNumericLiteral());
     REQUIRE(leftIndex->IsValid());
 
-    Rc<NumericLiteralToken> leftIndexToken{ M<NumericLiteralToken>(leftIndex->GetChildren()[0]) };
+    Rc<NumericLiteralToken> leftIndexToken{ M<NumericLiteralToken>(leftIndex->GetChild(0)) };
     REQUIRE(leftIndexToken->GetWholeValue() == numericValue1);
 
-    M<RBracketSymbol>(leftPostfixExpression->GetChildren()[3]);
+    M<RBracketSymbol>(leftPostfixExpression->GetChild(3));
 
-    M<LBracketSymbol>(rightPostfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(rightPostfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> rightIndex{ M<PrimaryExpression>(rightPostfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> rightIndex{ M<PrimaryExpression>(rightPostfixExpression->GetChild(2)) };
     REQUIRE(rightIndex->IsNumericLiteral());
     REQUIRE(rightIndex->IsValid());
 
-    Rc<NumericLiteralToken> rightIndexToken{ M<NumericLiteralToken>(rightIndex->GetChildren()[0]) };
+    Rc<NumericLiteralToken> rightIndexToken{ M<NumericLiteralToken>(rightIndex->GetChild(0)) };
     REQUIRE(rightIndexToken->GetWholeValue() == numericValue2);
 
-    M<RBracketSymbol>(rightPostfixExpression->GetChildren()[3]);
+    M<RBracketSymbol>(rightPostfixExpression->GetChild(3));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingRBracket") {
@@ -233,23 +233,23 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingRBracket") {
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(!postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<LBracketSymbol>(postfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(postfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> index{ M<PrimaryExpression>(postfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> index{ M<PrimaryExpression>(postfixExpression->GetChild(2)) };
     REQUIRE(index->IsIdentifier());
     REQUIRE(index->IsValid());
 
-    Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChildren()[0]) };
+    Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChild(0)) };
     REQUIRE(indexToken->GetWholeValue() == indexValue);
 
-    Rc<SyntaxNode> rBracket{ postfixExpression->GetChildren()[3] };
+    Rc<SyntaxNode> rBracket{ postfixExpression->GetChild(3) };
     REQUIRE(!rBracket);
 }
 
@@ -269,23 +269,23 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingFirstRBracket_C
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(!postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<LBracketSymbol>(postfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(postfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> index{ M<PrimaryExpression>(postfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> index{ M<PrimaryExpression>(postfixExpression->GetChild(2)) };
     REQUIRE(index->IsIdentifier());
     REQUIRE(index->IsValid());
 
-    Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChildren()[0]) };
+    Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChild(0)) };
     REQUIRE(indexToken->GetWholeValue() == indexValue1);
 
-    Rc<SyntaxNode> rBracket{ postfixExpression->GetChildren()[3] };
+    Rc<SyntaxNode> rBracket{ postfixExpression->GetChild(3) };
     REQUIRE(!rBracket);
 }
 
@@ -305,40 +305,38 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingSecondRBracket_
     REQUIRE(rightPostfixExpression->IsArrayAccessor());
     REQUIRE(!rightPostfixExpression->IsValid());
 
-    Rc<PostfixExpression> leftPostfixExpression{
-        M<PostfixExpression>(rightPostfixExpression->GetChildren()[0])
-    };
+    Rc<PostfixExpression> leftPostfixExpression{ M<PostfixExpression>(rightPostfixExpression->GetChild(0)) };
     REQUIRE(leftPostfixExpression->IsArrayAccessor());
     REQUIRE(leftPostfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<LBracketSymbol>(leftPostfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(leftPostfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> leftIndex{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> leftIndex{ M<PrimaryExpression>(leftPostfixExpression->GetChild(2)) };
     REQUIRE(leftIndex->IsNumericLiteral());
     REQUIRE(leftIndex->IsValid());
 
-    Rc<NumericLiteralToken> leftIndexToken{ M<NumericLiteralToken>(leftIndex->GetChildren()[0]) };
+    Rc<NumericLiteralToken> leftIndexToken{ M<NumericLiteralToken>(leftIndex->GetChild(0)) };
     REQUIRE(leftIndexToken->GetWholeValue() == indexValue1);
 
-    M<RBracketSymbol>(leftPostfixExpression->GetChildren()[3]);
+    M<RBracketSymbol>(leftPostfixExpression->GetChild(3));
 
-    M<LBracketSymbol>(rightPostfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(rightPostfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> rightIndex{ M<PrimaryExpression>(rightPostfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> rightIndex{ M<PrimaryExpression>(rightPostfixExpression->GetChild(2)) };
     REQUIRE(rightIndex->IsNumericLiteral());
     REQUIRE(rightIndex->IsValid());
 
-    Rc<NumericLiteralToken> rightIndexToken{ M<NumericLiteralToken>(rightIndex->GetChildren()[0]) };
+    Rc<NumericLiteralToken> rightIndexToken{ M<NumericLiteralToken>(rightIndex->GetChild(0)) };
     REQUIRE(rightIndexToken->GetWholeValue() == indexValue2);
 
-    Rc<SyntaxNode> rightRBracket{ rightPostfixExpression->GetChildren()[3] };
+    Rc<SyntaxNode> rightRBracket{ rightPostfixExpression->GetChild(3) };
     REQUIRE(!rightRBracket);
 }
 
@@ -357,23 +355,23 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingBothRBrackets_C
     REQUIRE(postfixExpression->IsArrayAccessor());
     REQUIRE(!postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<LBracketSymbol>(postfixExpression->GetChildren()[1]);
+    M<LBracketSymbol>(postfixExpression->GetChild(1));
 
-    Rc<PrimaryExpression> index{ M<PrimaryExpression>(postfixExpression->GetChildren()[2]) };
+    Rc<PrimaryExpression> index{ M<PrimaryExpression>(postfixExpression->GetChild(2)) };
     REQUIRE(index->IsIdentifier());
     REQUIRE(index->IsValid());
 
-    Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChildren()[0]) };
+    Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChild(0)) };
     REQUIRE(indexToken->GetWholeValue() == indexValue1);
 
-    Rc<SyntaxNode> rBracket{ postfixExpression->GetChildren()[3] };
+    Rc<SyntaxNode> rBracket{ postfixExpression->GetChild(3) };
     REQUIRE(!rBracket);
 }
 
@@ -389,16 +387,16 @@ TEST_CASE("ExpressionParser PostfixExpression MemberAccess") {
     REQUIRE(postfixExpression->IsStructureReference());
     REQUIRE(postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<DotSymbol>(postfixExpression->GetChildren()[1]);
+    M<DotSymbol>(postfixExpression->GetChild(1));
 
-    Rc<IdentifierToken> member{ M<IdentifierToken>(postfixExpression->GetChildren()[2]) };
+    Rc<IdentifierToken> member{ M<IdentifierToken>(postfixExpression->GetChild(2)) };
     REQUIRE(member->GetName() == memberName);
 }
 
@@ -417,27 +415,25 @@ TEST_CASE("ExpressionParser PostfixExpression MemberAccess_Chained") {
     REQUIRE(rightPostfixExpression->IsStructureReference());
     REQUIRE(rightPostfixExpression->IsValid());
 
-    Rc<PostfixExpression> leftPostfixExpression{
-        M<PostfixExpression>(rightPostfixExpression->GetChildren()[0])
-    };
+    Rc<PostfixExpression> leftPostfixExpression{ M<PostfixExpression>(rightPostfixExpression->GetChild(0)) };
     REQUIRE(leftPostfixExpression->IsStructureReference());
     REQUIRE(leftPostfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<DotSymbol>(leftPostfixExpression->GetChildren()[1]);
+    M<DotSymbol>(leftPostfixExpression->GetChild(1));
 
-    Rc<IdentifierToken> member1{ M<IdentifierToken>(leftPostfixExpression->GetChildren()[2]) };
+    Rc<IdentifierToken> member1{ M<IdentifierToken>(leftPostfixExpression->GetChild(2)) };
     REQUIRE(member1->GetName() == memberName1);
 
-    M<DotSymbol>(rightPostfixExpression->GetChildren()[1]);
+    M<DotSymbol>(rightPostfixExpression->GetChild(1));
 
-    Rc<IdentifierToken> member2{ M<IdentifierToken>(rightPostfixExpression->GetChildren()[2]) };
+    Rc<IdentifierToken> member2{ M<IdentifierToken>(rightPostfixExpression->GetChild(2)) };
     REQUIRE(member2->GetName() == memberName2);
 }
 
@@ -453,16 +449,16 @@ TEST_CASE("ExpressionParser PostfixExpression MemberAccess_MissingMemberName") {
     REQUIRE(postfixExpression->IsStructureReference());
     REQUIRE(!postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<DotSymbol>(postfixExpression->GetChildren()[1]);
+    M<DotSymbol>(postfixExpression->GetChild(1));
 
-    Rc<SyntaxNode> memberBase{ postfixExpression->GetChildren()[2] };
+    Rc<SyntaxNode> memberBase{ postfixExpression->GetChild(2) };
     REQUIRE(!memberBase);
 }
 
@@ -478,16 +474,16 @@ TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess") {
     REQUIRE(postfixExpression->IsStructureDereference());
     REQUIRE(postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<MinusGtSymbol>(postfixExpression->GetChildren()[1]);
+    M<MinusGtSymbol>(postfixExpression->GetChild(1));
 
-    Rc<IdentifierToken> member{ M<IdentifierToken>(postfixExpression->GetChildren()[2]) };
+    Rc<IdentifierToken> member{ M<IdentifierToken>(postfixExpression->GetChild(2)) };
     REQUIRE(member->GetName() == memberName);
 }
 
@@ -506,27 +502,25 @@ TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess_Chained") {
     REQUIRE(rightPostfixExpression->IsStructureDereference());
     REQUIRE(rightPostfixExpression->IsValid());
 
-    Rc<PostfixExpression> leftPostfixExpression{
-        M<PostfixExpression>(rightPostfixExpression->GetChildren()[0])
-    };
+    Rc<PostfixExpression> leftPostfixExpression{ M<PostfixExpression>(rightPostfixExpression->GetChild(0)) };
     REQUIRE(leftPostfixExpression->IsStructureDereference());
     REQUIRE(leftPostfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<MinusGtSymbol>(leftPostfixExpression->GetChildren()[1]);
+    M<MinusGtSymbol>(leftPostfixExpression->GetChild(1));
 
-    Rc<IdentifierToken> member1{ M<IdentifierToken>(leftPostfixExpression->GetChildren()[2]) };
+    Rc<IdentifierToken> member1{ M<IdentifierToken>(leftPostfixExpression->GetChild(2)) };
     REQUIRE(member1->GetName() == memberName1);
 
-    M<MinusGtSymbol>(rightPostfixExpression->GetChildren()[1]);
+    M<MinusGtSymbol>(rightPostfixExpression->GetChild(1));
 
-    Rc<IdentifierToken> member2{ M<IdentifierToken>(rightPostfixExpression->GetChildren()[2]) };
+    Rc<IdentifierToken> member2{ M<IdentifierToken>(rightPostfixExpression->GetChild(2)) };
     REQUIRE(member2->GetName() == memberName2);
 }
 
@@ -542,16 +536,16 @@ TEST_CASE("ExpressionParser PostfixExpression MemberPointerAccess_MissingMemberN
     REQUIRE(postfixExpression->IsStructureDereference());
     REQUIRE(!postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<MinusGtSymbol>(postfixExpression->GetChildren()[1]);
+    M<MinusGtSymbol>(postfixExpression->GetChild(1));
 
-    Rc<SyntaxNode> memberBase{ postfixExpression->GetChildren()[2] };
+    Rc<SyntaxNode> memberBase{ postfixExpression->GetChild(2) };
     REQUIRE(!memberBase);
 }
 
@@ -565,14 +559,14 @@ TEST_CASE("ExpressionParser PostfixExpression PostIncrement") {
     REQUIRE(postfixExpression->IsPostIncrement());
     REQUIRE(postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<PlusPlusSymbol>(postfixExpression->GetChildren()[1]);
+    M<PlusPlusSymbol>(postfixExpression->GetChild(1));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression PostIncrement_Chained") {
@@ -586,21 +580,19 @@ TEST_CASE("ExpressionParser PostfixExpression PostIncrement_Chained") {
     REQUIRE(rightPostfixExpression->IsPostIncrement());
     REQUIRE(rightPostfixExpression->IsValid());
 
-    Rc<PostfixExpression> leftPostfixExpression{
-        M<PostfixExpression>(rightPostfixExpression->GetChildren()[0])
-    };
+    Rc<PostfixExpression> leftPostfixExpression{ M<PostfixExpression>(rightPostfixExpression->GetChild(0)) };
     REQUIRE(leftPostfixExpression->IsPostIncrement());
     REQUIRE(leftPostfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<PlusPlusSymbol>(leftPostfixExpression->GetChildren()[1]);
-    M<PlusPlusSymbol>(rightPostfixExpression->GetChildren()[1]);
+    M<PlusPlusSymbol>(leftPostfixExpression->GetChild(1));
+    M<PlusPlusSymbol>(rightPostfixExpression->GetChild(1));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression PostDecrement") {
@@ -613,14 +605,14 @@ TEST_CASE("ExpressionParser PostfixExpression PostDecrement") {
     REQUIRE(postfixExpression->IsPostDecrement());
     REQUIRE(postfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(postfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<MinusMinusSymbol>(postfixExpression->GetChildren()[1]);
+    M<MinusMinusSymbol>(postfixExpression->GetChild(1));
 }
 
 TEST_CASE("ExpressionParser PostfixExpression PostDecrement_Chained") {
@@ -634,19 +626,17 @@ TEST_CASE("ExpressionParser PostfixExpression PostDecrement_Chained") {
     REQUIRE(rightPostfixExpression->IsPostDecrement());
     REQUIRE(rightPostfixExpression->IsValid());
 
-    Rc<PostfixExpression> leftPostfixExpression{
-        M<PostfixExpression>(rightPostfixExpression->GetChildren()[0])
-    };
+    Rc<PostfixExpression> leftPostfixExpression{ M<PostfixExpression>(rightPostfixExpression->GetChild(0)) };
     REQUIRE(leftPostfixExpression->IsPostDecrement());
     REQUIRE(leftPostfixExpression->IsValid());
 
-    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChildren()[0]) };
+    Rc<PrimaryExpression> obj{ M<PrimaryExpression>(leftPostfixExpression->GetChild(0)) };
     REQUIRE(obj->IsIdentifier());
     REQUIRE(obj->IsValid());
 
-    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChildren()[0]) };
+    Rc<IdentifierToken> objToken{ M<IdentifierToken>(obj->GetChild(0)) };
     REQUIRE(objToken->GetName() == objName);
 
-    M<MinusMinusSymbol>(leftPostfixExpression->GetChildren()[1]);
-    M<MinusMinusSymbol>(rightPostfixExpression->GetChildren()[1]);
+    M<MinusMinusSymbol>(leftPostfixExpression->GetChild(1));
+    M<MinusMinusSymbol>(rightPostfixExpression->GetChild(1));
 }
