@@ -39,8 +39,7 @@ APP_ENTRY	:= main.cc
 # =====================================================================
 TEST_CXXFLAGS	:= \
 	$(APP_CXXFLAGS) \
-	-Ivendor/googletest \
-	-isystem vendor/googletest/include \
+	-isystem vendor/Catch2 \
 	-pthread \
 	-D_VARIADIC_MAX=10
 
@@ -50,9 +49,8 @@ TEST_HHFILES	:= \
 TEST_CCFILES	:= \
 	$(APP_CCFILES) \
 	unit-tests/code-lexer-test.cc \
-	unit-tests/language-parser-test.cc \
-	unit-tests/preprocessor-lexer-test.cc \
-	vendor/googletest/src/gtest-all.cc
+	unit-tests/expression-parser-test.cc \
+	unit-tests/preprocessor-lexer-test.cc
 
 TEST_ENTRY	:= unit-tests/main.cc
 

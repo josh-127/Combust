@@ -4,34 +4,31 @@
     <Filter Include="vendor">
       <UniqueIdentifier>{8fb234b3-3071-4779-8693-6684aed9b05e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="vendor\googletest">
-      <UniqueIdentifier>{03d4c79b-9993-4377-8d82-c5ab49bdb7d3}</UniqueIdentifier>
+    <Filter Include="vendor\Catch2">
+      <UniqueIdentifier>{baa853e5-7a45-4042-9850-266a18b17ebd}</UniqueIdentifier>
     </Filter>
     <Filter Include="unit-tests">
-      <UniqueIdentifier>{86482f78-4ce1-4058-9533-eed64f260229}</UniqueIdentifier>
+      <UniqueIdentifier>{5cc43752-9dad-41ac-8fa6-9251dd90243a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="vendor\googletest\src\gtest-all.cc">
-      <Filter>vendor\googletest</Filter>
-    </ClCompile>
     <ClCompile Include="logger.cc" />
     <ClCompile Include="source.cc" />
     <ClCompile Include="syntax.cc" />
+    <ClCompile Include="code-lexer.cc" />
+    <ClCompile Include="preprocessor-lexer.cc" />
+    <ClCompile Include="language-parser.cc" />
+    <ClCompile Include="backtracking-lexer.cc" />
+    <ClCompile Include="unit-tests\code-lexer.test.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
+    <ClCompile Include="unit-tests\expression-parser-test.cc">
+      <Filter>unit-tests</Filter>
+    </ClCompile>
     <ClCompile Include="unit-tests\main.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
-    <ClCompile Include="code-lexer.cc" />
-    <ClCompile Include="unit-tests\code-lexer-test.cc">
-      <Filter>unit-tests</Filter>
-    </ClCompile>
-    <ClCompile Include="preprocessor-lexer.cc" />
     <ClCompile Include="unit-tests\preprocessor-lexer-test.cc">
-      <Filter>unit-tests</Filter>
-    </ClCompile>
-    <ClCompile Include="language-parser.cc" />
-    <ClCompile Include="backtracking-lexer.cc" />
-    <ClCompile Include="unit-tests\language-parser-test.cc">
       <Filter>unit-tests</Filter>
     </ClCompile>
   </ItemGroup>
@@ -45,6 +42,9 @@
     <ClInclude Include="lexer.hh" />
     <ClInclude Include="language-parser.hh" />
     <ClInclude Include="backtracking-lexer.hh" />
+    <ClInclude Include="vendor\Catch2\catch.hpp">
+      <Filter>vendor\Catch2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />

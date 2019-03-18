@@ -72,19 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;$(ProjectDir)vendor\Catch2;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;$(ProjectDir)vendor\Catch2;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;$(ProjectDir)vendor\Catch2;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)vendor\googletest\include;$(ProjectDir)vendor\Catch2;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -164,6 +164,7 @@
     <ClInclude Include="preprocessor-lexer.hh" />
     <ClInclude Include="source.hh" />
     <ClInclude Include="syntax.hh" />
+    <ClInclude Include="vendor\Catch2\catch.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="backtracking-lexer.cc" />
@@ -173,11 +174,10 @@
     <ClCompile Include="preprocessor-lexer.cc" />
     <ClCompile Include="source.cc" />
     <ClCompile Include="syntax.cc" />
-    <ClCompile Include="unit-tests\code-lexer-test.cc" />
-    <ClCompile Include="unit-tests\language-parser-test.cc" />
+    <ClCompile Include="unit-tests\code-lexer.test.cc" />
+    <ClCompile Include="unit-tests\expression-parser-test.cc" />
     <ClCompile Include="unit-tests\main.cc" />
     <ClCompile Include="unit-tests\preprocessor-lexer-test.cc" />
-    <ClCompile Include="vendor\googletest\src\gtest-all.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="syntax-kinds.def" />
