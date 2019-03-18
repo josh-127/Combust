@@ -487,6 +487,7 @@ Rc<SyntaxToken> CodeLexer::ReadTokenOnce() {
     case '.': {
         Rc<NumericLiteralToken> literal{ ReadNumericLiteral_Internal() };
         if (literal == nullptr) {
+            IncrementCursor();
             result = NewObj<DotSymbol>();
         }
         else {
