@@ -249,8 +249,8 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingRBracket") {
     Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChildren()[0]) };
     REQUIRE(indexToken->GetWholeValue() == indexValue);
 
-    Rc<RBracketSymbol> rBracket{ M<RBracketSymbol>(postfixExpression->GetChildren()[3]) };
-    REQUIRE((rBracket->GetFlags() & SyntaxToken::IS_MISSING) != 0);
+    Rc<SyntaxNode> rBracket{ postfixExpression->GetChildren()[3] };
+    REQUIRE(!rBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingFirstRBracket_Chained") {
@@ -285,8 +285,8 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingFirstRBracket_C
     Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChildren()[0]) };
     REQUIRE(indexToken->GetWholeValue() == indexValue1);
 
-    Rc<RBracketSymbol> rBracket{ M<RBracketSymbol>(postfixExpression->GetChildren()[3]) };
-    REQUIRE((rBracket->GetFlags() & SyntaxToken::IS_MISSING) != 0);
+    Rc<SyntaxNode> rBracket{ postfixExpression->GetChildren()[3] };
+    REQUIRE(!rBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingSecondRBracket_Chained") {
@@ -338,10 +338,8 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingSecondRBracket_
     Rc<NumericLiteralToken> rightIndexToken{ M<NumericLiteralToken>(rightIndex->GetChildren()[0]) };
     REQUIRE(rightIndexToken->GetWholeValue() == indexValue2);
 
-    Rc<RBracketSymbol> rightRBracket{
-        M<RBracketSymbol>(rightPostfixExpression->GetChildren()[3])
-    };
-    REQUIRE((rightRBracket->GetFlags() & SyntaxToken::IS_MISSING) != 0);
+    Rc<SyntaxNode> rightRBracket{ rightPostfixExpression->GetChildren()[3] };
+    REQUIRE(!rightRBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingBothRBrackets_Chained") {
@@ -375,8 +373,8 @@ TEST_CASE("ExpressionParser PostfixExpression ArrayAccess_MissingBothRBrackets_C
     Rc<NumericLiteralToken> indexToken{ M<NumericLiteralToken>(index->GetChildren()[0]) };
     REQUIRE(indexToken->GetWholeValue() == indexValue1);
 
-    Rc<RBracketSymbol> rBracket{ M<RBracketSymbol>(postfixExpression->GetChildren()[3]) };
-    REQUIRE((rBracket->GetFlags() & SyntaxToken::IS_MISSING) != 0);
+    Rc<SyntaxNode> rBracket{ postfixExpression->GetChildren()[3] };
+    REQUIRE(!rBracket);
 }
 
 TEST_CASE("ExpressionParser PostfixExpression MemberAccess") {

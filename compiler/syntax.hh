@@ -46,7 +46,6 @@ using SyntaxNodeVector = std::vector<Rc<SyntaxNode>>;
 class SyntaxToken : public SyntaxNode {
 public:
     static constexpr uint32_t BEGINNING_OF_LINE = 0x1;
-    static constexpr uint32_t IS_MISSING = 0x2;
 
     uint32_t GetFlags() const { return flags; }
     void SetFlags(const uint32_t to) { flags = to; }
