@@ -3,6 +3,24 @@ Portable Toolchain (PTC)
 
 Toolchain for native application development. Currently includes a C compiler.
 
+Building on Windows 10
+----------------------
+
+### Requirements
+| Dependency                   | Version       | Comments                       |
+|------------------------------|---------------|--------------------------------|
+| Microsoft Windows 10         | 1809 or later | Home edition is not supported. |
+| Microsoft Visual Studio 2019 | 16.x.x        |                                |
+
+### Visual Studio 2019 Workloads
+- Desktop development with C++
+
+### Building compiler
+`TODO: Include command-line instructions.`
+
+### Testing compiler
+`TODO: Include command-line instructions.`
+
 Building on Ubuntu 16.04 LTS and above
 --------------------------------------
 
