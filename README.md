@@ -16,10 +16,14 @@ Building on Windows 10
 - Desktop development with C++
 
 ### Building compiler
-`TODO: Include command-line instructions.`
+1. Open x64 Native Tools Command Prompt for VS 2019.
+2. Change directory to `/compiler`.
+3. `msbuild Compiler.vcxproj /t:Rebuild /c:Configuration=Release`
 
 ### Testing compiler
-`TODO: Include command-line instructions.`
+1. Open x64 Native Tools Command Prompt for VS 2019.
+2. Change directory to `/compiler`.
+3. `msbuild CompilerTests.vcxproj /t:Rebuild /c:Configuration=Release`
 
 Building on Ubuntu 16.04 LTS and above
 --------------------------------------
