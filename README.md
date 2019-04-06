@@ -1,7 +1,7 @@
-Portable Toolchain (PTC)
-========================
+Combust
+=======
 
-Toolchain for native application development. Currently includes a C compiler.
+SDK for native application development. Currently includes a C compiler.
 
 Building on Windows 10
 ----------------------
