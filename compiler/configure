@@ -5,7 +5,7 @@ VERSION=`g++ --version | head -n1 | cut -d' ' -f4`
 
 if [ "$VERSION" = "5.4.0" ]; then
     if [ -z "`command -v g++-8`" ]; then
-        echo "ERROR: You're system does not support GCC 8.x."
+        echo "ERROR: Your system does not support GCC 8.x."
         CC=NOT_SUPPORTED
     else
         echo "WARNING: You're using an unofficial build of GCC 8.x."
